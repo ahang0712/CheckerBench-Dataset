@@ -1,0 +1,24 @@
+diff --git a/drivers/net/ethernet/mellanox/mlx5/core/lib/ipsec_fs_roce.c b/drivers/net/ethernet/mellanox/mlx5/core/lib/ipsec_fs_roce.c
+index 234cd00f71a1..b7d4b1a2baf2 100644
+--- a/drivers/net/ethernet/mellanox/mlx5/core/lib/ipsec_fs_roce.c
++++ b/drivers/net/ethernet/mellanox/mlx5/core/lib/ipsec_fs_roce.c
+@@ -386,7 +386,8 @@ static int ipsec_fs_roce_tx_mpv_create(struct mlx5_core_dev *mdev,
+ 		return -EOPNOTSUPP;
+ 
+ 	peer_priv = mlx5_devcom_get_next_peer_data(*ipsec_roce->devcom, &tmp);
+-	if (!peer_priv) {
++	if (!peer_priv || !peer_priv->ipsec) {
++		mlx5_core_err(mdev, "IPsec not supported on master device\n");
+ 		err = -EOPNOTSUPP;
+ 		goto release_peer;
+ 	}
+@@ -455,7 +456,8 @@ static int ipsec_fs_roce_rx_mpv_create(struct mlx5_core_dev *mdev,
+ 		return -EOPNOTSUPP;
+ 
+ 	peer_priv = mlx5_devcom_get_next_peer_data(*ipsec_roce->devcom, &tmp);
+-	if (!peer_priv) {
++	if (!peer_priv || !peer_priv->ipsec) {
++		mlx5_core_err(mdev, "IPsec not supported on master device\n");
+ 		err = -EOPNOTSUPP;
+ 		goto release_peer;
+ 	}

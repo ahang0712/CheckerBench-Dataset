@@ -1,0 +1,105 @@
+### File: net/core/page_pool.c
+```c
+u64 *page_pool_ethtool_stats_get(u64 *data, const void *stats)
+{
+	const struct page_pool_stats *pool_stats = stats;
+
+	*data++ = pool_stats->alloc_stats.fast;
+	*data++ = pool_stats->alloc_stats.slow;
+	*data++ = pool_stats->alloc_stats.slow_high_order;
+	*data++ = pool_stats->alloc_stats.empty;
+	*data++ = pool_stats->alloc_stats.refill;
+	*data++ = pool_stats->alloc_stats.waive;
+	*data++ = pool_stats->recycle_stats.cached;
+	*data++ = pool_stats->recycle_stats.cache_full;
+	*data++ = pool_stats->recycle_stats.ring;
+	*data++ = pool_stats->recycle_stats.ring_full;
+	*data++ = pool_stats->recycle_stats.released_refcnt;
+
+	return data;
+}
+
+static bool page_pool_producer_lock(struct page_pool *pool)
+	__acquires(&pool->ring.producer_lock)
+{
+	bool in_softirq = in_softirq();
+
+	if (in_softirq)
+		spin_lock(&pool->ring.producer_lock);
+	else
+		spin_lock_bh(&pool->ring.producer_lock);
+
+	return in_softirq;
+}
+
+void page_pool_return_page(struct page_pool *pool, netmem_ref netmem)
+{
+	int count;
+	bool put;
+
+	put = true;
+	if (static_branch_unlikely(&page_pool_mem_providers) && pool->mp_ops)
+		put = pool->mp_ops->release_netmem(pool, netmem);
+	else
+		__page_pool_release_page_dma(pool, netmem);
+
+	/* This may be the last page returned, releasing the pool, so
+	 * it is not safe to reference pool afterwards.
+	 */
+	count = atomic_inc_return_relaxed(&pool->pages_state_release_cnt);
+	trace_page_pool_state_release(pool, netmem, count);
+
+	if (put) {
+		page_pool_clear_pp_info(netmem);
+		put_page(netmem_to_page(netmem));
+	}
+	/* An optimization would be to call __free_pages(page, pool->p.order)
+	 * knowing page is not part of page-cache (thus avoiding a
+	 * __page_cache_release() call).
+	 */
+}
+
+static bool page_pool_recycle_in_ring(struct page_pool *pool, netmem_ref netmem)
+{
+	bool in_softirq, ret;
+
+	/* BH protection not needed if current is softirq */
+	in_softirq = page_pool_producer_lock(pool);
+	ret = !__ptr_ring_produce(&pool->ring, (__force void *)netmem);
+	if (ret)
+		recycle_stat_inc(pool, ring);
+	page_pool_producer_unlock(pool, in_softirq);
+
+	return ret;
+}
+
+static bool page_pool_recycle_in_cache(netmem_ref netmem,
+				       struct page_pool *pool)
+{
+	if (unlikely(pool->alloc.count == PP_ALLOC_CACHE_SIZE)) {
+		recycle_stat_inc(pool, cache_full);
+		return false;
+	}
+
+	/* Caller MUST have verified/know (page_ref_count(page) == 1) */
+	pool->alloc.cache[pool->alloc.count++] = netmem;
+	recycle_stat_inc(pool, cached);
+	return true;
+}
+
+static int page_pool_release(struct page_pool *pool)
+{
+	bool in_softirq;
+	int inflight;
+
+	page_pool_scrub(pool);
+	inflight = page_pool_inflight(pool, true);
+	/* Acquire producer lock to make sure producers have exited. */
+	in_softirq = page_pool_producer_lock(pool);
+	page_pool_producer_unlock(pool, in_softirq);
+	if (!inflight)
+		__page_pool_destroy(pool);
+
+	return inflight;
+}
+```

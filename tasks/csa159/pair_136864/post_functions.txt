@@ -1,0 +1,282 @@
+### File: coders/tiff.c
+```c
+static Image *ReadTIFFImage(const ImageInfo *image_info,
+  ExceptionInfo *exception)
+{
+#define ThrowTIFFException(severity,message) \
+{ \
+  if (pixel_info != (MemoryInfo *) NULL) \
+    pixel_info=RelinquishVirtualMemory(pixel_info); \
+  if (quantum_info != (QuantumInfo *) NULL) \
+    quantum_info=DestroyQuantumInfo(quantum_info); \
+  TIFFClose(tiff); \
+  ThrowReaderException(severity,message); \
+}
+
+  const char
+    *option;
+
+  float
+    *chromaticity,
+    x_position,
+    y_position,
+    x_resolution,
+    y_resolution;
+
+  Image
+    *image;
+
+  int
+    tiff_status;
+
+  MagickBooleanType
+    more_frames,
+    status;
+
+  MemoryInfo
+    *pixel_info = (MemoryInfo *) NULL;
+
+  QuantumInfo
+    *quantum_info;
+
+  QuantumType
+    quantum_type;
+
+  register ssize_t
+    i;
+
+  size_t
+    number_pixels,
+    pad;
+
+  ssize_t
+    y;
+
+  TIFF
+    *tiff;
+
+  TIFFMethodType
+    method;
+
+  uint16
+    compress_tag,
+    bits_per_sample,
+    endian,
+    extra_samples,
+    interlace,
+    max_sample_value,
+    min_sample_value,
+    orientation,
+    pages,
+    photometric,
+    *sample_info,
+    sample_format,
+    samples_per_pixel,
+    units,
+    value;
+
+  uint32
+    height,
+    rows_per_strip,
+    width;
+
+  unsigned char
+    *pixels;
+
+  void
+    *sans[2] = { NULL, NULL };
+
+  /*
+    Open image.
+  */
+  assert(image_info != (const ImageInfo *) NULL);
+  assert(image_info->signature == MagickCoreSignature);
+  if (image_info->debug != MagickFalse)
+    (void) LogMagickEvent(TraceEvent,GetMagickModule(),"%s",
+      image_info->filename);
+  assert(exception != (ExceptionInfo *) NULL);
+  assert(exception->signature == MagickCoreSignature);
+  image=AcquireImage(image_info);
+  status=OpenBlob(image_info,image,ReadBinaryBlobMode,exception);
+  if (status == MagickFalse)
+    {
+      image=DestroyImageList(image);
+      return((Image *) NULL);
+    }
+  (void) SetMagickThreadValue(tiff_exception,exception);
+  tiff=TIFFClientOpen(image->filename,"rb",(thandle_t) image,TIFFReadBlob,
+    TIFFWriteBlob,TIFFSeekBlob,TIFFCloseBlob,TIFFGetBlobSize,TIFFMapBlob,
+    TIFFUnmapBlob);
+  if (tiff == (TIFF *) NULL)
+    {
+      image=DestroyImageList(image);
+      return((Image *) NULL);
+    }
+  if (exception->severity > ErrorException)
+    {
+      TIFFClose(tiff);
+      image=DestroyImageList(image);
+      return((Image *) NULL);
+    }
+  if (image_info->number_scenes != 0)
+    {
+      /*
+        Generate blank images for subimage specification (e.g. image.tif[4].
+        We need to check the number of directores because it is possible that
+        the subimage(s) are stored in the photoshop profile.
+      */
+      if (image_info->scene < (size_t)TIFFNumberOfDirectories(tiff))
+        {
+          for (i=0; i < (ssize_t) image_info->scene; i++)
+          {
+            status=TIFFReadDirectory(tiff) != 0 ? MagickTrue : MagickFalse;
+            if (status == MagickFalse)
+              {
+                TIFFClose(tiff);
+                image=DestroyImageList(image);
+                return((Image *) NULL);
+              }
+            AcquireNextImage(image_info,image);
+            if (GetNextImageInList(image) == (Image *) NULL)
+              {
+                TIFFClose(tiff);
+                image=DestroyImageList(image);
+                return((Image *) NULL);
+              }
+            image=SyncNextImageInList(image);
+          }
+        }
+    }
+  more_frames=MagickTrue;
+  do
+  {
+DisableMSCWarning(4127)
+    if (0 && (image_info->verbose != MagickFalse))
+      TIFFPrintDirectory(tiff,stdout,MagickFalse);
+RestoreMSCWarning
+    photometric=PHOTOMETRIC_RGB;
+    if ((TIFFGetField(tiff,TIFFTAG_IMAGEWIDTH,&width) != 1) ||
+        (TIFFGetField(tiff,TIFFTAG_IMAGELENGTH,&height) != 1) ||
+        (TIFFGetFieldDefaulted(tiff,TIFFTAG_PHOTOMETRIC,&photometric,sans) != 1) ||
+        (TIFFGetFieldDefaulted(tiff,TIFFTAG_COMPRESSION,&compress_tag,sans) != 1) ||
+        (TIFFGetFieldDefaulted(tiff,TIFFTAG_FILLORDER,&endian,sans) != 1) ||
+        (TIFFGetFieldDefaulted(tiff,TIFFTAG_PLANARCONFIG,&interlace,sans) != 1) ||
+        (TIFFGetFieldDefaulted(tiff,TIFFTAG_SAMPLESPERPIXEL,&samples_per_pixel,sans) != 1) ||
+        (TIFFGetFieldDefaulted(tiff,TIFFTAG_BITSPERSAMPLE,&bits_per_sample,sans) != 1) ||
+        (TIFFGetFieldDefaulted(tiff,TIFFTAG_SAMPLEFORMAT,&sample_format,sans) != 1) ||
+        (TIFFGetFieldDefaulted(tiff,TIFFTAG_MINSAMPLEVALUE,&min_sample_value,sans) != 1) ||
+        (TIFFGetFieldDefaulted(tiff,TIFFTAG_MAXSAMPLEVALUE,&max_sample_value,sans) != 1))
+      {
+        TIFFClose(tiff);
+        ThrowReaderException(CorruptImageError,"ImproperImageHeader");
+      }
+    if (((sample_format != SAMPLEFORMAT_IEEEFP) || (bits_per_sample != 64)) &&
+        ((bits_per_sample <= 0) || (bits_per_sample > 32)))
+      {
+        TIFFClose(tiff);
+        ThrowReaderException(CorruptImageError,"UnsupportedBitsPerPixel");
+      }
+    if (sample_format == SAMPLEFORMAT_IEEEFP)
+      (void) SetImageProperty(image,"quantum:format","floating-point");
+    switch (photometric)
+    {
+      case PHOTOMETRIC_MINISBLACK:
+      {
+        (void) SetImageProperty(image,"tiff:photometric","min-is-black");
+        break;
+      }
+      case PHOTOMETRIC_MINISWHITE:
+      {
+        (void) SetImageProperty(image,"tiff:photometric","min-is-white");
+        break;
+      }
+      case PHOTOMETRIC_PALETTE:
+      {
+        (void) SetImageProperty(image,"tiff:photometric","palette");
+        break;
+      }
+      case PHOTOMETRIC_RGB:
+      {
+        (void) SetImageProperty(image,"tiff:photometric","RGB");
+        break;
+      }
+      case PHOTOMETRIC_CIELAB:
+      {
+        (void) SetImageProperty(image,"tiff:photometric","CIELAB");
+        break;
+      }
+      case PHOTOMETRIC_LOGL:
+      {
+        (void) SetImageProperty(image,"tiff:photometric","CIE Log2(L)");
+        break;
+      }
+      case PHOTOMETRIC_LOGLUV:
+      {
+        (void) SetImageProperty(image,"tiff:photometric","LOGLUV");
+        break;
+      }
+#if defined(PHOTOMETRIC_MASK)
+      case PHOTOMETRIC_MASK:
+      {
+        (void) SetImageProperty(image,"tiff:photometric","MASK");
+        break;
+      }
+#endif
+      case PHOTOMETRIC_SEPARATED:
+      {
+        (void) SetImageProperty(image,"tiff:photometric","separated");
+        break;
+      }
+      case PHOTOMETRIC_YCBCR:
+      {
+        (void) SetImageProperty(image,"tiff:photometric","YCBCR");
+        break;
+      }
+      default:
+      {
+        (void) SetImageProperty(image,"tiff:photometric","unknown");
+        break;
+      }
+    }
+    if (image->debug != MagickFalse)
+      {
+        (void) LogMagickEvent(CoderEvent,GetMagickModule(),"Geometry: %ux%u",
+          (unsigned int) width,(unsigned int) height);
+        (void) LogMagickEvent(CoderEvent,GetMagickModule(),"Interlace: %u",
+          interlace);
+        (void) LogMagickEvent(CoderEvent,GetMagickModule(),
+          "Bits per sample: %u",bits_per_sample);
+        (void) LogMagickEvent(CoderEvent,GetMagickModule(),
+          "Min sample value: %u",min_sample_value);
+        (void) LogMagickEvent(CoderEvent,GetMagickModule(),
+          "Max sample value: %u",max_sample_value);
+        (void) LogMagickEvent(CoderEvent,GetMagickModule(),"Photometric "
+          "interpretation: %s",GetImageProperty(image,"tiff:photometric"));
+      }
+    image->columns=(size_t) width;
+    image->rows=(size_t) height;
+    image->depth=(size_t) bits_per_sample;
+    if (image->debug != MagickFalse)
+      (void) LogMagickEvent(CoderEvent,GetMagickModule(),"Image depth: %.20g",
+        (double) image->depth);
+    image->endian=MSBEndian;
+    if (endian == FILLORDER_LSB2MSB)
+      image->endian=LSBEndian;
+#if defined(MAGICKCORE_HAVE_TIFFISBIGENDIAN)
+    if (TIFFIsBigEndian(tiff) == 0)
+      {
+        (void) SetImageProperty(image,"tiff:endian","lsb");
+        image->endian=LSBEndian;
+      }
+    else
+      {
+        (void) SetImageProperty(image,"tiff:endian","msb");
+        image->endian=MSBEndian;
+      }
+#endif
+    if ((photometric == PHOTOMETRIC_MINISBLACK) ||
+        (photometric == PHOTOMETRIC_MINISWHITE))
+     
+
+// ... (24492 more chars)
+```

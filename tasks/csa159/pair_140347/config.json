@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "e60e8a73235ce5d42a2891c6989e8df1c8888c4a",
+  "after_commit": "d3b43eb505bffb8e4cdf6800c15660c001553fe6",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/deeb4b5393e106b990607df06261fba0ebb7ebde/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/deeb4b5393e106b990607df06261fba0ebb7ebde/compile_commands.json",
+  "changed_files": [
+    "drivers/rtc/rtc-mt6397.c"
+  ],
+  "commit_message": "rtc: mt6397: check return value after calling platform_get_resource()\n\nIt will cause null-ptr-deref if platform_get_resource() returns NULL,\nwe need check the return value.\n\nFixes: fc2979118f3f (\"rtc: mediatek: Add MT6397 RTC driver\")\nSigned-off-by: Yang Yingliang <yangyingliang@huawei.com>\nReviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>\nSigned-off-by: Alexandre Belloni <alexandre.belloni@bootlin.com>\nLink: https://lore.kernel.org/r/20220505125043.1594771-1-yangyingliang@huawei.com",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

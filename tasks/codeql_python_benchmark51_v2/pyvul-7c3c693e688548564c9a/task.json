@@ -1,0 +1,83 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-7c3c693e688548564c9a",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-7c3c693e688548564c9a",
+    "project_id": "pyvul__matrix-org__synapse",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "synapse/http/client.py",
+    "synapse/http/federation/well_known_resolver.py",
+    "synapse/http/matrixfederationclient.py",
+    "tests/http/federation/test_matrix_federation_agent.py"
+  ],
+  "patch_units": {
+    "before": [
+      "class:SimpleHttpClient",
+      "function:SimpleHttpClient.get_file",
+      "class:_ReadBodyToFileProtocol",
+      "function:_ReadBodyToFileProtocol.__init__",
+      "function:_ReadBodyToFileProtocol.dataReceived",
+      "function:readBodyToFile",
+      "class:WellKnownResolver",
+      "function:WellKnownResolver._make_well_known_request",
+      "module:<module>@18",
+      "module:<module>@24",
+      "module:<module>@25",
+      "module:<module>@29",
+      "class:MatrixFederationHttpClient",
+      "function:MatrixFederationHttpClient.get_file",
+      "module:<module>@39",
+      "module:<module>@45",
+      "class:MatrixFederationAgentTests",
+      "function:MatrixFederationAgentTests.test_srv_fallbacks",
+      "module:<module>@38"
+    ],
+    "after": [
+      "class:SimpleHttpClient",
+      "function:SimpleHttpClient.get_file",
+      "class:BodyExceededMaxSize",
+      "class:_ReadBodyWithMaxSizeProtocol",
+      "function:_ReadBodyWithMaxSizeProtocol.dataReceived",
+      "function:read_body_with_max_size",
+      "class:WellKnownResolver",
+      "function:WellKnownResolver._make_well_known_request",
+      "module:<module>@18",
+      "module:<module>@25",
+      "module:<module>@30",
+      "module:<module>@59",
+      "class:MatrixFederationHttpClient",
+      "function:MatrixFederationHttpClient.get_file",
+      "module:<module>@39",
+      "module:<module>@47",
+      "class:MatrixFederationAgentTests",
+      "function:MatrixFederationAgentTests.test_well_known_too_large",
+      "module:<module>@38"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/6a6057b0bbd3fab24f36e00dd97e382100a3a1862783463c95da20a717cddba5/database",
+      "cache_key": "6a6057b0bbd3fab24f36e00dd97e382100a3a1862783463c95da20a717cddba5",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/c474ba133c769ef096cd279e7d588e147b0a159eb7525c7ab86120f43670199a/database",
+      "cache_key": "c474ba133c769ef096cd279e7d588e147b0a159eb7525c7ab86120f43670199a",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/1f09a419a22f438c449e1d6c148390d8ede1943043df7f0542a902191e72354e/database",
+      "cache_key": "1f09a419a22f438c449e1d6c148390d8ede1943043df7f0542a902191e72354e",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-7c3c693e688548564c9a/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-7c3c693e688548564c9a/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-7c7eaf17f0df49603ae4",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-7c7eaf17f0df49603ae4",
+    "project_id": "pyvul__stranger6667__pyanyapi",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "pyanyapi/interfaces.py",
+    "tests/test_parsers.py"
+  ],
+  "patch_units": {
+    "before": [
+      "class:YAMLInterface",
+      "function:YAMLInterface.perform_parsing",
+      "function:test_xml_parsed"
+    ],
+    "after": [
+      "class:YAMLInterface",
+      "function:YAMLInterface.perform_parsing",
+      "function:test_yaml_parser_vulnerability"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/15820bacdfad7cb7ef73028198e676741f9997630f1dd41eebfeda47eba2eab4/database",
+      "cache_key": "15820bacdfad7cb7ef73028198e676741f9997630f1dd41eebfeda47eba2eab4",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/e3060be8f4972cd628df59c01096d1dc34dad220f8dcfaba3e01acb7aea917a4/database",
+      "cache_key": "e3060be8f4972cd628df59c01096d1dc34dad220f8dcfaba3e01acb7aea917a4",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/8b5eba99fc5084c8b749962da98838a46839d089af243667e8bdb76e99341f0b/database",
+      "cache_key": "8b5eba99fc5084c8b749962da98838a46839d089af243667e8bdb76e99341f0b",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-7c7eaf17f0df49603ae4/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-7c7eaf17f0df49603ae4/ (do not mount into agent)"
+  }
+}

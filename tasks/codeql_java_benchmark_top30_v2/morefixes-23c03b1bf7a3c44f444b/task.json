@@ -1,0 +1,51 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-23c03b1bf7a3c44f444b",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-23c03b1bf7a3c44f444b",
+    "project_id": "morefixes__googleapis__google-oauth-java-client",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "google-oauth-client/src/main/java/com/google/api/client/auth/openidconnect/Environment.java",
+    "google-oauth-client/src/main/java/com/google/api/client/auth/openidconnect/HttpTransportFactory.java",
+    "google-oauth-client/src/main/java/com/google/api/client/auth/openidconnect/IdTokenVerifier.java",
+    "google-oauth-client/src/test/java/com/google/api/client/auth/openidconnect/IdTokenVerifierTest.java"
+  ],
+  "patch_units": {
+    "before": [
+      "google-oauth-client/src/main/java/com/google/api/client/auth/openidconnect/IdTokenVerifier.java",
+      "google-oauth-client/src/test/java/com/google/api/client/auth/openidconnect/IdTokenVerifierTest.java"
+    ],
+    "after": [
+      "google-oauth-client/src/main/java/com/google/api/client/auth/openidconnect/Environment.java",
+      "google-oauth-client/src/main/java/com/google/api/client/auth/openidconnect/HttpTransportFactory.java",
+      "google-oauth-client/src/main/java/com/google/api/client/auth/openidconnect/IdTokenVerifier.java",
+      "google-oauth-client/src/test/java/com/google/api/client/auth/openidconnect/IdTokenVerifierTest.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/f4433a64b1e5813064fc3943a382d8a8213ec47268f6cb2f36a109324e7adeec/database",
+      "cache_key": "f4433a64b1e5813064fc3943a382d8a8213ec47268f6cb2f36a109324e7adeec",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/1a972b57bc7a3ad411e3efcc18aad691a9952bba82f67553a85a6afada7ce5c0/database",
+      "cache_key": "1a972b57bc7a3ad411e3efcc18aad691a9952bba82f67553a85a6afada7ce5c0",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/020ac12aed43d066dee7a129db39fffb674c3dd90153c4d30aed08557b4e34f3/database",
+      "cache_key": "020ac12aed43d066dee7a129db39fffb674c3dd90153c4d30aed08557b4e34f3",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-23c03b1bf7a3c44f444b/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-23c03b1bf7a3c44f444b/ (do not mount into agent)"
+  }
+}

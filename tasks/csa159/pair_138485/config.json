@@ -1,0 +1,19 @@
+{
+  "project_id": "skvadrik_re2c",
+  "before_commit": "7b5643476bd99c994c4f51b8143f942982d85521",
+  "after_commit": "4d9c809355b574f2a58eac119f5e076c48e4d1e2",
+  "repo_path": "/workspace/repo/skvadrik/re2c",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/skvadrik_re2c/7b689f4231003c33f798db897ce39535e66c33bf/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/skvadrik_re2c/7b689f4231003c33f798db897ce39535e66c33bf/compile_commands.json",
+  "changed_files": [
+    "src/regexp/nullable.cc"
+  ],
+  "commit_message": "Rewrite recursion into iteration (nullable RE).\n\nThis is to avoid stack overflow on large RE (especially on instrumented\nbuilds that have larger stack frames, like AddressSanitizer).\n\nPartial fix for #219 \"overflow-1.re test fails on system with small stack\".",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

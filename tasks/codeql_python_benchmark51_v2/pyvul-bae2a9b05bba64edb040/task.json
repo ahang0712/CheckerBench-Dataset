@@ -1,0 +1,57 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-bae2a9b05bba64edb040",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-bae2a9b05bba64edb040",
+    "project_id": "pyvul__zopefoundation__products.genericsetup",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "src/Products/GenericSetup/context.py",
+    "src/Products/GenericSetup/tests/test_tool.py"
+  ],
+  "patch_units": {
+    "before": [
+      "class:SnapshotExportContext",
+      "function:SnapshotExportContext._ensureSnapshotsFolder",
+      "module:<module>@29",
+      "class:SetupToolTests",
+      "function:SetupToolTests.test_runAllImportStepsFromProfile_unicode_id_creates_reports",
+      "function:SetupToolTests.test_applyContext"
+    ],
+    "after": [
+      "class:SnapshotExportContext",
+      "function:SnapshotExportContext.writeDataFile",
+      "function:SnapshotExportContext._ensureSnapshotsFolder",
+      "module:<module>@29",
+      "class:SetupToolTests",
+      "function:SetupToolTests.check_restricted_access",
+      "function:SetupToolTests.test_runAllImportStepsFromProfile_unicode_id_creates_reports",
+      "function:SetupToolTests.test_createSnapshot_default"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/4625469d61f52d0592178cacd44a53f32de79f4887c3f6794a8e28a419d4577c/database",
+      "cache_key": "4625469d61f52d0592178cacd44a53f32de79f4887c3f6794a8e28a419d4577c",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/38782b9865f316638d1d171445928873ae17725922448bc77820a3ff9a51fbd6/database",
+      "cache_key": "38782b9865f316638d1d171445928873ae17725922448bc77820a3ff9a51fbd6",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/059c643d6dd139fc5b88c6e464b29dec7137c7ccc26cbb76b0a2c474a68a5fa3/database",
+      "cache_key": "059c643d6dd139fc5b88c6e464b29dec7137c7ccc26cbb76b0a2c474a68a5fa3",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-bae2a9b05bba64edb040/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-bae2a9b05bba64edb040/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,127 @@
+### File: regexp.c
+```c
+static int count(struct cstate *g, Renode *node)
+{
+	int min, max, n;
+	if (!node) return 0;
+	switch (node->type) {
+	default: return 1;
+	case P_CAT: return count(g, node->x) + count(g, node->y);
+	case P_ALT: return count(g, node->x) + count(g, node->y) + 2;
+	case P_REP:
+		min = node->m;
+		max = node->n;
+		if (min == max) n = count(g, node->x) * min;
+		else if (max < REPINF) n = count(g, node->x) * max + (max - min);
+		else n = count(g, node->x) * (min + 1) + 2;
+		if (n < 0 || n > MAXPROG) die(g, "program too large");
+		return n;
+	case P_PAR: return count(g, node->x) + 2;
+	case P_PLA: return count(g, node->x) + 2;
+	case P_NLA: return count(g, node->x) + 2;
+	}
+}
+
+static void dumpprog(Reprog *prog)
+{
+	Reinst *inst;
+	int i;
+	for (i = 0, inst = prog->start; inst < prog->end; ++i, ++inst) {
+		printf("% 5d: ", i);
+		switch (inst->opcode) {
+		case I_END: puts("end"); break;
+		case I_JUMP: printf("jump %d\n", (int)(inst->x - prog->start)); break;
+		case I_SPLIT: printf("split %d %d\n", (int)(inst->x - prog->start), (int)(inst->y - prog->start)); break;
+		case I_PLA: printf("pla %d %d\n", (int)(inst->x - prog->start), (int)(inst->y - prog->start)); break;
+		case I_NLA: printf("nla %d %d\n", (int)(inst->x - prog->start), (int)(inst->y - prog->start)); break;
+		case I_ANY: puts("any"); break;
+		case I_ANYNL: puts("anynl"); break;
+		case I_CHAR: printf(inst->c >= 32 && inst->c < 127 ? "char '%c'\n" : "char U+%04X\n", inst->c); break;
+		case I_CCLASS: puts("cclass"); break;
+		case I_NCCLASS: puts("ncclass"); break;
+		case I_REF: printf("ref %d\n", inst->n); break;
+		case I_BOL: puts("bol"); break;
+		case I_EOL: puts("eol"); break;
+		case I_WORD: puts("word"); break;
+		case I_NWORD: puts("nword"); break;
+		case I_LPAR: printf("lpar %d\n", inst->n); break;
+		case I_RPAR: printf("rpar %d\n", inst->n); break;
+		}
+	}
+}
+
+Reprog *regcompx(void *(*alloc)(void *ctx, void *p, int n), void *ctx,
+	const char *pattern, int cflags, const char **errorp)
+{
+	struct cstate g;
+	Renode *node;
+	Reinst *split, *jump;
+	int i, n;
+
+	g.pstart = NULL;
+	g.prog = NULL;
+
+	if (setjmp(g.kaboom)) {
+		if (errorp) *errorp = g.error;
+		alloc(ctx, g.pstart, 0);
+		alloc(ctx, g.prog, 0);
+		return NULL;
+	}
+
+	g.prog = alloc(ctx, NULL, sizeof (Reprog));
+	if (!g.prog)
+		die(&g, "cannot allocate regular expression");
+	g.pstart = g.pend = alloc(ctx, NULL, sizeof (Renode) * strlen(pattern) * 2);
+	if (!g.pstart)
+		die(&g, "cannot allocate regular expression parse list");
+
+	g.source = pattern;
+	g.ncclass = 0;
+	g.nsub = 1;
+	for (i = 0; i < MAXSUB; ++i)
+		g.sub[i] = 0;
+
+	g.prog->flags = cflags;
+
+	next(&g);
+	node = parsealt(&g);
+	if (g.lookahead == ')')
+		die(&g, "unmatched ')'");
+	if (g.lookahead != 0)
+		die(&g, "syntax error");
+
+#ifdef TEST
+	dumpnode(node);
+	putchar('\n');
+#endif
+
+	n = 6 + count(&g, node);
+	if (n < 0 || n > MAXPROG)
+		die(&g, "program too large");
+
+	g.prog->nsub = g.nsub;
+	g.prog->start = g.prog->end = alloc(ctx, NULL, n * sizeof (Reinst));
+	if (!g.prog->start)
+		die(&g, "cannot allocate regular expression instruction list");
+
+	split = emit(g.prog, I_SPLIT);
+	split->x = split + 3;
+	split->y = split + 1;
+	emit(g.prog, I_ANYNL);
+	jump = emit(g.prog, I_JUMP);
+	jump->x = split;
+	emit(g.prog, I_LPAR);
+	compile(g.prog, node);
+	emit(g.prog, I_RPAR);
+	emit(g.prog, I_END);
+
+#ifdef TEST
+	dumpprog(g.prog);
+#endif
+
+	alloc(ctx, g.pstart, 0);
+
+	if (errorp) *errorp = NULL;
+	return g.prog;
+}
+```

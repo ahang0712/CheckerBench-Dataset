@@ -1,0 +1,20 @@
+{
+  "project_id": "verdammelt_tnef",
+  "before_commit": "5af0791db67d50ce5ebc16252626c679bb4079fb",
+  "after_commit": "cfdd80f52b31215bb4cf59ffb6e1bf5be93ead7c",
+  "repo_path": "/workspace/repo/verdammelt/tnef",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/verdammelt_tnef/5af0791db67d50ce5ebc16252626c679bb4079fb/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/verdammelt_tnef/5af0791db67d50ce5ebc16252626c679bb4079fb/compile_commands.json",
+  "changed_files": [
+    "src/mapi_attr.c",
+    "src/util.c"
+  ],
+  "commit_message": "Handle overflow problem reported in #23\n\n1. Assert that names must be non-zero length.\n2. Keep unicode_to_utf8 from underflowing.",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

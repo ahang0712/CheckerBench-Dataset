@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "1f57f78fbacf630430bf954e5a84caafdfea30c0",
+  "after_commit": "606f6366a35a3329545e38129804d65ef26ed7d2",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/0bb80ecc33a8fb5a682236443c1e740d5c917d1d/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/0bb80ecc33a8fb5a682236443c1e740d5c917d1d/compile_commands.json",
+  "changed_files": [
+    "drivers/clk/mediatek/clk-mt6797.c"
+  ],
+  "commit_message": "clk: mediatek: clk-mt6797: Add check for mtk_alloc_clk_data\n\nAdd the check for the return value of mtk_alloc_clk_data() in order to\navoid NULL pointer dereference.\n\nFixes: 96596aa06628 (\"clk: mediatek: add clk support for MT6797\")\nSigned-off-by: Jiasheng Jiang <jiasheng@iscas.ac.cn>\nLink: https://lore.kernel.org/r/20230912093407.21505-3-jiasheng@iscas.ac.cn\nReviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>\nSigned-off-by: Stephen Boyd <sboyd@kernel.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

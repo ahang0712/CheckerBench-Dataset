@@ -1,0 +1,47 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-08d699b1f7c72c366406",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-08d699b1f7c72c366406",
+    "project_id": "morefixes__kyverno__kyverno",
+    "language": "go",
+    "backend": "codeql"
+  },
+  "changed_go_files": [
+    "pkg/engine/wildcards/wildcards.go",
+    "pkg/engine/wildcards/wildcards_test.go"
+  ],
+  "patch_units": {
+    "before": [
+      "pkg/engine/wildcards/wildcards.go",
+      "pkg/engine/wildcards/wildcards_test.go"
+    ],
+    "after": [
+      "pkg/engine/wildcards/wildcards.go",
+      "pkg/engine/wildcards/wildcards_test.go"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/83b670f1115034b4433e483663960bd3f562a7c09fe5cb6dcf140d5048a6ce8f/database",
+      "cache_key": "83b670f1115034b4433e483663960bd3f562a7c09fe5cb6dcf140d5048a6ce8f",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/c094a82c89630463a6d0fa86a16ba5c7492fab7051a11261cac1808586525ee0/database",
+      "cache_key": "c094a82c89630463a6d0fa86a16ba5c7492fab7051a11261cac1808586525ee0",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/ca9672e6600175c72d388571605401118ec17d7e51613ef932b9e2ac55a0c8e9/database",
+      "cache_key": "ca9672e6600175c72d388571605401118ec17d7e51613ef932b9e2ac55a0c8e9",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-08d699b1f7c72c366406/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-08d699b1f7c72c366406/ (do not mount into agent)"
+  }
+}

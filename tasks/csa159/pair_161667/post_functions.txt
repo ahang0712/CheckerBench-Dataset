@@ -1,0 +1,318 @@
+### File: net/tls/tls_sw.c
+```c
+static void tls_decrypt_done(void *data, int err)
+{
+	struct aead_request *aead_req = data;
+	struct crypto_aead *aead = crypto_aead_reqtfm(aead_req);
+	struct scatterlist *sgout = aead_req->dst;
+	struct scatterlist *sgin = aead_req->src;
+	struct tls_sw_context_rx *ctx;
+	struct tls_decrypt_ctx *dctx;
+	struct tls_context *tls_ctx;
+	struct scatterlist *sg;
+	unsigned int pages;
+	struct sock *sk;
+	int aead_size;
+
+	aead_size = sizeof(*aead_req) + crypto_aead_reqsize(aead);
+	aead_size = ALIGN(aead_size, __alignof__(*dctx));
+	dctx = (void *)((u8 *)aead_req + aead_size);
+
+	sk = dctx->sk;
+	tls_ctx = tls_get_ctx(sk);
+	ctx = tls_sw_ctx_rx(tls_ctx);
+
+	/* Propagate if there was an err */
+	if (err) {
+		if (err == -EBADMSG)
+			TLS_INC_STATS(sock_net(sk), LINUX_MIB_TLSDECRYPTERROR);
+		ctx->async_wait.err = err;
+		tls_err_abort(sk, err);
+	}
+
+	/* Free the destination pages if skb was not decrypted inplace */
+	if (sgout != sgin) {
+		/* Skip the first S/G entry as it points to AAD */
+		for_each_sg(sg_next(sgout), sg, UINT_MAX, pages) {
+			if (!sg)
+				break;
+			put_page(sg_page(sg));
+		}
+	}
+
+	kfree(aead_req);
+
+	if (atomic_dec_and_test(&ctx->decrypt_pending))
+		complete(&ctx->async_wait.completion);
+}
+
+static int tls_decrypt_async_wait(struct tls_sw_context_rx *ctx)
+{
+	if (!atomic_dec_and_test(&ctx->decrypt_pending))
+		crypto_wait_req(-EINPROGRESS, &ctx->async_wait);
+	atomic_inc(&ctx->decrypt_pending);
+
+	return ctx->async_wait.err;
+}
+
+static int tls_do_decryption(struct sock *sk,
+			     struct scatterlist *sgin,
+			     struct scatterlist *sgout,
+			     char *iv_recv,
+			     size_t data_len,
+			     struct aead_request *aead_req,
+			     struct tls_decrypt_arg *darg)
+{
+	struct tls_context *tls_ctx = tls_get_ctx(sk);
+	struct tls_prot_info *prot = &tls_ctx->prot_info;
+	struct tls_sw_context_rx *ctx = tls_sw_ctx_rx(tls_ctx);
+	int ret;
+
+	aead_request_set_tfm(aead_req, ctx->aead_recv);
+	aead_request_set_ad(aead_req, prot->aad_size);
+	aead_request_set_crypt(aead_req, sgin, sgout,
+			       data_len + prot->tag_size,
+			       (u8 *)iv_recv);
+
+	if (darg->async) {
+		aead_request_set_callback(aead_req,
+					  CRYPTO_TFM_REQ_MAY_BACKLOG,
+					  tls_decrypt_done, aead_req);
+		DEBUG_NET_WARN_ON_ONCE(atomic_read(&ctx->decrypt_pending) < 1);
+		atomic_inc(&ctx->decrypt_pending);
+	} else {
+		aead_request_set_callback(aead_req,
+					  CRYPTO_TFM_REQ_MAY_BACKLOG,
+					  crypto_req_done, &ctx->async_wait);
+	}
+
+	ret = crypto_aead_decrypt(aead_req);
+	if (ret == -EINPROGRESS) {
+		if (darg->async)
+			return 0;
+
+		ret = crypto_wait_req(ret, &ctx->async_wait);
+	}
+	darg->async = false;
+
+	return ret;
+}
+
+static void tls_encrypt_done(void *data, int err)
+{
+	struct tls_sw_context_tx *ctx;
+	struct tls_context *tls_ctx;
+	struct tls_prot_info *prot;
+	struct tls_rec *rec = data;
+	struct scatterlist *sge;
+	struct sk_msg *msg_en;
+	bool ready = false;
+	struct sock *sk;
+
+	msg_en = &rec->msg_encrypted;
+
+	sk = rec->sk;
+	tls_ctx = tls_get_ctx(sk);
+	prot = &tls_ctx->prot_info;
+	ctx = tls_sw_ctx_tx(tls_ctx);
+
+	sge = sk_msg_elem(msg_en, msg_en->sg.curr);
+	sge->offset -= prot->prepend_size;
+	sge->length += prot->prepend_size;
+
+	/* Check if error is previously set on socket */
+	if (err || sk->sk_err) {
+		rec = NULL;
+
+		/* If err is already set on socket, return the same code */
+		if (sk->sk_err) {
+			ctx->async_wait.err = -sk->sk_err;
+		} else {
+			ctx->async_wait.err = err;
+			tls_err_abort(sk, err);
+		}
+	}
+
+	if (rec) {
+		struct tls_rec *first_rec;
+
+		/* Mark the record as ready for transmission */
+		smp_store_mb(rec->tx_ready, true);
+
+		/* If received record is at head of tx_list, schedule tx */
+		first_rec = list_first_entry(&ctx->tx_list,
+					     struct tls_rec, list);
+		if (rec == first_rec)
+			ready = true;
+	}
+
+	if (atomic_dec_and_test(&ctx->encrypt_pending))
+		complete(&ctx->async_wait.completion);
+
+	if (!ready)
+		return;
+
+	/* Schedule the transmission */
+	if (!test_and_set_bit(BIT_TX_SCHEDULED, &ctx->tx_bitmask))
+		schedule_delayed_work(&ctx->tx_work.work, 1);
+}
+
+static int tls_encrypt_async_wait(struct tls_sw_context_tx *ctx)
+{
+	if (!atomic_dec_and_test(&ctx->encrypt_pending))
+		crypto_wait_req(-EINPROGRESS, &ctx->async_wait);
+	atomic_inc(&ctx->encrypt_pending);
+
+	return ctx->async_wait.err;
+}
+
+static int tls_do_encryption(struct sock *sk,
+			     struct tls_context *tls_ctx,
+			     struct tls_sw_context_tx *ctx,
+			     struct aead_request *aead_req,
+			     size_t data_len, u32 start)
+{
+	struct tls_prot_info *prot = &tls_ctx->prot_info;
+	struct tls_rec *rec = ctx->open_rec;
+	struct sk_msg *msg_en = &rec->msg_encrypted;
+	struct scatterlist *sge = sk_msg_elem(msg_en, start);
+	int rc, iv_offset = 0;
+
+	/* For CCM based ciphers, first byte of IV is a constant */
+	switch (prot->cipher_type) {
+	case TLS_CIPHER_AES_CCM_128:
+		rec->iv_data[0] = TLS_AES_CCM_IV_B0_BYTE;
+		iv_offset = 1;
+		break;
+	case TLS_CIPHER_SM4_CCM:
+		rec->iv_data[0] = TLS_SM4_CCM_IV_B0_BYTE;
+		iv_offset = 1;
+		break;
+	}
+
+	memcpy(&rec->iv_data[iv_offset], tls_ctx->tx.iv,
+	       prot->iv_size + prot->salt_size);
+
+	tls_xor_iv_with_seq(prot, rec->iv_data + iv_offset,
+			    tls_ctx->tx.rec_seq);
+
+	sge->offset += prot->prepend_size;
+	sge->length -= prot->prepend_size;
+
+	msg_en->sg.curr = start;
+
+	aead_request_set_tfm(aead_req, ctx->aead_send);
+	aead_request_set_ad(aead_req, prot->aad_size);
+	aead_request_set_crypt(aead_req, rec->sg_aead_in,
+			       rec->sg_aead_out,
+			       data_len, rec->iv_data);
+
+	aead_request_set_callback(aead_req, CRYPTO_TFM_REQ_MAY_BACKLOG,
+				  tls_encrypt_done, rec);
+
+	/* Add the record in tx_list */
+	list_add_tail((struct list_head *)&rec->list, &ctx->tx_list);
+	DEBUG_NET_WARN_ON_ONCE(atomic_read(&ctx->encrypt_pending) < 1);
+	atomic_inc(&ctx->encrypt_pending);
+
+	rc = crypto_aead_encrypt(aead_req);
+	if (!rc || rc != -EINPROGRESS) {
+		atomic_dec(&ctx->encrypt_pending);
+		sge->offset -= prot->prepend_size;
+		sge->length += prot->prepend_size;
+	}
+
+	if (!rc) {
+		WRITE_ONCE(rec->tx_ready, true);
+	} else if (rc != -EINPROGRESS) {
+		list_del(&rec->list);
+		return rc;
+	}
+
+	/* Unhook the record from context if encryption is not failure */
+	ctx->open_rec = NULL;
+	tls_advance_record_sn(sk, prot, &tls_ctx->tx);
+	return rc;
+}
+
+static int tls_split_open_record(struct sock *sk, struct tls_rec *from,
+				 struct tls_rec **to, struct sk_msg *msg_opl,
+				 struct sk_msg *msg_oen, u32 split_point,
+				 u32 tx_overhead_size, u32 *orig_end)
+{
+	u32 i, j, bytes = 0, apply = msg_opl->apply_bytes;
+	struct scatterlist *sge, *osge, *nsge;
+	u32 orig_size = msg_opl->sg.size;
+	struct scatterlist tmp = { };
+	struct sk_msg *msg_npl;
+	struct tls_rec *new;
+	int ret;
+
+	new = tls_get_rec(sk);
+	if (!new)
+		return -ENOMEM;
+	ret = sk_msg_alloc(sk, &new->msg_encrypted, msg_opl->sg.size +
+			   tx_overhead_size, 0);
+	if (ret < 0) {
+		tls_free_rec(sk, new);
+		return ret;
+	}
+
+	*orig_end = msg_opl->sg.end;
+	i = msg_opl->sg.start;
+	sge = sk_msg_elem(msg_opl, i);
+	while (apply && sge->length) {
+		if (sge->length > apply) {
+			u32 len = sge->length - apply;
+
+			get_page(sg_page(sge));
+			sg_set_page(&tmp, sg_page(sge), len,
+				    sge->offset + apply);
+			sge->length = apply;
+			bytes += apply;
+			apply = 0;
+		} else {
+			apply -= sge->length;
+			bytes += sge->length;
+		}
+
+		sk_msg_iter_var_next(i);
+		if (i == msg_opl->sg.end)
+			break;
+		sge = sk_msg_elem(msg_opl, i);
+	}
+
+	msg_opl->sg.end = i;
+	msg_opl->sg.curr = i;
+	msg_opl->sg.copybreak = 0;
+	msg_opl->apply_bytes = 0;
+	msg_opl->sg.size = bytes;
+
+	msg_npl = &new->msg_plaintext;
+	msg_npl->apply_bytes = apply;
+	msg_npl->sg.size = orig_size - bytes;
+
+	j = msg_npl->sg.start;
+	nsge = sk_msg_elem(msg_npl, j);
+	if (tmp.length) {
+		memcpy(nsge, &tmp, sizeof(*nsge));
+		sk_msg_iter_var_next(j);
+		nsge = sk_msg_elem(msg_npl, j);
+	}
+
+	osge = sk_msg_elem(msg_opl, i);
+	while (osge->length) {
+		memcpy(nsge, osge, sizeof(*nsge));
+		sg_unmark_end(nsge);
+		sk_msg_iter_var_next(i);
+		sk_msg_iter_var_next(j);
+		if (i == *orig_end)
+			break;
+		osge = sk_msg_elem(msg_opl, i);
+		nsge = sk_msg_elem(msg_npl, j);
+	}
+
+	msg_npl->sg.e
+
+// ... (1506 more chars)
+```

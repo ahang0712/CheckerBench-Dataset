@@ -1,0 +1,85 @@
+diff --git a/.travis.yml b/.travis.yml
+index 1975b26..b7b5b14 100644
+--- a/.travis.yml
++++ b/.travis.yml
+@@ -1,17 +1,30 @@
+ language: python
+ python:
+   - 3.5
+-env:
+-  - TOX_ENV=py26
+-  - TOX_ENV=py27
+-  - TOX_ENV=py32
+-  - TOX_ENV=py33
+-  - TOX_ENV=py34
+-  - TOX_ENV=py35
+-  - TOX_ENV=pypy
+-  - TOX_ENV=pypy3
+-  - JYTHON=true
++matrix:
++  fast_finish: true
++  include:
++    - python: 3.5
++      env: TOX_ENV=py35
++    - python: 3.4
++      env: TOX_ENV=py34
++    - python: 3.3
++      env: TOX_ENV=py33
++    - python: 3.2
++      env: TOX_ENV=py32
++    - python: 2.7
++      env: TOX_ENV=py27
++    - python: 2.6
++      env: TOX_ENV=py26
++    - python: pypy
++      env: TOX_ENV=pypy
++    - python: pypy3
++      env: TOX_ENV=pypy3
++    - python: 3.5
++      env: $JYTHON=true
+ install:
++  - if [ $TOX_ENV = "py32" ]; then travis_retry pip install "virtualenv<14.0.0" "tox<1.8.0"; fi
++  - if [ $TOX_ENV = "pypy3" ]; then travis_retry pip install "virtualenv<14.0.0" "tox<1.8.0"; fi
+   - if [ -z "$JYTHON" ]; then pip install codecov; fi
+   - if [ "$TOX_ENV" ]; then travis_retry pip install "virtualenv<14.0.0" tox; fi
+ before_install:
+@@ -22,4 +35,4 @@ script:
+   - if [ "$JYTHON" ]; then travis_retry jython setup.py test; fi
+   - if [ "$TOX_ENV" ]; then tox -e $TOX_ENV; fi
+ after_success:
+-  - codecov
+\ No newline at end of file
++  - codecov
+diff --git a/pyanyapi/interfaces.py b/pyanyapi/interfaces.py
+index 698c637..c0914b2 100644
+--- a/pyanyapi/interfaces.py
++++ b/pyanyapi/interfaces.py
+@@ -274,7 +274,7 @@ class YAMLInterface(DictInterface):
+ 
+     def perform_parsing(self):
+         try:
+-            return yaml.load(self.content)
++            return yaml.safe_load(self.content)
+         except yaml.error.YAMLError:
+             raise ResponseParseError(self._error_message, self.content)
+ 
+diff --git a/tests/test_parsers.py b/tests/test_parsers.py
+index 38223e2..4958b21 100644
+--- a/tests/test_parsers.py
++++ b/tests/test_parsers.py
+@@ -63,6 +63,15 @@ def test_yaml_parser_error():
+         parsed.test
+ 
+ 
++def test_yaml_parser_vulnerability():
++    """
++    In case of usage of yaml.load `test` value will be equal to 0.
++    """
++    parsed = YAMLParser({'test': 'container > test'}).parse('!!python/object/apply:os.system ["exit 0"]')
++    with pytest.raises(ResponseParseError):
++        parsed.test
++
++
+ @lxml_is_supported
+ @pytest.mark.parametrize(
+     'settings', (

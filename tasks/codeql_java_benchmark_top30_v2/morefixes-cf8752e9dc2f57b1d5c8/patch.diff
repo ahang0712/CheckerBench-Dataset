@@ -1,0 +1,57 @@
+diff --git a/src/main/java/io/airlift/compress/v3/lz4/Lz4RawDecompressor.java b/src/main/java/io/airlift/compress/v3/lz4/Lz4RawDecompressor.java
+index 8cb036e..4ad7c1e 100644
+--- a/src/main/java/io/airlift/compress/v3/lz4/Lz4RawDecompressor.java
++++ b/src/main/java/io/airlift/compress/v3/lz4/Lz4RawDecompressor.java
+@@ -114,7 +114,7 @@ final class Lz4RawDecompressor
+             input += SIZE_OF_SHORT;
+ 
+             long matchAddress = output - offset;
+-            if (matchAddress < outputAddress) {
++            if (matchAddress < outputAddress || matchAddress >= output) {
+                 throw new MalformedInputException(input - inputAddress, "offset outside destination buffer");
+             }
+ 
+diff --git a/src/test/java/io/airlift/compress/v3/lz4/AbstractTestLz4.java b/src/test/java/io/airlift/compress/v3/lz4/AbstractTestLz4.java
+index bcadf1e..de09e48 100644
+--- a/src/test/java/io/airlift/compress/v3/lz4/AbstractTestLz4.java
++++ b/src/test/java/io/airlift/compress/v3/lz4/AbstractTestLz4.java
+@@ -63,6 +63,6 @@ public abstract class AbstractTestLz4
+         byte[] data = buffer.toByteArray();
+ 
+         assertThatThrownBy(() -> getDecompressor().decompress(data, 0, data.length, new byte[2048], 0, 2048))
+-                .hasMessageMatching("Malformed input.*|Unknown error occurred.*");
++                .hasMessageMatching("Malformed input.*|Unknown error occurred.*|offset outside destination buffer.*");
+     }
+ }
+diff --git a/src/test/java/io/airlift/compress/v3/lz4/TestLz4.java b/src/test/java/io/airlift/compress/v3/lz4/TestLz4.java
+index 33c7c88..8a3b5a4 100644
+--- a/src/test/java/io/airlift/compress/v3/lz4/TestLz4.java
++++ b/src/test/java/io/airlift/compress/v3/lz4/TestLz4.java
+@@ -15,9 +15,13 @@ package io.airlift.compress.v3.lz4;
+ 
+ import io.airlift.compress.v3.Compressor;
+ import io.airlift.compress.v3.Decompressor;
++import io.airlift.compress.v3.MalformedInputException;
+ import io.airlift.compress.v3.thirdparty.JPountzLz4Compressor;
+ import io.airlift.compress.v3.thirdparty.JPountzLz4Decompressor;
+ import net.jpountz.lz4.LZ4Factory;
++import org.junit.jupiter.api.Test;
++
++import static org.assertj.core.api.Assertions.assertThatThrownBy;
+ 
+ class TestLz4
+         extends AbstractTestLz4
+@@ -45,4 +49,13 @@ class TestLz4
+     {
+         return new JPountzLz4Decompressor(LZ4Factory.fastestInstance());
+     }
++
++    @Test
++    void testZeroMatchOffset()
++    {
++        byte[] compressed = new byte[] {15, 0, 0, -1, -1, -118, 49, -1, -1, 0};
++        assertThatThrownBy(() -> getDecompressor().decompress(compressed, 0, compressed.length, new byte[1024], 0, 1024))
++                .isInstanceOf(MalformedInputException.class)
++                .hasMessageContaining("offset outside destination buffer: offset=3");
++    }
+ }

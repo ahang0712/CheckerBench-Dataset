@@ -1,0 +1,170 @@
+### File: drivers/net/ethernet/mellanox/mlx5/core/lib/ipsec_fs_roce.c
+```c
+static int ipsec_fs_roce_tx_mpv_create(struct mlx5_core_dev *mdev,
+				       struct mlx5_ipsec_fs *ipsec_roce,
+				       struct mlx5_flow_table *pol_ft,
+				       u32 *in, bool from_event)
+{
+	struct mlx5_devcom_comp_dev *tmp = NULL;
+	struct mlx5_ipsec_tx_roce *roce;
+	struct mlx5e_priv *peer_priv;
+	int err;
+
+	if (!mlx5_devcom_for_each_peer_begin(*ipsec_roce->devcom))
+		return -EOPNOTSUPP;
+
+	peer_priv = mlx5_devcom_get_next_peer_data(*ipsec_roce->devcom, &tmp);
+	if (!peer_priv) {
+		err = -EOPNOTSUPP;
+		goto release_peer;
+	}
+
+	roce = &ipsec_roce->tx;
+
+	err = ipsec_fs_roce_tx_mpv_create_ft(mdev, roce, pol_ft, peer_priv, from_event);
+	if (err) {
+		mlx5_core_err(mdev, "Fail to create RoCE IPsec tables err=%d\n", err);
+		goto release_peer;
+	}
+
+	err = ipsec_fs_roce_tx_mpv_create_group_rules(mdev, roce, pol_ft, in);
+	if (err) {
+		mlx5_core_err(mdev, "Fail to create RoCE IPsec tx group/rule err=%d\n", err);
+		goto destroy_tables;
+	}
+
+	mlx5_devcom_for_each_peer_end(*ipsec_roce->devcom);
+	return 0;
+
+destroy_tables:
+	mlx5_destroy_flow_table(roce->ft);
+	mlx5_destroy_flow_table(roce->goto_alias_ft);
+	mlx5_cmd_alias_obj_destroy(peer_priv->mdev, roce->alias_id,
+				   MLX5_GENERAL_OBJECT_TYPES_FLOW_TABLE_ALIAS);
+release_peer:
+	mlx5_devcom_for_each_peer_end(*ipsec_roce->devcom);
+	return err;
+}
+
+static int ipsec_fs_roce_rx_mpv_create(struct mlx5_core_dev *mdev,
+				       struct mlx5_ipsec_fs *ipsec_roce,
+				       struct mlx5_flow_namespace *ns,
+				       u32 family, u32 level, u32 prio)
+{
+	struct mlx5_flow_namespace *roce_ns, *nic_ns;
+	struct mlx5_flow_table_attr ft_attr = {};
+	struct mlx5_devcom_comp_dev *tmp = NULL;
+	struct mlx5_ipsec_rx_roce *roce;
+	struct mlx5_flow_table next_ft;
+	struct mlx5_flow_table *ft;
+	struct mlx5_flow_group *g;
+	struct mlx5e_priv *peer_priv;
+	int ix = 0;
+	u32 *in;
+	int err;
+
+	roce = (family == AF_INET) ? &ipsec_roce->ipv4_rx :
+				     &ipsec_roce->ipv6_rx;
+
+	if (!mlx5_devcom_for_each_peer_begin(*ipsec_roce->devcom))
+		return -EOPNOTSUPP;
+
+	peer_priv = mlx5_devcom_get_next_peer_data(*ipsec_roce->devcom, &tmp);
+	if (!peer_priv) {
+		err = -EOPNOTSUPP;
+		goto release_peer;
+	}
+
+	roce_ns = mlx5_get_flow_namespace(peer_priv->mdev, MLX5_FLOW_NAMESPACE_RDMA_RX_IPSEC);
+	if (!roce_ns) {
+		err = -EOPNOTSUPP;
+		goto release_peer;
+	}
+
+	nic_ns = mlx5_get_flow_namespace(peer_priv->mdev, MLX5_FLOW_NAMESPACE_KERNEL);
+	if (!nic_ns) {
+		err = -EOPNOTSUPP;
+		goto release_peer;
+	}
+
+	in = kvzalloc(MLX5_ST_SZ_BYTES(create_flow_group_in), GFP_KERNEL);
+	if (!in) {
+		err = -ENOMEM;
+		goto release_peer;
+	}
+
+	ft_attr.level = (family == AF_INET) ? MLX5_IPSEC_RX_IPV4_FT_LEVEL :
+					      MLX5_IPSEC_RX_IPV6_FT_LEVEL;
+	ft_attr.max_fte = 1;
+	ft = mlx5_create_flow_table(roce_ns, &ft_attr);
+	if (IS_ERR(ft)) {
+		err = PTR_ERR(ft);
+		mlx5_core_err(mdev, "Fail to create RoCE IPsec rx ft at rdma master err=%d\n", err);
+		goto free_in;
+	}
+
+	roce->ft_rdma = ft;
+
+	ft_attr.max_fte = 1;
+	ft_attr.prio = prio;
+	ft_attr.level = level + 2;
+	ft = mlx5_create_flow_table(nic_ns, &ft_attr);
+	if (IS_ERR(ft)) {
+		err = PTR_ERR(ft);
+		mlx5_core_err(mdev, "Fail to create RoCE IPsec rx ft at NIC master err=%d\n", err);
+		goto destroy_ft_rdma;
+	}
+	roce->nic_master_ft = ft;
+
+	MLX5_SET_CFG(in, start_flow_index, ix);
+	ix += 1;
+	MLX5_SET_CFG(in, end_flow_index, ix - 1);
+	g = mlx5_create_flow_group(roce->nic_master_ft, in);
+	if (IS_ERR(g)) {
+		err = PTR_ERR(g);
+		mlx5_core_err(mdev, "Fail to create RoCE IPsec rx group aliased err=%d\n", err);
+		goto destroy_nic_master_ft;
+	}
+	roce->nic_master_group = g;
+
+	err = ipsec_fs_create_aliased_ft(peer_priv->mdev, mdev, roce->nic_master_ft,
+					 &roce->alias_id, roce->key, false);
+	if (err) {
+		mlx5_core_err(mdev, "Fail to create RoCE IPsec rx alias FT err=%d\n", err);
+		goto destroy_group;
+	}
+
+	next_ft.id = roce->alias_id;
+	ft_attr.max_fte = 1;
+	ft_attr.prio = prio;
+	ft_attr.level = roce->ft->level + 1;
+	ft_attr.flags = MLX5_FLOW_TABLE_UNMANAGED;
+	ft_attr.next_ft = &next_ft;
+	ft = mlx5_create_flow_table(ns, &ft_attr);
+	if (IS_ERR(ft)) {
+		err = PTR_ERR(ft);
+		mlx5_core_err(mdev, "Fail to create RoCE IPsec rx ft at NIC slave err=%d\n", err);
+		goto destroy_alias;
+	}
+	roce->goto_alias_ft = ft;
+
+	kvfree(in);
+	mlx5_devcom_for_each_peer_end(*ipsec_roce->devcom);
+	return 0;
+
+destroy_alias:
+	mlx5_cmd_alias_obj_destroy(mdev, roce->alias_id,
+				   MLX5_GENERAL_OBJECT_TYPES_FLOW_TABLE_ALIAS);
+destroy_group:
+	mlx5_destroy_flow_group(roce->nic_master_group);
+destroy_nic_master_ft:
+	mlx5_destroy_flow_table(roce->nic_master_ft);
+destroy_ft_rdma:
+	mlx5_destroy_flow_table(roce->ft_rdma);
+free_in:
+	kvfree(in);
+release_peer:
+	mlx5_devcom_for_each_peer_end(*ipsec_roce->devcom);
+	return err;
+}
+```

@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "fbf7085b3ad1c7cc0677834c90f985f1b4f77a33",
+  "after_commit": "60cf6206a1f513512f5d73fa4d3dbbcad2e7dcd6",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/55d42a0c3f9ccd07c199e0ddbe1ba87572d30074/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/55d42a0c3f9ccd07c199e0ddbe1ba87572d30074/compile_commands.json",
+  "changed_files": [
+    "net/vmw_vsock/virtio_transport_common.c"
+  ],
+  "commit_message": "virtio/vsock: Improve MSG_ZEROCOPY error handling\n\nAdd a missing kfree_skb() to prevent memory leaks.\n\nFixes: 581512a6dc93 (\"vsock/virtio: MSG_ZEROCOPY flag support\")\nReviewed-by: Stefano Garzarella <sgarzare@redhat.com>\nSigned-off-by: Michal Luczaj <mhal@rbox.co>\nAcked-by: Arseniy Krasnov <avkrasnov@salutedevices.com>\nSigned-off-by: Paolo Abeni <pabeni@redhat.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

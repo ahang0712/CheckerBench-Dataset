@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-e73df8c8998a1ddc180a",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-e73df8c8998a1ddc180a",
+    "project_id": "pyvul__fonttools__fonttools",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "Lib/fontTools/subset/svg.py"
+  ],
+  "patch_units": {
+    "before": [
+      "function:subset_glyphs"
+    ],
+    "after": [
+      "function:subset_glyphs"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/48cd017d8b697d985212d9a7152bb65fce6592d1ac17bd9f9502723c2e11747b/database",
+      "cache_key": "48cd017d8b697d985212d9a7152bb65fce6592d1ac17bd9f9502723c2e11747b",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/f5e2fbebb52114085844644a39edc259052bf22a9d38175fb541e9cee0576c08/database",
+      "cache_key": "f5e2fbebb52114085844644a39edc259052bf22a9d38175fb541e9cee0576c08",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/85e9b83255ff1f73333277d259af5addfd43ae511ccc753cc90d97b2a9dac12a/database",
+      "cache_key": "85e9b83255ff1f73333277d259af5addfd43ae511ccc753cc90d97b2a9dac12a",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-e73df8c8998a1ddc180a/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-e73df8c8998a1ddc180a/ (do not mount into agent)"
+  }
+}

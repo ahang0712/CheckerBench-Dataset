@@ -1,0 +1,64 @@
+### File: fs/nilfs2/segment.c
+```c
+static size_t nilfs_lookup_dirty_data_buffers(struct inode *inode,
+					      struct list_head *listp,
+					      size_t nlimit,
+					      loff_t start, loff_t end)
+{
+	struct address_space *mapping = inode->i_mapping;
+	struct folio_batch fbatch;
+	pgoff_t index = 0, last = ULONG_MAX;
+	size_t ndirties = 0;
+	int i;
+
+	if (unlikely(start != 0 || end != LLONG_MAX)) {
+		/*
+		 * A valid range is given for sync-ing data pages. The
+		 * range is rounded to per-page; extra dirty buffers
+		 * may be included if blocksize < pagesize.
+		 */
+		index = start >> PAGE_SHIFT;
+		last = end >> PAGE_SHIFT;
+	}
+	folio_batch_init(&fbatch);
+ repeat:
+	if (unlikely(index > last) ||
+	      !filemap_get_folios_tag(mapping, &index, last,
+		      PAGECACHE_TAG_DIRTY, &fbatch))
+		return ndirties;
+
+	for (i = 0; i < folio_batch_count(&fbatch); i++) {
+		struct buffer_head *bh, *head;
+		struct folio *folio = fbatch.folios[i];
+
+		folio_lock(folio);
+		if (unlikely(folio->mapping != mapping)) {
+			/* Exclude folios removed from the address space */
+			folio_unlock(folio);
+			continue;
+		}
+		head = folio_buffers(folio);
+		if (!head)
+			head = create_empty_buffers(folio,
+					i_blocksize(inode), 0);
+		folio_unlock(folio);
+
+		bh = head;
+		do {
+			if (!buffer_dirty(bh) || buffer_async_write(bh))
+				continue;
+			get_bh(bh);
+			list_add_tail(&bh->b_assoc_buffers, listp);
+			ndirties++;
+			if (unlikely(ndirties >= nlimit)) {
+				folio_batch_release(&fbatch);
+				cond_resched();
+				return ndirties;
+			}
+		} while (bh = bh->b_this_page, bh != head);
+	}
+	folio_batch_release(&fbatch);
+	cond_resched();
+	goto repeat;
+}
+```

@@ -1,0 +1,58 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-bf4aded7c76d99f9ef84",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-bf4aded7c76d99f9ef84",
+    "project_id": "pyvul__paramiko__paramiko",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "paramiko/pkey.py",
+    "tests/test_pkey.py"
+  ],
+  "patch_units": {
+    "before": [
+      "class:PKey",
+      "function:PKey._write_private_key_file",
+      "module:<module>@26",
+      "module:<module>@42",
+      "module:<module>@43"
+    ],
+    "after": [
+      "class:PKey",
+      "function:PKey._write_private_key_file",
+      "class:KeyTest",
+      "function:KeyTest._test_keyfile_race",
+      "function:KeyTest.test_new_keyfiles_avoid_file_descriptor_race_on_chmod",
+      "function:KeyTest.test_existing_keyfiles_still_work_ok",
+      "function:KeyTest.test_new_keyfiles_avoid_descriptor_race_integration",
+      "module:<module>@26",
+      "module:<module>@40",
+      "module:<module>@44"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/473a61d6d5f4fbd16aa0679010715d7fbf101331c0a698aeb81ad0f0d1912d9f/database",
+      "cache_key": "473a61d6d5f4fbd16aa0679010715d7fbf101331c0a698aeb81ad0f0d1912d9f",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/dd0b49ac6eafbab3961d79b42dd7811c8f730a3ed3aa1ed448100c839dc8f157/database",
+      "cache_key": "dd0b49ac6eafbab3961d79b42dd7811c8f730a3ed3aa1ed448100c839dc8f157",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/3101c97a8e7df02eac3c6652b60fa2432b3a78a3e58af20e9ac886e123832167/database",
+      "cache_key": "3101c97a8e7df02eac3c6652b60fa2432b3a78a3e58af20e9ac886e123832167",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-bf4aded7c76d99f9ef84/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-bf4aded7c76d99f9ef84/ (do not mount into agent)"
+  }
+}

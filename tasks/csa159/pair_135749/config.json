@@ -1,0 +1,20 @@
+{
+  "project_id": "verdammelt_tnef",
+  "before_commit": "c5044689e50039635e7700fe2472fd632ac77176",
+  "after_commit": "8dccf79857ceeb7a6d3e42c1e762e7b865d5344d",
+  "repo_path": "/workspace/repo/verdammelt/tnef",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/verdammelt_tnef/99c70157998ff5f3c3e0fd1669c7cffdaaa32048/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/verdammelt_tnef/99c70157998ff5f3c3e0fd1669c7cffdaaa32048/compile_commands.json",
+  "changed_files": [
+    "src/file.c",
+    "src/tnef.c"
+  ],
+  "commit_message": "Check types to avoid invalid reads/writes.",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

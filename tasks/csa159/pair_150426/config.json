@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "711a9c018ad252b2807f85d44e1267b595644f9b",
+  "after_commit": "c623b63580880cc742255eaed3d79804c1b91143",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/254f49634ee16a731174d2ae34bc50bd5f45e731/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/254f49634ee16a731174d2ae34bc50bd5f45e731/compile_commands.json",
+  "changed_files": [
+    "drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c"
+  ],
+  "commit_message": "wifi: brcmfmac: Fix potential use-after-free issue when stopping watchdog task\n\nWatchdog task might end between send_sig() and kthread_stop() calls, what\nresults in the use-after-free issue. Fix this by increasing watchdog task\nreference count before calling send_sig() and dropping it by switching to\nkthread_stop_put().\n\nCc: stable@vger.kernel.org\nFixes: 373c83a801f1 (\"brcmfmac: stop watchdog before detach and free everything\")\nFixes: a9ffda88be74 (\"brcm80211: fmac: abstract bus_stop interface function pointer\")\nSigned-off-by: Marek Szyprowski <m.szyprowski@samsung.com>\nAcked-by: Arend van Spriel <arend.vanspriel@broadcom.com>\nLink: https://patch.msgid.link/20260416093339.2066829-1-m.szyprowski@samsung.com\nSigned-off-by: Johannes Berg <johannes.berg@intel.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

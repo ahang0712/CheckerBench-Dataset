@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-516c6c53716bba29b7f0",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-516c6c53716bba29b7f0",
+    "project_id": "morefixes__decidim__decidim",
+    "language": "javascript",
+    "backend": "codeql"
+  },
+  "changed_javascript_files": [
+    "decidim-templates/app/packs/src/decidim/templates/admin/choose_template.js"
+  ],
+  "patch_units": {
+    "before": [
+      "decidim-templates/app/packs/src/decidim/templates/admin/choose_template.js"
+    ],
+    "after": [
+      "decidim-templates/app/packs/src/decidim/templates/admin/choose_template.js"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/e6fb155cac938fbb0700049d21ae52cf2a41f6f8978ae8455a304f8da69febd6/database",
+      "cache_key": "e6fb155cac938fbb0700049d21ae52cf2a41f6f8978ae8455a304f8da69febd6",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/77643cec26434a9e6cadee8367ea5a550e6dc4a838d99c690dc998b3c67feed6/database",
+      "cache_key": "77643cec26434a9e6cadee8367ea5a550e6dc4a838d99c690dc998b3c67feed6",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/b206adeb54d8d473f7a805116f3f641534f6cb5b63ef1fc80f342cb5e8dc35a9/database",
+      "cache_key": "b206adeb54d8d473f7a805116f3f641534f6cb5b63ef1fc80f342cb5e8dc35a9",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-516c6c53716bba29b7f0/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-516c6c53716bba29b7f0/ (do not mount into agent)"
+  }
+}

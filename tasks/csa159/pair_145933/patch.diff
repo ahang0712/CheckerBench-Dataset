@@ -1,0 +1,13 @@
+diff --git a/drivers/rtc/rtc-tps6594.c b/drivers/rtc/rtc-tps6594.c
+index e69667634137..7c6246e3f029 100644
+--- a/drivers/rtc/rtc-tps6594.c
++++ b/drivers/rtc/rtc-tps6594.c
+@@ -37,7 +37,7 @@
+ #define MAX_OFFSET (277774)
+ 
+ // Number of ticks per hour
+-#define TICKS_PER_HOUR (32768 * 3600)
++#define TICKS_PER_HOUR (32768 * 3600LL)
+ 
+ // Multiplier for ppb conversions
+ #define PPB_MULT NANO

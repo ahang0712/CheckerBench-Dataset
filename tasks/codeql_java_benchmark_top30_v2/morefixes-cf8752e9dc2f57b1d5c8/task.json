@@ -1,0 +1,50 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-cf8752e9dc2f57b1d5c8",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-cf8752e9dc2f57b1d5c8",
+    "project_id": "morefixes__airlift__aircompressor",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "src/main/java/io/airlift/compress/v3/lz4/Lz4RawDecompressor.java",
+    "src/test/java/io/airlift/compress/v3/lz4/AbstractTestLz4.java",
+    "src/test/java/io/airlift/compress/v3/lz4/TestLz4.java"
+  ],
+  "patch_units": {
+    "before": [
+      "src/main/java/io/airlift/compress/v3/lz4/Lz4RawDecompressor.java",
+      "src/test/java/io/airlift/compress/v3/lz4/AbstractTestLz4.java",
+      "src/test/java/io/airlift/compress/v3/lz4/TestLz4.java"
+    ],
+    "after": [
+      "src/main/java/io/airlift/compress/v3/lz4/Lz4RawDecompressor.java",
+      "src/test/java/io/airlift/compress/v3/lz4/AbstractTestLz4.java",
+      "src/test/java/io/airlift/compress/v3/lz4/TestLz4.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/67175b8ce7e7b48daac73b8fed7df1805a3d54181507d8394ded6d09e1ef85e2/database",
+      "cache_key": "67175b8ce7e7b48daac73b8fed7df1805a3d54181507d8394ded6d09e1ef85e2",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/4210b3c15a8e65e3571c6e72ba6dbb5648fde87fb497f295a1e4b3f39cbbd088/database",
+      "cache_key": "4210b3c15a8e65e3571c6e72ba6dbb5648fde87fb497f295a1e4b3f39cbbd088",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/ba0fa9385c7ecc377c7585844e17d264a264a91c74186316520f3e71bea41bf8/database",
+      "cache_key": "ba0fa9385c7ecc377c7585844e17d264a264a91c74186316520f3e71bea41bf8",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-cf8752e9dc2f57b1d5c8/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-cf8752e9dc2f57b1d5c8/ (do not mount into agent)"
+  }
+}

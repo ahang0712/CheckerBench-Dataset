@@ -1,0 +1,336 @@
+### File: fs/ntfs3/inode.c
+```c
+static struct inode *ntfs_read_mft(struct inode *inode,
+				   const struct cpu_str *name,
+				   const struct MFT_REF *ref)
+{
+	int err = 0;
+	struct ntfs_inode *ni = ntfs_i(inode);
+	struct super_block *sb = inode->i_sb;
+	struct ntfs_sb_info *sbi = sb->s_fs_info;
+	mode_t mode = 0;
+	struct ATTR_STD_INFO5 *std5 = NULL;
+	struct ATTR_LIST_ENTRY *le;
+	struct ATTRIB *attr;
+	bool is_match = false;
+	bool is_root = false;
+	bool is_dir;
+	unsigned long ino = inode->i_ino;
+	u32 rp_fa = 0, asize, t32;
+	u16 roff, rsize, names = 0, links = 0;
+	const struct ATTR_FILE_NAME *fname = NULL;
+	const struct INDEX_ROOT *root;
+	struct REPARSE_DATA_BUFFER rp; // 0x18 bytes
+	u64 t64;
+	struct MFT_REC *rec;
+	struct runs_tree *run;
+	struct timespec64 ts;
+
+	inode->i_op = NULL;
+	/* Setup 'uid' and 'gid' */
+	inode->i_uid = sbi->options->fs_uid;
+	inode->i_gid = sbi->options->fs_gid;
+
+	err = mi_init(&ni->mi, sbi, ino);
+	if (err)
+		goto out;
+
+	if (!sbi->mft.ni && ino == MFT_REC_MFT && !sb->s_root) {
+		t64 = sbi->mft.lbo >> sbi->cluster_bits;
+		t32 = bytes_to_cluster(sbi, MFT_REC_VOL * sbi->record_size);
+		sbi->mft.ni = ni;
+		init_rwsem(&ni->file.run_lock);
+
+		if (!run_add_entry(&ni->file.run, 0, t64, t32, true)) {
+			err = -ENOMEM;
+			goto out;
+		}
+	}
+
+	err = mi_read(&ni->mi, ino == MFT_REC_MFT);
+
+	if (err)
+		goto out;
+
+	rec = ni->mi.mrec;
+
+	if (sbi->flags & NTFS_FLAGS_LOG_REPLAYING) {
+		;
+	} else if (ref->seq != rec->seq) {
+		err = -EINVAL;
+		ntfs_err(sb, "MFT: r=%lx, expect seq=%x instead of %x!", ino,
+			 le16_to_cpu(ref->seq), le16_to_cpu(rec->seq));
+		goto out;
+	} else if (!is_rec_inuse(rec)) {
+		err = -ESTALE;
+		ntfs_err(sb, "Inode r=%x is not in use!", (u32)ino);
+		goto out;
+	}
+
+	if (le32_to_cpu(rec->total) != sbi->record_size) {
+		/* Bad inode? */
+		err = -EINVAL;
+		goto out;
+	}
+
+	if (!is_rec_base(rec)) {
+		err = -EINVAL;
+		goto out;
+	}
+
+	/* Record should contain $I30 root. */
+	is_dir = rec->flags & RECORD_FLAG_DIR;
+
+	/* MFT_REC_MFT is not a dir */
+	if (is_dir && ino == MFT_REC_MFT) {
+		err = -EINVAL;
+		goto out;
+	}
+
+	inode->i_generation = le16_to_cpu(rec->seq);
+
+	/* Enumerate all struct Attributes MFT. */
+	le = NULL;
+	attr = NULL;
+
+	/*
+	 * To reduce tab pressure use goto instead of
+	 * while( (attr = ni_enum_attr_ex(ni, attr, &le, NULL) ))
+	 */
+next_attr:
+	run = NULL;
+	err = -EINVAL;
+	attr = ni_enum_attr_ex(ni, attr, &le, NULL);
+	if (!attr)
+		goto end_enum;
+
+	if (le && le->vcn) {
+		/* This is non primary attribute segment. Ignore if not MFT. */
+		if (ino != MFT_REC_MFT || attr->type != ATTR_DATA)
+			goto next_attr;
+
+		run = &ni->file.run;
+		asize = le32_to_cpu(attr->size);
+		goto attr_unpack_run;
+	}
+
+	roff = attr->non_res ? 0 : le16_to_cpu(attr->res.data_off);
+	rsize = attr->non_res ? 0 : le32_to_cpu(attr->res.data_size);
+	asize = le32_to_cpu(attr->size);
+
+	/*
+	 * Really this check was done in 'ni_enum_attr_ex' -> ... 'mi_enum_attr'.
+	 * There not critical to check this case again
+	 */
+	if (attr->name_len &&
+	    sizeof(short) * attr->name_len + le16_to_cpu(attr->name_off) >
+		    asize)
+		goto out;
+
+	if (attr->non_res) {
+		t64 = le64_to_cpu(attr->nres.alloc_size);
+		if (le64_to_cpu(attr->nres.data_size) > t64 ||
+		    le64_to_cpu(attr->nres.valid_size) > t64)
+			goto out;
+	}
+
+	switch (attr->type) {
+	case ATTR_STD:
+		if (attr->non_res ||
+		    asize < sizeof(struct ATTR_STD_INFO) + roff ||
+		    rsize < sizeof(struct ATTR_STD_INFO))
+			goto out;
+
+		if (std5)
+			goto next_attr;
+
+		std5 = Add2Ptr(attr, roff);
+
+#ifdef STATX_BTIME
+		nt2kernel(std5->cr_time, &ni->i_crtime);
+#endif
+		nt2kernel(std5->a_time, &ts);
+		inode_set_atime_to_ts(inode, ts);
+		nt2kernel(std5->c_time, &ts);
+		inode_set_ctime_to_ts(inode, ts);
+		nt2kernel(std5->m_time, &ts);
+		inode_set_mtime_to_ts(inode, ts);
+
+		ni->std_fa = std5->fa;
+
+		if (asize >= sizeof(struct ATTR_STD_INFO5) + roff &&
+		    rsize >= sizeof(struct ATTR_STD_INFO5))
+			ni->std_security_id = std5->security_id;
+		goto next_attr;
+
+	case ATTR_LIST:
+		if (attr->name_len || le || ino == MFT_REC_LOG)
+			goto out;
+
+		err = ntfs_load_attr_list(ni, attr);
+		if (err)
+			goto out;
+
+		le = NULL;
+		attr = NULL;
+		goto next_attr;
+
+	case ATTR_NAME:
+		if (attr->non_res || asize < SIZEOF_ATTRIBUTE_FILENAME + roff ||
+		    rsize < SIZEOF_ATTRIBUTE_FILENAME)
+			goto out;
+
+		names += 1;
+		fname = Add2Ptr(attr, roff);
+		if (fname->type == FILE_NAME_DOS)
+			goto next_attr;
+
+		links += 1;
+		if (name && name->len == fname->name_len &&
+		    !ntfs_cmp_names_cpu(name, (struct le_str *)&fname->name_len,
+					NULL, false))
+			is_match = true;
+
+		goto next_attr;
+
+	case ATTR_DATA:
+		if (is_dir) {
+			/* Ignore data attribute in dir record. */
+			goto next_attr;
+		}
+
+		if (ino == MFT_REC_BADCLUST && !attr->non_res)
+			goto next_attr;
+
+		if (attr->name_len &&
+		    ((ino != MFT_REC_BADCLUST || !attr->non_res ||
+		      attr->name_len != ARRAY_SIZE(BAD_NAME) ||
+		      memcmp(attr_name(attr), BAD_NAME, sizeof(BAD_NAME))) &&
+		     (ino != MFT_REC_SECURE || !attr->non_res ||
+		      attr->name_len != ARRAY_SIZE(SDS_NAME) ||
+		      memcmp(attr_name(attr), SDS_NAME, sizeof(SDS_NAME))))) {
+			/* File contains stream attribute. Ignore it. */
+			goto next_attr;
+		}
+
+		if (is_attr_sparsed(attr))
+			ni->std_fa |= FILE_ATTRIBUTE_SPARSE_FILE;
+		else
+			ni->std_fa &= ~FILE_ATTRIBUTE_SPARSE_FILE;
+
+		if (is_attr_compressed(attr))
+			ni->std_fa |= FILE_ATTRIBUTE_COMPRESSED;
+		else
+			ni->std_fa &= ~FILE_ATTRIBUTE_COMPRESSED;
+
+		if (is_attr_encrypted(attr))
+			ni->std_fa |= FILE_ATTRIBUTE_ENCRYPTED;
+		else
+			ni->std_fa &= ~FILE_ATTRIBUTE_ENCRYPTED;
+
+		if (!attr->non_res) {
+			ni->i_valid = inode->i_size = rsize;
+			inode_set_bytes(inode, rsize);
+		}
+
+		mode = S_IFREG | (0777 & sbi->options->fs_fmask_inv);
+
+		if (!attr->non_res) {
+			ni->ni_flags |= NI_FLAG_RESIDENT;
+			goto next_attr;
+		}
+
+		inode_set_bytes(inode, attr_ondisk_size(attr));
+
+		ni->i_valid = le64_to_cpu(attr->nres.valid_size);
+		inode->i_size = le64_to_cpu(attr->nres.data_size);
+		if (!attr->nres.alloc_size)
+			goto next_attr;
+
+		run = ino == MFT_REC_BITMAP ? &sbi->used.bitmap.run :
+					      &ni->file.run;
+		break;
+
+	case ATTR_ROOT:
+		if (attr->non_res)
+			goto out;
+
+		root = Add2Ptr(attr, roff);
+
+		if (attr->name_len != ARRAY_SIZE(I30_NAME) ||
+		    memcmp(attr_name(attr), I30_NAME, sizeof(I30_NAME)))
+			goto next_attr;
+
+		if (root->type != ATTR_NAME ||
+		    root->rule != NTFS_COLLATION_TYPE_FILENAME)
+			goto out;
+
+		if (!is_dir)
+			goto next_attr;
+
+		is_root = true;
+		ni->ni_flags |= NI_FLAG_DIR;
+
+		err = indx_init(&ni->dir, sbi, attr, INDEX_MUTEX_I30);
+		if (err)
+			goto out;
+
+		mode = sb->s_root ?
+			       (S_IFDIR | (0777 & sbi->options->fs_dmask_inv)) :
+			       (S_IFDIR | 0777);
+		goto next_attr;
+
+	case ATTR_ALLOC:
+		if (!is_root || attr->name_len != ARRAY_SIZE(I30_NAME) ||
+		    memcmp(attr_name(attr), I30_NAME, sizeof(I30_NAME)))
+			goto next_attr;
+
+		inode->i_size = le64_to_cpu(attr->nres.data_size);
+		ni->i_valid = le64_to_cpu(attr->nres.valid_size);
+		inode_set_bytes(inode, le64_to_cpu(attr->nres.alloc_size));
+
+		run = &ni->dir.alloc_run;
+		break;
+
+	case ATTR_BITMAP:
+		if (ino == MFT_REC_MFT) {
+			if (!attr->non_res)
+				goto out;
+#ifndef CONFIG_NTFS3_64BIT_CLUSTER
+			/* 0x20000000 = 2^32 / 8 */
+			if (le64_to_cpu(attr->nres.alloc_size) >= 0x20000000)
+				goto out;
+#endif
+			run = &sbi->mft.bitmap.run;
+			break;
+		} else if (is_dir && attr->name_len == ARRAY_SIZE(I30_NAME) &&
+			   !memcmp(attr_name(attr), I30_NAME,
+				   sizeof(I30_NAME)) &&
+			   attr->non_res) {
+			run = &ni->dir.bitmap_run;
+			break;
+		}
+		goto next_attr;
+
+	case ATTR_REPARSE:
+		if (attr->name_len)
+			goto next_attr;
+
+		rp_fa = ni_parse_reparse(ni, attr, &rp);
+		switch (rp_fa) {
+		case REPARSE_LINK:
+			/*
+			 * Normal symlink.
+			 * Assume one unicode symbol == one utf8.
+			 */
+			inode->i_size = le16_to_cpu(rp.SymbolicLinkReparseBuffer
+							    .PrintNameLength) /
+					sizeof(u16);
+			ni->i_valid = inode->i_size;
+			/* Clear directory bit. */
+			if (ni->ni_flags & NI_FLAG_DIR) {
+				indx_clear(&ni->dir);
+				memset(&ni->dir, 0, sizeo
+
+// ... (3559 more chars)
+```

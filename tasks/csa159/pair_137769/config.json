@@ -1,0 +1,19 @@
+{
+  "project_id": "qemu_qemu",
+  "before_commit": "933cc4bb3469b82be2a2095523df400973aa4790",
+  "after_commit": "25c01bd19d0e4b66f357618aeefda1ef7a41e21a",
+  "repo_path": "/workspace/repo/qemu/qemu",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/qemu_qemu/6598f0cdad6acc6674c4f060fa46e537228c2c47/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/qemu_qemu/6598f0cdad6acc6674c4f060fa46e537228c2c47/compile_commands.json",
+  "changed_files": [
+    "net/net.c"
+  ],
+  "commit_message": "net: drop too large packet early\n\nWe try to detect and drop too large packet (>INT_MAX) in 1592a9947036\n(\"net: ignore packet size greater than INT_MAX\") during packet\ndelivering. Unfortunately, this is not sufficient as we may hit\nanother integer overflow when trying to queue such large packet in\nqemu_net_queue_append_iov():\n\n- size of the allocation may overflow on 32bit\n- packet->size is integer which may overflow even on 64bit\n\nFixing this by moving the check to qemu_sendv_packet_async() which is\nthe entrance of all networking codes and reduce the limit to\nNET_BUFSIZE to be more conservative. This works since:\n\n- For the callers that call qemu_sendv_packet_async() directly, they\n  only care about if zero is returned to determine whether to prevent\n  the source from producing more packets. A callback will be triggered\n  if peer can accept more then source could be enabled. This is\n  usually used by high speed networking implementation like virtio-net\n  or netmap.\n- For the callers that call qemu_sendv_packet() that calls\n  qemu_sendv_packet_async() indirectly, they often ignore the return\n  value. In this case qemu will just the drop packets if peer can't\n  receive.\n\nQemu will copy the packet if it was queued. So it was safe for both\nkinds of the callers to assume the packet was sent.\n\nSince we move the check from qemu_deliver_packet_iov() to\nqemu_sendv_packet_async(), it would be safer to make\nqemu_deliver_packet_iov() static to prevent any external user in the\nfuture.\n\nThis is a revised patch of CVE-2018-17963.\n\nCc: qemu-stable@nongnu.org\nCc: Li Qiang <liq3ea@163.com>\nFixes: 1592a9947036 (\"net: ignore packet size greater than INT_MAX\")\nReported-by: Li Qiang <liq3ea@gmail.com>\nReviewed-by: Li Qiang <liq3ea@gmail.com>\nSigned-off-by: Jason Wang <jasowang@redhat.com>\nReviewed-by: Thomas Huth <thuth@redhat.com>\nMessage-id: 20181204035347.6148-2-jasowang@redhat.com\nSigned-off-by: Peter Maydell <peter.maydell@linaro.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

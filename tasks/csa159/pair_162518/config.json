@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "e71ba9452f0b5b2e8dc8aa5445198cd9214a6a62",
+  "after_commit": "2896c93811e39d63a4d9b63ccf12a8fbc226e5e4",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/e71ba9452f0b5b2e8dc8aa5445198cd9214a6a62/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/e71ba9452f0b5b2e8dc8aa5445198cd9214a6a62/compile_commands.json",
+  "changed_files": [
+    "drivers/target/target_core_xcopy.c"
+  ],
+  "commit_message": "scsi: target: Fix XCOPY NAA identifier lookup\n\nWhen attempting to match EXTENDED COPY CSCD descriptors with corresponding\nse_devices, target_xcopy_locate_se_dev_e4() currently iterates over LIO's\nglobal devices list which includes all configured backstores.\n\nThis change ensures that only initiator-accessible backstores are\nconsidered during CSCD descriptor lookup, according to the session's\nse_node_acl LUN list.\n\nTo avoid LUN removal race conditions, device pinning is changed from being\nconfigfs based to instead using the se_node_acl lun_ref.\n\nReference: CVE-2020-28374\nFixes: cbf031f425fd (\"target: Add support for EXTENDED_COPY copy offload emulation\")\nReviewed-by: Lee Duncan <lduncan@suse.com>\nSigned-off-by: David Disseldorp <ddiss@suse.de>\nSigned-off-by: Mike Christie <michael.christie@oracle.com>\nSigned-off-by: Martin K. Petersen <martin.petersen@oracle.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

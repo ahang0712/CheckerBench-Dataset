@@ -1,0 +1,179 @@
+diff --git a/cli/brook/main.go b/cli/brook/main.go
+index f69b992..b3e7a61 100644
+--- a/cli/brook/main.go
++++ b/cli/brook/main.go
+@@ -975,7 +975,7 @@ func main() {
+ 				if err != nil {
+ 					return err
+ 				}
+-				s, err := brook.NewQUICServer(":"+p, c.String("password"), h, c.Int("tcpTimeout"), c.Int("udpTimeout"), c.String("blockDomainList"), c.String("blockCIDR4List"), c.String("blockCIDR6List"), c.Int64("updateListInterval"), c.StringSlice("blockGeoIP"), c.Bool("withoutBrookProtocol"))
++				s, err := brook.NewQUICServer(":"+p, c.String("password"), h, c.Int("tcpTimeout"), c.Int("udpTimeout"), c.Bool("withoutBrookProtocol"))
+ 				if err != nil {
+ 					return err
+ 				}
+@@ -1437,7 +1437,7 @@ func main() {
+ 				},
+ 				&cli.BoolFlag{
+ 					Name:  "enableIPv6",
+-					Usage: "Your local and server must support IPv6 both",
++					Usage: "deprecated",
+ 				},
+ 				&cli.BoolFlag{
+ 					Name:  "doNotRunScripts",
+@@ -1514,7 +1514,55 @@ func main() {
+ 					lock := &sync.Mutex{}
+ 					m := http.NewServeMux()
+ 					m.Handle("/", http.FileServer(http.FS(web)))
++					m.HandleFunc("/hasp", func(w http.ResponseWriter, r *http.Request) {
++						lock.Lock()
++						defer lock.Unlock()
++						_, err := os.Stat("/tmp/.brook.web.password")
++						if os.IsNotExist(err) {
++							w.Write([]byte("no"))
++							return
++						}
++						w.Write([]byte("yes"))
++					})
++					m.HandleFunc("/setp", func(w http.ResponseWriter, r *http.Request) {
++						lock.Lock()
++						defer lock.Unlock()
++						_, err := os.Stat("/tmp/.brook.web.password")
++						if !os.IsNotExist(err) {
++							http.Error(w, "file exsits", 500)
++							return
++						}
++						err = ioutil.WriteFile("/tmp/.brook.web.password", []byte(r.FormValue("p")), 0600)
++						if err != nil {
++							http.Error(w, err.Error(), 500)
++							return
++						}
++						w.WriteHeader(200)
++					})
++					m.HandleFunc("/authp", func(w http.ResponseWriter, r *http.Request) {
++						lock.Lock()
++						defer lock.Unlock()
++						b, err := ioutil.ReadFile("/tmp/.brook.web.password")
++						if err != nil {
++							http.Error(w, err.Error(), 500)
++							return
++						}
++						if string(b) != r.FormValue("p") {
++							http.Error(w, "web ui password wrong", 500)
++							return
++						}
++						w.WriteHeader(200)
++					})
+ 					m.HandleFunc("/start", func(w http.ResponseWriter, r *http.Request) {
++						b, err := ioutil.ReadFile("/root/.brook.web.password")
++						if err != nil {
++							http.Error(w, err.Error(), 500)
++							return
++						}
++						if string(b) != r.FormValue("p") {
++							http.Error(w, "web ui password wrong", 500)
++							return
++						}
+ 						s, err := os.Executable()
+ 						if err != nil {
+ 							http.Error(w, err.Error(), 500)
+@@ -1523,7 +1571,6 @@ func main() {
+ 						lock.Lock()
+ 						defer lock.Unlock()
+ 						cmd = exec.Command("/bin/sh", "-c", s+" tproxy "+r.FormValue("args"))
+-						log.Println(s + " tproxy " + r.FormValue("args"))
+ 						done := make(chan byte)
+ 						defer close(done)
+ 						errch := make(chan error)
+@@ -1552,6 +1599,15 @@ func main() {
+ 						}
+ 					})
+ 					m.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {
++						b, err := ioutil.ReadFile("/root/.brook.web.password")
++						if err != nil {
++							http.Error(w, err.Error(), 500)
++							return
++						}
++						if string(b) != r.FormValue("p") {
++							http.Error(w, "web ui password wrong", 500)
++							return
++						}
+ 						lock.Lock()
+ 						defer lock.Unlock()
+ 						if cmd == nil {
+@@ -1565,6 +1621,15 @@ func main() {
+ 						w.Write([]byte("disconnected"))
+ 					})
+ 					m.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
++						b, err := ioutil.ReadFile("/tmp/.brook.web.password")
++						if err != nil {
++							http.Error(w, err.Error(), 500)
++							return
++						}
++						if string(b) != r.FormValue("p") {
++							http.Error(w, "web ui password wrong", 500)
++							return
++						}
+ 						lock.Lock()
+ 						defer lock.Unlock()
+ 						if cmd == nil {
+diff --git a/quicserver.go b/quicserver.go
+index 9dfbbf2..9992e10 100644
+--- a/quicserver.go
++++ b/quicserver.go
+@@ -45,7 +45,7 @@ type QUICServer struct {
+ 	UDPServerConnFactory UDPServerConnFactory
+ }
+ 
+-func NewQUICServer(addr, password, domain string, tcpTimeout, udpTimeout int, blockDomainList, blockCIDR4List, blockCIDR6List string, updateListInterval int64, blockGeoIP []string, withoutbrook bool) (*QUICServer, error) {
++func NewQUICServer(addr, password, domain string, tcpTimeout, udpTimeout int, withoutbrook bool) (*QUICServer, error) {
+ 	if err := limits.Raise(); err != nil {
+ 		Log(&Error{"when": "try to raise system limits", "warning": err.Error()})
+ 	}
+diff --git a/streamclient.go b/streamclient.go
+index 76165eb..dc971fe 100644
+--- a/streamclient.go
++++ b/streamclient.go
+@@ -94,7 +94,7 @@ func NewStreamClient(network string, password []byte, src string, server net.Con
+ 	}
+ 	binary.BigEndian.PutUint32(c.WB[2+16:2+16+4], uint32(i))
+ 	copy(c.WB[2+16+4:2+16+4+len(dst)], dst)
+-	if err := c.WriteL(4 + len(dst)); err != nil {
++	if err := c.Write(4 + len(dst)); err != nil {
+ 		x.BP12.Put(c.cn)
+ 		x.BP2048.Put(c.WB)
+ 		return nil, err
+@@ -150,7 +150,7 @@ func (c *StreamClient) Exchange(local net.Conn) error {
+ 					return
+ 				}
+ 			}
+-			l, err := c.ReadL()
++			l, err := c.Read()
+ 			if err != nil {
+ 				return
+ 			}
+@@ -169,14 +169,14 @@ func (c *StreamClient) Exchange(local net.Conn) error {
+ 		if err != nil {
+ 			return nil
+ 		}
+-		if err := c.WriteL(l); err != nil {
++		if err := c.Write(l); err != nil {
+ 			return nil
+ 		}
+ 	}
+ 	return nil
+ }
+ 
+-func (c *StreamClient) WriteL(l int) error {
++func (c *StreamClient) Write(l int) error {
+ 	binary.BigEndian.PutUint16(c.WB[:2], uint16(l))
+ 	c.ca.Seal(c.WB[:0], c.cn, c.WB[:2], nil)
+ 	NextNonce(c.cn)
+@@ -188,7 +188,7 @@ func (c *StreamClient) WriteL(l int) error {
+ 	return nil
+ }
+ 
+-func (c *StreamClient) ReadL() (int, error) {
++func (c *StreamClient) Read() (int, error) {
+ 	if _, err := io.ReadFull(c.Server, c.RB[:2+16]); err != nil {
+ 		return 0, err
+ 	}

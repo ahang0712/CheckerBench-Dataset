@@ -1,0 +1,286 @@
+### File: coders/miff.c
+```c
+static Image *ReadMIFFImage(const ImageInfo *image_info,
+  ExceptionInfo *exception)
+{
+#define BZipMaxExtent(x)  ((x)+((x)/100)+600)
+#define LZMAMaxExtent(x)  ((x)+((x)/3)+128)
+#define ThrowMIFFException(exception,message) \
+{ \
+  if (quantum_info != (QuantumInfo *) NULL) \
+    quantum_info=DestroyQuantumInfo(quantum_info); \
+  if (compress_pixels != (unsigned char *) NULL) \
+    compress_pixels=(unsigned char *) RelinquishMagickMemory(compress_pixels); \
+  ThrowReaderException((exception),(message)); \
+}
+#define ZipMaxExtent(x)  ((x)+(((x)+7) >> 3)+(((x)+63) >> 6)+11)
+
+#if defined(MAGICKCORE_BZLIB_DELEGATE)
+  bz_stream
+    bzip_info;
+#endif
+
+  char
+    id[MagickPathExtent],
+    keyword[MagickPathExtent],
+    *options;
+
+  double
+    version;
+
+  GeometryInfo
+    geometry_info;
+
+  Image
+    *image;
+
+  int
+    c;
+
+  LinkedListInfo
+    *profiles;
+
+#if defined(MAGICKCORE_LZMA_DELEGATE)
+  lzma_stream
+    initialize_lzma = LZMA_STREAM_INIT,
+    lzma_info = LZMA_STREAM_INIT;
+
+  lzma_allocator
+    allocator;
+#endif
+
+  MagickBooleanType
+    status;
+
+  PixelInfo
+    pixel;
+
+  MagickStatusType
+    flags;
+
+  QuantumFormatType
+    quantum_format;
+
+  QuantumInfo
+    *quantum_info;
+
+  QuantumType
+    quantum_type;
+
+  size_t
+    colors,
+    compress_extent,
+    extent,
+    length,
+    packet_size;
+
+  ssize_t
+    count,
+    i,
+    y;
+
+  unsigned char
+    *compress_pixels,
+    *pixels;
+
+
+#if defined(MAGICKCORE_ZLIB_DELEGATE)
+  z_stream
+    zip_info;
+#endif
+
+  /*
+    Open image file.
+  */
+  assert(image_info != (const ImageInfo *) NULL);
+  assert(image_info->signature == MagickCoreSignature);
+  assert(exception != (ExceptionInfo *) NULL);
+  assert(exception->signature == MagickCoreSignature);
+  if (IsEventLogging() != MagickFalse)
+    (void) LogMagickEvent(TraceEvent,GetMagickModule(),"%s",
+      image_info->filename);
+  image=AcquireImage(image_info,exception);
+  status=OpenBlob(image_info,image,ReadBinaryBlobMode,exception);
+  if (status == MagickFalse)
+    {
+      image=DestroyImageList(image);
+      return((Image *) NULL);
+    }
+  /*
+    Decode image header;  header terminates one character beyond a ':'.
+  */
+  c=ReadBlobByte(image);
+  if (c == EOF)
+    ThrowReaderException(CorruptImageError,"ImproperImageHeader");
+  *id='\0';
+  compress_pixels=(unsigned char *) NULL;
+  quantum_info=(QuantumInfo *) NULL;
+  (void) memset(keyword,0,sizeof(keyword));
+  version=0.0;
+  (void) version;
+  do
+  {
+    /*
+      Decode image header;  header terminates one character beyond a ':'.
+    */
+    SetGeometryInfo(&geometry_info);
+    length=MagickPathExtent;
+    options=AcquireString((char *) NULL);
+    quantum_format=UndefinedQuantumFormat;
+    profiles=(LinkedListInfo *) NULL;
+    colors=0;
+    image->depth=8UL;
+    image->compression=NoCompression;
+    while ((isgraph((int) ((unsigned char) c)) != 0) && (c != (int) ':'))
+    {
+      char
+        *p;
+
+      if (c == (int) '{')
+        {
+          char
+            *comment;
+
+          /*
+            Read comment-- any text between { }.
+          */
+          length=MagickPathExtent;
+          comment=AcquireString((char *) NULL);
+          for (p=comment; comment != (char *) NULL; p++)
+          {
+            c=ReadBlobByte(image);
+            if (c == (int) '\\')
+              c=ReadBlobByte(image);
+            else
+              if ((c == EOF) || (c == (int) '}'))
+                break;
+            if ((size_t) (p-comment+1) >= length)
+              {
+                *p='\0';
+                length<<=1;
+                comment=(char *) ResizeQuantumMemory(comment,
+                  OverAllocateMemory(length+MagickPathExtent),sizeof(*comment));
+                if (comment == (char *) NULL)
+                  break;
+                p=comment+strlen(comment);
+              }
+            *p=(char) c;
+          }
+          if (comment == (char *) NULL)
+            {
+              options=DestroyString(options);
+              ThrowMIFFException(ResourceLimitError,"MemoryAllocationFailed");
+            }
+          *p='\0';
+          (void) SetImageProperty(image,"comment",comment,exception);
+          comment=DestroyString(comment);
+          c=ReadBlobByte(image);
+        }
+      else
+        if (isalnum((int) ((unsigned char) c)) != MagickFalse)
+          {
+            /*
+              Get the keyword.
+            */
+            length=MagickPathExtent-1;
+            p=keyword;
+            do
+            {
+              if (c == (int) '=')
+                break;
+              if ((size_t) (p-keyword) < (MagickPathExtent-1))
+                *p++=(char) c;
+              c=ReadBlobByte(image);
+            } while (c != EOF);
+            *p='\0';
+            p=options;
+            while ((isspace((int) ((unsigned char) c)) != 0) && (c != EOF))
+              c=ReadBlobByte(image);
+            if (c == (int) '=')
+              {
+                /*
+                  Get the keyword value.
+                */
+                c=ReadBlobByte(image);
+                while ((c != (int) '{') && (c != (int) '}') && (c != EOF))
+                {
+                  if ((size_t) (p-options+1) >= length)
+                    {
+                      *p='\0';
+                      length<<=1;
+                      options=(char *) ResizeQuantumMemory(options,length+
+                        MagickPathExtent,sizeof(*options));
+                      if (options == (char *) NULL)
+                        break;
+                      p=options+strlen(options);
+                    }
+                  *p++=(char) c;
+                  c=ReadBlobByte(image);
+                  if (c == '\\')
+                    {
+                      c=ReadBlobByte(image);
+                      if ((c == (int) '{') || (c == (int) '}'))
+                        {
+                          *p++=(char) c;
+                          c=ReadBlobByte(image);
+                        }
+                    }
+                  if (*options != '{')
+                    if (isspace((int) ((unsigned char) c)) != 0)
+                      break;
+                }
+                if (options == (char *) NULL)
+                  ThrowMIFFException(ResourceLimitError,
+                    "MemoryAllocationFailed");
+              }
+            *p='\0';
+            if (*options == '{')
+              (void) CopyMagickString(options,options+1,strlen(options));
+            /*
+              Assign a value to the specified keyword.
+            */
+            switch (*keyword)
+            {
+              case 'a':
+              case 'A':
+              {
+                if (LocaleCompare(keyword,"alpha-trait") == 0)
+                  {
+                    ssize_t
+                      alpha_trait;
+
+                    alpha_trait=ParseCommandOption(MagickPixelTraitOptions,
+                      MagickFalse,options);
+                    if (alpha_trait < 0)
+                      break;
+                    image->alpha_trait=(PixelTrait) alpha_trait;
+                    break;
+                  }
+                (void) SetImageProperty(image,keyword,options,exception);
+                break;
+              }
+              case 'b':
+              case 'B':
+              {
+                if (LocaleCompare(keyword,"background-color") == 0)
+                  {
+                    (void) QueryColorCompliance(options,AllCompliance,
+                      &image->background_color,exception);
+                    break;
+                  }
+                if (LocaleCompare(keyword,"blue-primary") == 0)
+                  {
+                    flags=ParseGeometry(options,&geometry_info);
+                    image->chromaticity.blue_primary.x=geometry_info.rho;
+                    image->chromaticity.blue_primary.y=geometry_info.sigma;
+                    if ((flags & SigmaValue) == 0)
+                      image->chromaticity.blue_primary.y=
+                        image->chromaticity.blue_primary.x;
+                    break;
+                  }
+                if (LocaleCompare(keyword,"border-color") == 0)
+                  {
+ 
+
+// ... (65089 more chars)
+```

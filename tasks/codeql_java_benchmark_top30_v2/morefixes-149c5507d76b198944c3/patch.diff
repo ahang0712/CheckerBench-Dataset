@@ -1,0 +1,197 @@
+diff --git a/src/main/java/org/apache/sling/jcr/base/util/RepositoryAccessor.java b/src/main/java/org/apache/sling/jcr/base/util/RepositoryAccessor.java
+index c0b5ea2..7e4b043 100644
+--- a/src/main/java/org/apache/sling/jcr/base/util/RepositoryAccessor.java
++++ b/src/main/java/org/apache/sling/jcr/base/util/RepositoryAccessor.java
+@@ -18,26 +18,26 @@
+  */
+ package org.apache.sling.jcr.base.util;
+ 
+-import java.util.Hashtable;
+-
+-import javax.jcr.Repository;
+-import javax.naming.InitialContext;
+-
+-import org.apache.jackrabbit.rmi.client.ClientAdapterFactory;
+ import org.apache.jackrabbit.rmi.client.ClientRepositoryFactory;
+ import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
+-import org.apache.jackrabbit.rmi.remote.RemoteRepository;
+-import org.slf4j.Logger;
+-import org.slf4j.LoggerFactory;
+ 
+-/** Access a Repository via JNDI or RMI. */
++import javax.jcr.Repository;
++import java.util.Hashtable;
++
++/** 
++ * Access a Repository via JNDI or RMI. 
++ *
++ * @deprecated No longer supported
++ */
++@Deprecated
+ public class RepositoryAccessor {
+-    private final Logger log = LoggerFactory.getLogger(getClass());
+ 
+     /** Prefix for RMI Repository URLs */
++    @Deprecated
+     public static final String RMI_PREFIX = "rmi://";
+ 
+     /** Prefix for JNDI Repository URLs */
++    @Deprecated
+     public static final String JNDI_PREFIX = "jndi://";
+ 
+     /**
+@@ -55,79 +55,13 @@ public class RepositoryAccessor {
+      *            the Repository
+      * @param jndiContext if null, JNDI is not tried
+      * @return a Repository, or null if not found
++     * @throws UnsupportedOperationException Always throws {@code UnsupportedOperationException}
++     * @deprecated No longer supported
+      */
++    @Deprecated
+     public Repository getRepository(String repositoryName,
+             Hashtable<String, Object> jndiContext) {
+-
+-        Repository result = null;
+-        String tried = "";
+-
+-        if (jndiContext == null || jndiContext.size() == 0) {
+-            log.info("jndiContext is null or empty, not trying JNDI");
+-        } else {
+-            log.debug("Trying to acquire Repository '" + repositoryName
+-                + "' via JNDI, context=" + jndiContext);
+-            tried += "JNDI ";
+-            final ClassLoader old = Thread.currentThread().getContextClassLoader();
+-            try {
+-                Thread.currentThread().setContextClassLoader(
+-                    this.getClass().getClassLoader());
+-                InitialContext initialContext = new InitialContext(jndiContext);
+-                Object repoObject = initialContext.lookup(repositoryName);
+-                if (repoObject instanceof Repository) {
+-                    result = (Repository) repoObject;
+-                    log.info("Acquired Repository '" + repositoryName
+-                        + "' via JNDI");
+-
+-                } else if (repoObject instanceof RemoteRepository) {
+-                    RemoteRepository remoteRepo = (RemoteRepository) repoObject;
+-                    LocalAdapterFactory laf = getLocalAdapterFactory();
+-                    result = laf.getRepository(remoteRepo);
+-                    log.info("Acquired RemoteRepository '" + repositoryName
+-                        + "' via JNDI");
+-
+-                } else {
+-                    log.info("Repository '" + repositoryName
+-                        + "' acquired via JDNI "
+-                        + "does not implement the required interfaces, class="
+-                        + repoObject.getClass().getName());
+-                }
+-
+-            } catch (Throwable t) {
+-                log.info("Unable to acquire Repository '" + repositoryName
+-                    + "' via JNDI, context=" + jndiContext, t);
+-            } finally {
+-                Thread.currentThread().setContextClassLoader(old);
+-            }
+-        }
+-
+-        if (result == null) {
+-            if (repositoryName == null
+-                || !repositoryName.startsWith(RMI_PREFIX)) {
+-                log.info("Repository name does not start with '" + RMI_PREFIX
+-                    + "', not trying RMI");
+-            } else {
+-                try {
+-                    tried += "RMI ";
+-                    log.debug("Trying to acquire Repository '" + repositoryName
+-                        + "' via RMI");
+-                    ClientRepositoryFactory crf = getClientRepositoryFactory();
+-                    result = crf.getRepository(repositoryName);
+-                    log.info("Acquired Repository '" + repositoryName
+-                        + "' via RMI");
+-                } catch (Throwable t) {
+-                    log.info("Unable to acquire Repository '" + repositoryName
+-                        + "' via RMI", t);
+-                }
+-            }
+-        }
+-
+-        if (result == null) {
+-            log.info("Unable to acquire Repository '" + repositoryName
+-                + "', tried " + tried);
+-        }
+-
+-        return result;
++        throw new UnsupportedOperationException("Repository access via JNDI-context is no longer supported.");
+     }
+ 
+     /**
+@@ -142,39 +76,12 @@ public class RepositoryAccessor {
+      * </pre>
+      *
+      * @return the repository for the given url
+-     * @throws NullPointerException If <code>url</code> is <code>null</code>.
++     * @throws UnsupportedOperationException Always throws {@code UnsupportedOperationException}
++     * @deprecated No longer supported
+      */
++    @Deprecated
+     public Repository getRepositoryFromURL(String url) {
+-
+-        if (url == null) {
+-            throw new NullPointerException("url");
+-        }
+-
+-        if (url.startsWith(JNDI_PREFIX)) {
+-            // Parse JNDI URL to extract repository name and context
+-            String name = null;
+-            final Hashtable<String, Object> jndiContext = new Hashtable<String, Object>();
+-            final String urlNoPrefix = url.substring(JNDI_PREFIX.length());
+-            final int colonPos = urlNoPrefix.indexOf(':');
+-            if (colonPos < 0) {
+-                name = urlNoPrefix;
+-            } else {
+-                name = urlNoPrefix.substring(0, colonPos);
+-                for (String entryStr : urlNoPrefix.substring(colonPos + 1).split(
+-                    ",")) {
+-                    final String[] entry = entryStr.split("=");
+-                    if (entry.length == 2) {
+-                        jndiContext.put(entry[0], entry[1]);
+-                    }
+-                }
+-            }
+-
+-            return getRepository(name, jndiContext);
+-
+-        }
+-
+-        // Use URL as is
+-        return getRepository(url, null);
++        throw new UnsupportedOperationException("Repository access via URL is no longer supported.");
+     }
+ 
+     /**
+@@ -188,9 +95,12 @@ public class RepositoryAccessor {
+      * 
+      * @return the <code>LocalAdapterFactory</code> used to convert Jackrabbit
+      * JCR RMI remote objects to local JCR API objects.
++     * @throws UnsupportedOperationException Always throws {@code UnsupportedOperationException}
++     * @deprecated No longer supported
+      */
++    @Deprecated
+     protected LocalAdapterFactory getLocalAdapterFactory() {
+-        return new ClientAdapterFactory();
++        throw new UnsupportedOperationException("Repository access via RMI is no longer supported.");
+     }
+ 
+     /**
+@@ -206,8 +116,11 @@ public class RepositoryAccessor {
+      * 
+      * @return the <code>ClientRepositoryFactory</code> to access the remote
+      * JCR repository over RMI.
++     * @throws UnsupportedOperationException Always throws {@code UnsupportedOperationException}
++     * @deprecated No longer supported 
+      */
++    @Deprecated
+     protected ClientRepositoryFactory getClientRepositoryFactory() {
+-        return new ClientRepositoryFactory(getLocalAdapterFactory());
++        throw new UnsupportedOperationException("Repository access via RMI is no longer supported.");
+     }
+ }

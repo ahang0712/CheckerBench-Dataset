@@ -1,0 +1,47 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-7e2af82757795db7f69a",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-7e2af82757795db7f69a",
+    "project_id": "morefixes__bettercap__bettercap",
+    "language": "go",
+    "backend": "codeql"
+  },
+  "changed_go_files": [
+    "modules/zerogod/zerogod_acceptor.go",
+    "modules/zerogod/zerogod_ipp_primitives.go"
+  ],
+  "patch_units": {
+    "before": [
+      "modules/zerogod/zerogod_acceptor.go",
+      "modules/zerogod/zerogod_ipp_primitives.go"
+    ],
+    "after": [
+      "modules/zerogod/zerogod_acceptor.go",
+      "modules/zerogod/zerogod_ipp_primitives.go"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/886843741cf153a04b17994f7df48ba584be43cefb43037fa3f8f61a03586d2a/database",
+      "cache_key": "886843741cf153a04b17994f7df48ba584be43cefb43037fa3f8f61a03586d2a",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/f23f0e5cc82ca5dd3d6bc23be359b0ffb59a9384c3e320c05b0353915eb3cfaa/database",
+      "cache_key": "f23f0e5cc82ca5dd3d6bc23be359b0ffb59a9384c3e320c05b0353915eb3cfaa",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/275b9356630ae27e1528cfe5999c3ee3caac16b680057e64e2dd863d1c250bcb/database",
+      "cache_key": "275b9356630ae27e1528cfe5999c3ee3caac16b680057e64e2dd863d1c250bcb",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-7e2af82757795db7f69a/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-7e2af82757795db7f69a/ (do not mount into agent)"
+  }
+}

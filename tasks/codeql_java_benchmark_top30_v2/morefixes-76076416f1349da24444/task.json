@@ -1,0 +1,83 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-76076416f1349da24444",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-76076416f1349da24444",
+    "project_id": "morefixes__hyperadev__dragonfly",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "src/main/java/dev/hypera/dragonfly/Dragonfly.java",
+    "src/main/java/dev/hypera/dragonfly/DragonflyBuilder.java",
+    "src/main/java/dev/hypera/dragonfly/downloaders/impl/MavenDownloader.java",
+    "src/main/java/dev/hypera/dragonfly/exceptions/DownloadFailureException.java",
+    "src/main/java/dev/hypera/dragonfly/exceptions/DragonflyException.java",
+    "src/main/java/dev/hypera/dragonfly/exceptions/LoadFailureException.java",
+    "src/main/java/dev/hypera/dragonfly/exceptions/RelocationFailureException.java",
+    "src/main/java/dev/hypera/dragonfly/exceptions/ResolveFailureException.java",
+    "src/main/java/dev/hypera/dragonfly/loading/DependencyLoader.java",
+    "src/main/java/dev/hypera/dragonfly/loading/DragonflyClassLoader.java",
+    "src/main/java/dev/hypera/dragonfly/relocation/DependencyRelocator.java",
+    "src/main/java/dev/hypera/dragonfly/relocation/Relocation.java",
+    "src/main/java/dev/hypera/dragonfly/resolvers/impl/MavenResolver.java",
+    "src/main/java/dev/hypera/dragonfly/resolvers/impl/MavenSnapshotResolver.java"
+  ],
+  "patch_units": {
+    "before": [
+      "src/main/java/dev/hypera/dragonfly/Dragonfly.java",
+      "src/main/java/dev/hypera/dragonfly/DragonflyBuilder.java",
+      "src/main/java/dev/hypera/dragonfly/downloaders/impl/MavenDownloader.java",
+      "src/main/java/dev/hypera/dragonfly/exceptions/DownloadFailureException.java",
+      "src/main/java/dev/hypera/dragonfly/exceptions/DragonflyException.java",
+      "src/main/java/dev/hypera/dragonfly/exceptions/LoadFailureException.java",
+      "src/main/java/dev/hypera/dragonfly/exceptions/RelocationFailureException.java",
+      "src/main/java/dev/hypera/dragonfly/exceptions/ResolveFailureException.java",
+      "src/main/java/dev/hypera/dragonfly/loading/DependencyLoader.java",
+      "src/main/java/dev/hypera/dragonfly/loading/DragonflyClassLoader.java",
+      "src/main/java/dev/hypera/dragonfly/relocation/DependencyRelocator.java",
+      "src/main/java/dev/hypera/dragonfly/relocation/Relocation.java",
+      "src/main/java/dev/hypera/dragonfly/resolvers/impl/MavenResolver.java",
+      "src/main/java/dev/hypera/dragonfly/resolvers/impl/MavenSnapshotResolver.java"
+    ],
+    "after": [
+      "src/main/java/dev/hypera/dragonfly/Dragonfly.java",
+      "src/main/java/dev/hypera/dragonfly/DragonflyBuilder.java",
+      "src/main/java/dev/hypera/dragonfly/downloaders/impl/MavenDownloader.java",
+      "src/main/java/dev/hypera/dragonfly/exceptions/DownloadFailureException.java",
+      "src/main/java/dev/hypera/dragonfly/exceptions/DragonflyException.java",
+      "src/main/java/dev/hypera/dragonfly/exceptions/LoadFailureException.java",
+      "src/main/java/dev/hypera/dragonfly/exceptions/RelocationFailureException.java",
+      "src/main/java/dev/hypera/dragonfly/exceptions/ResolveFailureException.java",
+      "src/main/java/dev/hypera/dragonfly/loading/DependencyLoader.java",
+      "src/main/java/dev/hypera/dragonfly/loading/DragonflyClassLoader.java",
+      "src/main/java/dev/hypera/dragonfly/relocation/DependencyRelocator.java",
+      "src/main/java/dev/hypera/dragonfly/relocation/Relocation.java",
+      "src/main/java/dev/hypera/dragonfly/resolvers/impl/MavenResolver.java",
+      "src/main/java/dev/hypera/dragonfly/resolvers/impl/MavenSnapshotResolver.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/6414b059c057ba9157ed150806632407aad96ab19e5dcac6a3e363633c36ae3a/database",
+      "cache_key": "6414b059c057ba9157ed150806632407aad96ab19e5dcac6a3e363633c36ae3a",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/89f6283934297600fffa1f07f207360a38ed9bb6df86038543bee55cb8c6fe43/database",
+      "cache_key": "89f6283934297600fffa1f07f207360a38ed9bb6df86038543bee55cb8c6fe43",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/c2bc2d4e9ea85a28ed549e5062d24a923427f439dfd62fc6c4795e2083f3fa85/database",
+      "cache_key": "c2bc2d4e9ea85a28ed549e5062d24a923427f439dfd62fc6c4795e2083f3fa85",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-76076416f1349da24444/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-76076416f1349da24444/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,180 @@
+### File: src/encode.c
+```c
+/*****************************************************************************/
+/*  LibreDWG - free implementation of the DWG file format                    */
+/*                                                                           */
+/*  Copyright (C) 2009-2010,2018-2021 Free Software Foundation, Inc.         */
+/*  Copyright (C) 2010 Thien-Thi Nguyen                                      */
+/*                                                                           */
+/*  This library is free software, licensed under the terms of the GNU       */
+/*  General Public License as published by the Free Software Foundation,     */
+/*  either version 3 of the License, or (at your option) any later version.  */
+/*  You should have received a copy of the GNU General Public License        */
+/*  along with this program.  If not, see <http://www.gnu.org/licenses/>.    */
+/*****************************************************************************/
+
+/*
+ * encode.c: encoding functions to write a DWG
+ * written by Felipe Castro
+ * modified by Felipe Corrêa da Silva Sances
+ * modified by Rodrigo Rodrigues da Silva
+ * modified by Thien-Thi Nguyen
+ * modified by Till Heuschmann
+ * modified by Anderson Pierre Cardoso
+ * modified by Reini Urban
+ */
+
+//#define HAVE_COMPRESS_R2004_SECTION
+
+#include "config.h"
+#ifdef __STDC_ALLOC_LIB__
+#  define __STDC_WANT_LIB_EXT2__ 1 /* for strdup */
+#else
+#  define _USE_BSD 1
+#endif
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <assert.h>
+#ifdef HAVE_CTYPE_H
+#  include <ctype.h>
+#endif
+
+#include "common.h"
+#include "bits.h"
+#include "dwg.h"
+#include "encode.h"
+#include "decode.h"
+#include "classes.h"
+#include "free.h"
+
+// from dynapi
+bool is_dwg_object (const char *name);
+bool is_dwg_entity (const char *name);
+int dwg_dynapi_entity_size (const char *restrict name);
+// from dwg_api
+BITCODE_T dwg_add_u8_input (Dwg_Data *restrict dwg,
+                            const char *restrict u8str);
+Dwg_Object_APPID *dwg_add_APPID (Dwg_Data *restrict dwg,
+                                 const char *restrict name);
+unsigned long dwg_obj_generic_handlevalue (void *_obj);
+
+/* The logging level for the write (encode) path.  */
+static unsigned int loglevel;
+/* the current version per spec block */
+static unsigned int cur_ver = 0;
+static BITCODE_BL rcount1 = 0, rcount2 = 0;
+
+#ifdef USE_TRACING
+/* This flag means we have checked the environment variable
+   LIBREDWG_TRACE and set `loglevel' appropriately.  */
+static bool env_var_checked_p;
+#endif /* USE_TRACING */
+#define DWG_LOGLEVEL loglevel
+
+#include "logging.h"
+
+/*--------------------------------------------------------------------------------
+ * spec MACROS
+ */
+
+#define ACTION encode
+#define IS_ENCODER
+
+#define ANYCODE -1
+
+#define LOG_POS                                                               \
+  LOG_INSANE (" @%lu.%u", obj ? dat->byte - obj->address : dat->byte, dat->bit)\
+  LOG_TRACE ("\n")
+#define LOG_RPOS                                                              \
+  LOG_INSANE (" @%lu.%u", dat->byte, dat->bit)                                \
+  LOG_TRACE ("\n")
+#define LOG_HPOS                                                              \
+  LOG_INSANE (" @%lu.%u",                                                     \
+              obj && hdl_dat->byte > obj->address                             \
+                  ? hdl_dat->byte - obj->address                              \
+                  : hdl_dat->byte,                                            \
+              hdl_dat->bit)                                                   \
+  LOG_TRACE ("\n")
+
+#define VALUE(value, type, dxf)                                               \
+  {                                                                           \
+    bit_write_##type (dat, value);                                            \
+    LOG_TRACE (FORMAT_##type " [" #type " %d]", (BITCODE_##type)value, dxf);  \
+    LOG_POS                                                                   \
+  }
+#define VALUE_RC(value, dxf) VALUE (value, RC, dxf)
+#define VALUE_RS(value, dxf) VALUE (value, RS, dxf)
+#define VALUE_RL(value, dxf) VALUE (value, RL, dxf)
+#define VALUE_BS(value, dxf) VALUE (value, BS, dxf)
+#define VALUE_BL(value, dxf) VALUE (value, BL, dxf)
+#define VALUE_RD(value, dxf) VALUE (value, RD, dxf)
+#define VALUE_BD(value, dxf) VALUE (value, BD, dxf)
+
+#define FIELD(nam, type)                                                      \
+  {                                                                           \
+    bit_write_##type (dat, _obj->nam);                                        \
+    FIELD_TRACE (nam, type);                                                  \
+  }
+#define FIELDG(nam, type, dxf)                                                \
+  {                                                                           \
+    bit_write_##type (dat, _obj->nam);                                        \
+    FIELD_G_TRACE (nam, type, dxf);                                           \
+  }
+#define FIELD_TRACE(nam, type)                                                \
+  LOG_TRACE (#nam ": " FORMAT_##type, _obj->nam)                              \
+  LOG_POS
+#define FIELD_G_TRACE(nam, type, dxfgroup)                                    \
+  LOG_TRACE (#nam ": " FORMAT_##type " [" #type " " #dxfgroup "]", _obj->nam) \
+  LOG_POS
+#define FIELD_CAST(nam, type, cast, dxf)                                      \
+  {                                                                           \
+    bit_write_##type (dat, (BITCODE_##type)_obj->nam);                        \
+    LOG_TRACE (#nam ": " FORMAT_##type " [" #type " " #dxf "]",               \
+               (BITCODE_##type)_obj->nam);                                    \
+    LOG_POS                                                                   \
+  }
+#define SUB_FIELD(o, nam, type, dxf) FIELD (o.nam, type)
+#define SUB_FIELD_CAST(o, nam, type, cast, dxf)                               \
+  {                                                                           \
+    bit_write_##type (dat, (BITCODE_##type)_obj->o.nam);                      \
+    FIELD_G_TRACE (o.nam, cast, dxf);                                         \
+  }
+
+#define FIELD_VALUE(nam) _obj->nam
+
+#define FIELD_B(nam, dxf) FIELDG (nam, B, dxf)
+#define FIELD_BB(nam, dxf) FIELDG (nam, BB, dxf)
+#define FIELD_3B(nam, dxf) FIELDG (nam, 3B, dxf)
+#define FIELD_BS(nam, dxf) FIELDG (nam, BS, dxf)
+#define FIELD_BSd(nam, dxf) FIELD_CAST (nam, BS, BSd, dxf)
+#define FIELD_RSx(nam, dxf) FIELD_CAST (nam, RS, RSx, dxf)
+#define FIELD_RLx(nam, dxf) FIELD_CAST (nam, RL, RLx, dxf)
+#define FIELD_BLx(nam, dxf) FIELD_CAST (nam, BL, BLx, dxf)
+#define FIELD_BLd(nam, dxf) FIELD_CAST (nam, BL, BLd, dxf)
+#define FIELD_RLd(nam, dxf) FIELD_CAST (nam, RL, RLd, dxf)
+#define FIELD_BL(nam, dxf) FIELDG (nam, BL, dxf)
+#define FIELD_BLL(nam, dxf) FIELDG (nam, BLL, dxf)
+#define FIELD_BD(nam, dxf) FIELDG (nam, BD, dxf)
+#define FIELD_RC(nam, dxf) FIELDG (nam, RC, dxf)
+#define FIELD_RS(nam, dxf) FIELDG (nam, RS, dxf)
+#define FIELD_RD(nam, dxf) FIELDG (nam, RD, dxf)
+#define FIELD_RL(nam, dxf) FIELDG (nam, RL, dxf)
+#define FIELD_RLL(nam, dxf) FIELDG (nam, RLL, dxf)
+#define FIELD_RLLu(nam, dxf)                                            \
+  {                                                                     \
+    bit_write_RLL (dat, _obj->nam);                                     \
+    FIELD_G_TRACE (nam, BLL, dxf);                                      \
+  }
+#define FIELD_MC(nam, dxf) FIELDG (nam, MC, dxf)
+#define FIELD_MS(nam, dxf) FIELDG (nam, MS, dxf)
+#define FIELD_TV(nam, dxf)                                                    \
+  {                                                                           \
+    IF_ENCODE_FROM_EARLIER                                                    \
+    {                                                                         \
+      if (!_obj->nam)   
+
+// ... (177221 more chars)
+```

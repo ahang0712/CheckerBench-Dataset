@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-6c80dd14ea98e73d8b2e",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-6c80dd14ea98e73d8b2e",
+    "project_id": "morefixes__jberet__jsr352",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "jberet-core/src/main/java/org/jberet/repository/JdbcRepository.java"
+  ],
+  "patch_units": {
+    "before": [
+      "jberet-core/src/main/java/org/jberet/repository/JdbcRepository.java"
+    ],
+    "after": [
+      "jberet-core/src/main/java/org/jberet/repository/JdbcRepository.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/7fb174c51b654911e239013a0b8420d425e36f9884d771f8282bbc5d0076707b/database",
+      "cache_key": "7fb174c51b654911e239013a0b8420d425e36f9884d771f8282bbc5d0076707b",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/5bdc33f2555649d2e9c2e4ddf30b177af8198d71a6d8294bad6406c8ef86a2ff/database",
+      "cache_key": "5bdc33f2555649d2e9c2e4ddf30b177af8198d71a6d8294bad6406c8ef86a2ff",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/e9e3cb646dbeaab2fd22bcf3b3092b582da9dd6c55ffd310185136b030a0ea51/database",
+      "cache_key": "e9e3cb646dbeaab2fd22bcf3b3092b582da9dd6c55ffd310185136b030a0ea51",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-6c80dd14ea98e73d8b2e/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-6c80dd14ea98e73d8b2e/ (do not mount into agent)"
+  }
+}

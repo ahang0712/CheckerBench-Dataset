@@ -1,0 +1,46 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-f55f7c013a9f5bd1eb0d",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-f55f7c013a9f5bd1eb0d",
+    "project_id": "pyvul__caronc__apprise",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "apprise/plugins/NotifyIFTTT.py"
+  ],
+  "patch_units": {
+    "before": [
+      "class:NotifyIFTTT",
+      "function:NotifyIFTTT.parse_native_url"
+    ],
+    "after": [
+      "class:NotifyIFTTT",
+      "function:NotifyIFTTT.parse_native_url"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/14c7dffc83f6154b963e9f0975c7aecf287c056f253f975923e0ce41c8ba61ce/database",
+      "cache_key": "14c7dffc83f6154b963e9f0975c7aecf287c056f253f975923e0ce41c8ba61ce",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/01e0a522a84fb01af3434b1a833327894e72dc78380285e813e165d80347c3bf/database",
+      "cache_key": "01e0a522a84fb01af3434b1a833327894e72dc78380285e813e165d80347c3bf",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/fc64be56f86084ed1741beba8919c61280668ac81d26a42e2103a16c61adf529/database",
+      "cache_key": "fc64be56f86084ed1741beba8919c61280668ac81d26a42e2103a16c61adf529",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-f55f7c013a9f5bd1eb0d/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-f55f7c013a9f5bd1eb0d/ (do not mount into agent)"
+  }
+}

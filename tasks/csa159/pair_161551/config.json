@@ -1,0 +1,20 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "c1832f67035dc04fb89e6b591b64e4d515843cda",
+  "after_commit": "a677ebd8ca2f2632ccdecbad7b87641274e15aac",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/39cd87c4eb2b893354f3b850f916353f2658ae6f/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/39cd87c4eb2b893354f3b850f916353f2658ae6f/compile_commands.json",
+  "changed_files": [
+    "fs/smb/server/mgmt/share_config.c",
+    "fs/smb/server/transport_ipc.c"
+  ],
+  "commit_message": "ksmbd: validate payload size in ipc response\n\nIf installing malicious ksmbd-tools, ksmbd.mountd can return invalid ipc\nresponse to ksmbd kernel server. ksmbd should validate payload size of\nipc response from ksmbd.mountd to avoid memory overrun or\nslab-out-of-bounds. This patch validate 3 ipc response that has payload.\n\nCc: stable@vger.kernel.org\nReported-by: Chao Ma <machao2019@gmail.com>\nSigned-off-by: Namjae Jeon <linkinjeon@kernel.org>\nSigned-off-by: Steve French <stfrench@microsoft.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

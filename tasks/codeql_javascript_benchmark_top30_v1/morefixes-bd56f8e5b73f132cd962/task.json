@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-bd56f8e5b73f132cd962",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-bd56f8e5b73f132cd962",
+    "project_id": "morefixes__brokercap__bifrost",
+    "language": "javascript",
+    "backend": "codeql"
+  },
+  "changed_javascript_files": [
+    "admin/view/public/js/ajax.js"
+  ],
+  "patch_units": {
+    "before": [
+      "admin/view/public/js/ajax.js"
+    ],
+    "after": [
+      "admin/view/public/js/ajax.js"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/245f651c8c1059f797f49a345005098cdb70c7fd7f5f0160830a4c212e8ea314/database",
+      "cache_key": "245f651c8c1059f797f49a345005098cdb70c7fd7f5f0160830a4c212e8ea314",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/5b8322cb754773d9740b60baf46675deaff9cbee8551c543305069b145567ccd/database",
+      "cache_key": "5b8322cb754773d9740b60baf46675deaff9cbee8551c543305069b145567ccd",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/ef0cc788450e71beeba8a299184336fd9c7396ffac8d3234c3dfb44786c49e4e/database",
+      "cache_key": "ef0cc788450e71beeba8a299184336fd9c7396ffac8d3234c3dfb44786c49e4e",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-bd56f8e5b73f132cd962/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-bd56f8e5b73f132cd962/ (do not mount into agent)"
+  }
+}

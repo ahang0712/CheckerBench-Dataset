@@ -1,0 +1,399 @@
+diff --git a/internal/peer/gossip/mcs.go b/internal/peer/gossip/mcs.go
+index 626da4c86..3bcb3f0ba 100644
+--- a/internal/peer/gossip/mcs.go
++++ b/internal/peer/gossip/mcs.go
+@@ -151,6 +151,10 @@ func (s *MSPMessageCryptoService) VerifyBlock(chainID common.ChannelID, seqNum u
+ 		return fmt.Errorf("Failed unmarshalling medatata for signatures [%s]", err)
+ 	}
+ 
++	if err := protoutil.VerifyTransactionsAreWellFormed(block); err != nil {
++		return fmt.Errorf("block has malformed transactions: %v", err)
++	}
++
+ 	// - Verify that Header.DataHash is equal to the hash of block.Data
+ 	// This is to ensure that the header is consistent with the data carried by this block
+ 	if !bytes.Equal(protoutil.BlockDataHash(block.Data), block.Header.DataHash) {
+@@ -259,7 +263,6 @@ func (s *MSPMessageCryptoService) Expiration(peerIdentity api.PeerIdentityType)
+ 		return time.Time{}, errors.Wrap(err, "Unable to extract msp.Identity from peer Identity")
+ 	}
+ 	return id.ExpiresAt(), nil
+-
+ }
+ 
+ func (s *MSPMessageCryptoService) getValidatedIdentity(peerIdentity api.PeerIdentityType) (msp.Identity, common.ChannelID, error) {
+diff --git a/orderer/common/cluster/replication_test.go b/orderer/common/cluster/replication_test.go
+index ac8861a00..734eddd26 100644
+--- a/orderer/common/cluster/replication_test.go
++++ b/orderer/common/cluster/replication_test.go
+@@ -130,7 +130,7 @@ func TestReplicateChainsFailures(t *testing.T) {
+ 			name: "hash chain mismatch",
+ 			expectedPanic: "Failed pulling system channel: " +
+ 				"block header mismatch on sequence 11, " +
+-				"expected 9cd61b7e9a5ea2d128cc877e5304e7205888175a8032d40b97db7412dca41d9e, got 010203",
++				"expected 229de8d87db1ddf7278093bc65ba9245cd3acd8ccfc687e0edc68adf9b181488, got 010203",
+ 			latestBlockSeqInOrderer: 21,
+ 			mutateBlocks: func(systemChannelBlocks []*common.Block) {
+ 				systemChannelBlocks[len(systemChannelBlocks)/2].Header.PreviousHash = []byte{1, 2, 3}
+@@ -139,8 +139,8 @@ func TestReplicateChainsFailures(t *testing.T) {
+ 		{
+ 			name: "last pulled block doesn't match the boot block",
+ 			expectedPanic: "Block header mismatch on last system channel block," +
+-				" expected 8ec93b2ef5ffdc302f0c0e24611be04ad2b17b099a1aeafd7cfb76a95923f146," +
+-				" got e428decfc78f8e4c97b26da9c16f9d0b73f886dafa80477a0dd9bac7eb14fe7a",
++				" expected 0bea18bff7feeaa0bc08f528e1f563c818fc0633e291786c96eedffd8c7e6cff," +
++				" got 924c568c4a4e8f16e3cbd123ea0ae38d0bbb01d60bafb74f4bb55f108c0eb194",
+ 			latestBlockSeqInOrderer: 21,
+ 			mutateBlocks: func(systemChannelBlocks []*common.Block) {
+ 				systemChannelBlocks[21].Header.DataHash = nil
+@@ -321,7 +321,6 @@ func TestPullChannelFailure(t *testing.T) {
+ 			assert.Equal(t, cluster.ErrRetryCountExhausted, err)
+ 		})
+ 	}
+-
+ }
+ 
+ func TestPullerConfigFromTopLevelConfig(t *testing.T) {
+@@ -443,8 +442,10 @@ func TestReplicateChainsGreenPath(t *testing.T) {
+ 	channelLister := &mocks.ChannelLister{}
+ 	channelLister.On("Channels").Return([]cluster.ChannelGenesisBlock{
+ 		{ChannelName: "E", GenesisBlock: fakeGB},
+-		{ChannelName: "D", GenesisBlock: fakeGB}, {ChannelName: "C", GenesisBlock: fakeGB},
+-		{ChannelName: "A", GenesisBlock: fakeGB}, {ChannelName: "B", GenesisBlock: fakeGB},
++		{ChannelName: "D", GenesisBlock: fakeGB},
++		{ChannelName: "C", GenesisBlock: fakeGB},
++		{ChannelName: "A", GenesisBlock: fakeGB},
++		{ChannelName: "B", GenesisBlock: fakeGB},
+ 	})
+ 	channelLister.On("Close")
+ 
+diff --git a/orderer/common/cluster/util.go b/orderer/common/cluster/util.go
+index a8f2c865d..ef34cead7 100644
+--- a/orderer/common/cluster/util.go
++++ b/orderer/common/cluster/util.go
+@@ -318,6 +318,11 @@ func VerifyBlockHash(indexInBuffer int, blockBuff []*common.Block) error {
+ 		return errors.New("missing block header")
+ 	}
+ 	seq := block.Header.Number
++
++	if err := protoutil.VerifyTransactionsAreWellFormed(block); err != nil && block.Header.Number > 0 {
++		return fmt.Errorf("block has malformed transactions: %v", err)
++	}
++
+ 	dataHash := protoutil.BlockDataHash(block.Data)
+ 	// Verify data hash matches the hash in the header
+ 	if !bytes.Equal(dataHash, block.Header.DataHash) {
+diff --git a/orderer/common/cluster/util_test.go b/orderer/common/cluster/util_test.go
+index 059e0f95e..7bf346024 100644
+--- a/orderer/common/cluster/util_test.go
++++ b/orderer/common/cluster/util_test.go
+@@ -289,7 +289,7 @@ func TestVerifyBlockHash(t *testing.T) {
+ 		},
+ 		{
+ 			name: "data hash mismatch",
+-			errorContains: "computed hash of block (13) (dcb2ec1c5e482e4914cb953ff8eedd12774b244b12912afbe6001ba5de9ff800)" +
++			errorContains: "computed hash of block (13) (6de668ac99645e179a4921b477d50df9295fa56cd44f8e5c94756b60ce32ce1c)" +
+ 				" doesn't match claimed hash (07)",
+ 			mutateBlockSequence: func(blockSequence []*common.Block) []*common.Block {
+ 				blockSequence[len(blockSequence)/2].Header.DataHash = []byte{7}
+@@ -299,7 +299,7 @@ func TestVerifyBlockHash(t *testing.T) {
+ 		{
+ 			name: "prev hash mismatch",
+ 			errorContains: "block [12]'s hash " +
+-				"(866351705f1c2f13e10d52ead9d0ca3b80689ede8cc8bf70a6d60c67578323f4) " +
++				"(72cc7ddf4d8465da95115c0a906416d23d8c74bfcb731a5ab057c213d8db62e1) " +
+ 				"mismatches block [13]'s prev block hash (07)",
+ 			mutateBlockSequence: func(blockSequence []*common.Block) []*common.Block {
+ 				blockSequence[len(blockSequence)/2].Header.PreviousHash = []byte{7}
+@@ -373,7 +373,7 @@ func TestVerifyBlocks(t *testing.T) {
+ 				return blockSequence
+ 			},
+ 			expectedError: "block [74]'s hash " +
+-				"(5cb4bd1b6a73f81afafd96387bb7ff4473c2425929d0862586f5fbfa12d762dd) " +
++				"(6daec1924ac6db2b23e3f49c190115dfc096603bcd0ec916baf111c68633c969) " +
+ 				"mismatches block [75]'s prev block hash (07)",
+ 		},
+ 		{
+@@ -398,7 +398,7 @@ func TestVerifyBlocks(t *testing.T) {
+ 				assignHashes(blockSequence)
+ 				return blockSequence
+ 			},
+-			expectedError: "nil header in payload",
++			expectedError: "block has malformed transactions: transaction 0 has no payload",
+ 		},
+ 		{
+ 			name: "config blocks in the sequence need to be verified and one of them is improperly signed",
+@@ -550,6 +550,7 @@ func createBlockChain(start, end uint64) []*common.Block {
+ 		})
+ 
+ 		txn := protoutil.MarshalOrPanic(&common.Envelope{
++			Signature: []byte{1, 2, 3},
+ 			Payload: protoutil.MarshalOrPanic(&common.Payload{
+ 				Header: &common.Header{},
+ 			}),
+@@ -558,9 +559,8 @@ func createBlockChain(start, end uint64) []*common.Block {
+ 		return block
+ 	}
+ 	var blockchain []*common.Block
+-	for seq := uint64(start); seq <= uint64(end); seq++ {
++	for seq := start; seq <= end; seq++ {
+ 		block := newBlock(seq)
+-		block.Data.Data = append(block.Data.Data, make([]byte, 100))
+ 		block.Header.DataHash = protoutil.BlockDataHash(block.Data)
+ 		blockchain = append(blockchain, block)
+ 	}
+@@ -706,7 +706,8 @@ func TestConfigFromBlockBadInput(t *testing.T) {
+ 					Payload: protoutil.MarshalOrPanic(&common.Payload{
+ 						Data: []byte{1, 2, 3},
+ 					}),
+-				})}}},
++				})}},
++			},
+ 		},
+ 		{
+ 			name:          "invalid envelope in block",
+@@ -731,7 +732,8 @@ func TestConfigFromBlockBadInput(t *testing.T) {
+ 							ChannelHeader: []byte{1, 2, 3},
+ 						},
+ 					}),
+-				})}}},
++				})}},
++			},
+ 		},
+ 		{
+ 			name:          "invalid config block",
+@@ -747,7 +749,8 @@ func TestConfigFromBlockBadInput(t *testing.T) {
+ 							}),
+ 						},
+ 					}),
+-				})}}},
++				})}},
++			},
+ 		},
+ 	} {
+ 		t.Run(testCase.name, func(t *testing.T) {
+diff --git a/protoutil/blockutils.go b/protoutil/blockutils.go
+index eec72e8ec..46518e994 100644
+--- a/protoutil/blockutils.go
++++ b/protoutil/blockutils.go
+@@ -10,6 +10,8 @@ import (
+ 	"bytes"
+ 	"crypto/sha256"
+ 	"encoding/asn1"
++	"encoding/base64"
++	"fmt"
+ 	"math/big"
+ 
+ 	"github.com/golang/protobuf/proto"
+@@ -218,3 +220,45 @@ func InitBlockMetadata(block *cb.Block) {
+ 		}
+ 	}
+ }
++
++func VerifyTransactionsAreWellFormed(block *cb.Block) error {
++	if block == nil || block.Data == nil || len(block.Data.Data) == 0 {
++		return fmt.Errorf("empty block")
++	}
++
++	// If we have a single transaction, and the block is a config block, then no need to check
++	// well formed-ness, because there cannot be another transaction in the original block.
++	if IsConfigBlock(block) {
++		return nil
++	}
++
++	for i, rawTx := range block.Data.Data {
++		env := &cb.Envelope{}
++		if err := proto.Unmarshal(rawTx, env); err != nil {
++			return fmt.Errorf("transaction %d is invalid: %v", i, err)
++		}
++
++		if len(env.Payload) == 0 {
++			return fmt.Errorf("transaction %d has no payload", i)
++		}
++
++		if len(env.Signature) == 0 {
++			return fmt.Errorf("transaction %d has no signature", i)
++		}
++
++		expected, err := proto.Marshal(env)
++		if err != nil {
++			return fmt.Errorf("failed re-marshaling envelope: %v", err)
++		}
++
++		if len(expected) < len(rawTx) {
++			return fmt.Errorf("transaction %d has %d trailing bytes", i, len(rawTx)-len(expected))
++		}
++		if !bytes.Equal(expected, rawTx) {
++			return fmt.Errorf("transaction %d (%s) does not match its raw form (%s)", i,
++				base64.StdEncoding.EncodeToString(expected), base64.StdEncoding.EncodeToString(rawTx))
++		}
++	}
++
++	return nil
++}
+diff --git a/protoutil/blockutils_test.go b/protoutil/blockutils_test.go
+index e798749a1..9b3e56e1d 100644
+--- a/protoutil/blockutils_test.go
++++ b/protoutil/blockutils_test.go
+@@ -210,7 +210,7 @@ func TestGetMetadataFromBlock(t *testing.T) {
+ }
+ 
+ func TestGetConsenterMetadataFromBlock(t *testing.T) {
+-	var cases = []struct {
++	cases := []struct {
+ 		name       string
+ 		value      []byte
+ 		signatures []byte
+@@ -376,3 +376,131 @@ func TestGetLastConfigIndexFromBlock(t *testing.T) {
+ 		}, "Expected panic with malformed last config metadata")
+ 	})
+ }
++
++func TestVerifyTransactionsAreWellFormed(t *testing.T) {
++	originalBlock := &cb.Block{
++		Data: &cb.BlockData{
++			Data: [][]byte{
++				marshalOrPanic(&cb.Envelope{
++					Payload:   []byte{1, 2, 3},
++					Signature: []byte{4, 5, 6},
++				}),
++				marshalOrPanic(&cb.Envelope{
++					Payload:   []byte{7, 8, 9},
++					Signature: []byte{10, 11, 12},
++				}),
++			},
++		},
++	}
++
++	forgedBlock := proto.Clone(originalBlock).(*cb.Block)
++	tmp := make([]byte, len(forgedBlock.Data.Data[0])+len(forgedBlock.Data.Data[1]))
++	copy(tmp, forgedBlock.Data.Data[0])
++	copy(tmp[len(forgedBlock.Data.Data[0]):], forgedBlock.Data.Data[1])
++	forgedBlock.Data.Data = [][]byte{tmp} // Replace transactions {0,1} with transaction {0 || 1}
++
++	for _, tst := range []struct {
++		name          string
++		expectedError string
++		block         *cb.Block
++	}{
++		{
++			name: "config block",
++			block: &cb.Block{Data: &cb.BlockData{
++				Data: [][]byte{
++					protoutil.MarshalOrPanic(
++						&cb.Envelope{
++							Payload: protoutil.MarshalOrPanic(&cb.Payload{
++								Header: &cb.Header{
++									ChannelHeader: protoutil.MarshalOrPanic(&cb.ChannelHeader{
++										Type: int32(cb.HeaderType_CONFIG),
++									}),
++								},
++							}),
++						}),
++				},
++			}},
++		},
++		{
++			name:          "empty block",
++			expectedError: "empty block",
++		},
++		{
++			name:          "no block data",
++			block:         &cb.Block{},
++			expectedError: "empty block",
++		},
++		{
++			name:          "no transactions",
++			block:         &cb.Block{Data: &cb.BlockData{}},
++			expectedError: "empty block",
++		},
++		{
++			name: "single transaction",
++			block: &cb.Block{Data: &cb.BlockData{Data: [][]byte{marshalOrPanic(&cb.Envelope{
++				Payload:   []byte{1, 2, 3},
++				Signature: []byte{4, 5, 6},
++			})}}},
++		},
++
++		{
++			name:  "good block",
++			block: originalBlock,
++		},
++		{
++			name:          "forged block",
++			block:         forgedBlock,
++			expectedError: "transaction 0 has 10 trailing bytes",
++		},
++		{
++			name:          "no signature",
++			expectedError: "transaction 0 has no signature",
++			block: &cb.Block{
++				Data: &cb.BlockData{
++					Data: [][]byte{
++						marshalOrPanic(&cb.Envelope{
++							Payload: []byte{1, 2, 3},
++						}),
++					},
++				},
++			},
++		},
++		{
++			name:          "no payload",
++			expectedError: "transaction 0 has no payload",
++			block: &cb.Block{
++				Data: &cb.BlockData{
++					Data: [][]byte{
++						marshalOrPanic(&cb.Envelope{
++							Signature: []byte{4, 5, 6},
++						}),
++					},
++				},
++			},
++		},
++		{
++			name:          "transaction invalid",
++			expectedError: "transaction 0 is invalid: proto: common.Envelope: illegal tag 0 (wire type 6)",
++			block: &cb.Block{
++				Data: &cb.BlockData{
++					Data: [][]byte{
++						marshalOrPanic(&cb.Envelope{
++							Payload:   []byte{1, 2, 3},
++							Signature: []byte{4, 5, 6},
++						})[9:],
++					},
++				},
++			},
++		},
++	} {
++		tst := tst
++		t.Run(tst.name, func(t *testing.T) {
++			err := protoutil.VerifyTransactionsAreWellFormed(tst.block)
++			if tst.expectedError == "" {
++				require.NoError(t, err)
++			} else {
++				require.Contains(t, err.Error(), tst.expectedError)
++			}
++		})
++	}
++}
+diff --git a/protoutil/commonutils.go b/protoutil/commonutils.go
+index 76c903cdb..97dd17389 100644
+--- a/protoutil/commonutils.go
++++ b/protoutil/commonutils.go
+@@ -188,7 +188,16 @@ func SignOrPanic(signer identity.Signer, msg []byte) []byte {
+ // IsConfigBlock validates whenever given block contains configuration
+ // update transaction
+ func IsConfigBlock(block *cb.Block) bool {
+-	envelope, err := ExtractEnvelope(block, 0)
++	if block.Data == nil {
++		return false
++	}
++
++	if len(block.Data.Data) != 1 {
++		return false
++	}
++
++	marshaledEnvelope := block.Data.Data[0]
++	envelope, err := GetEnvelopeFromBlock(marshaledEnvelope)
+ 	if err != nil {
+ 		return false
+ 	}

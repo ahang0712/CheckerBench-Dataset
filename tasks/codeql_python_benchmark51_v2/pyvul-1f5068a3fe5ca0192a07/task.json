@@ -1,0 +1,71 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-1f5068a3fe5ca0192a07",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-1f5068a3fe5ca0192a07",
+    "project_id": "pyvul__snowflakedb__snowflake-connector-python",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "src/snowflake/connector/_sql_util.py",
+    "src/snowflake/connector/cursor.py",
+    "src/snowflake/connector/gcs_storage_client.py",
+    "test/unit/test_cursor.py"
+  ],
+  "patch_units": {
+    "before": [
+      "class:SnowflakeCursor",
+      "function:SnowflakeCursor.get_file_transfer_type",
+      "function:SnowflakeCursor._execute_helper",
+      "module:<module>@35",
+      "class:SnowflakeGCSRestClient",
+      "function:SnowflakeGCSRestClient._get_local_file_path_from_put_command",
+      "module:<module>@13",
+      "function:test_get_filetransfer_type"
+    ],
+    "after": [
+      "function:remove_starting_comments",
+      "function:get_file_transfer_type",
+      "function:is_put_statement",
+      "function:is_get_statement",
+      "module:<module>@5",
+      "module:<module>@7",
+      "module:<module>@9",
+      "module:<module>@11",
+      "module:<module>@19",
+      "module:<module>@20",
+      "class:SnowflakeCursor",
+      "function:SnowflakeCursor.get_file_transfer_type",
+      "function:SnowflakeCursor._execute_helper",
+      "module:<module>@35",
+      "class:SnowflakeGCSRestClient",
+      "function:SnowflakeGCSRestClient._get_local_file_path_from_put_command",
+      "module:<module>@13",
+      "function:test_get_filetransfer_type"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/51887dcfe7b812bd843f3a90bce6ab7b253e5b2bcb4f7ac848f4c114825a4951/database",
+      "cache_key": "51887dcfe7b812bd843f3a90bce6ab7b253e5b2bcb4f7ac848f4c114825a4951",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/4fc5588b7743ee66216e918ba584f47435544a3f20dfa638a54387e954e61737/database",
+      "cache_key": "4fc5588b7743ee66216e918ba584f47435544a3f20dfa638a54387e954e61737",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/da7a7cda9635f06af5e6e590e9e469862e58d247d08eb71840969ce954b37632/database",
+      "cache_key": "da7a7cda9635f06af5e6e590e9e469862e58d247d08eb71840969ce954b37632",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-1f5068a3fe5ca0192a07/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-1f5068a3fe5ca0192a07/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,200 @@
+### File: drivers/infiniband/hw/irdma/ctrl.c
+```c
+int irdma_sc_qp_create(struct irdma_sc_qp *qp, struct irdma_create_qp_info *info,
+		       u64 scratch, bool post_sq)
+{
+	struct irdma_sc_cqp *cqp;
+	__le64 *wqe;
+	u64 hdr;
+
+	cqp = qp->dev->cqp;
+	if (qp->qp_uk.qp_id < cqp->dev->hw_attrs.min_hw_qp_id ||
+	    qp->qp_uk.qp_id > (cqp->dev->hmc_info->hmc_obj[IRDMA_HMC_IW_QP].max_cnt - 1))
+		return -EINVAL;
+
+	wqe = irdma_sc_cqp_get_next_send_wqe(cqp, scratch);
+	if (!wqe)
+		return -ENOMEM;
+
+	set_64bit_val(wqe, 16, qp->hw_host_ctx_pa);
+	set_64bit_val(wqe, 40, qp->shadow_area_pa);
+
+	hdr = qp->qp_uk.qp_id |
+	      FIELD_PREP(IRDMA_CQPSQ_OPCODE, IRDMA_CQP_OP_CREATE_QP) |
+	      FIELD_PREP(IRDMA_CQPSQ_QP_ORDVALID, (info->ord_valid ? 1 : 0)) |
+	      FIELD_PREP(IRDMA_CQPSQ_QP_TOECTXVALID, info->tcp_ctx_valid) |
+	      FIELD_PREP(IRDMA_CQPSQ_QP_MACVALID, info->mac_valid) |
+	      FIELD_PREP(IRDMA_CQPSQ_QP_QPTYPE, qp->qp_uk.qp_type) |
+	      FIELD_PREP(IRDMA_CQPSQ_QP_VQ, qp->virtual_map) |
+	      FIELD_PREP(IRDMA_CQPSQ_QP_FORCELOOPBACK, info->force_lpb) |
+	      FIELD_PREP(IRDMA_CQPSQ_QP_CQNUMVALID, info->cq_num_valid) |
+	      FIELD_PREP(IRDMA_CQPSQ_QP_ARPTABIDXVALID,
+			 info->arp_cache_idx_valid) |
+	      FIELD_PREP(IRDMA_CQPSQ_QP_NEXTIWSTATE, info->next_iwarp_state) |
+	      FIELD_PREP(IRDMA_CQPSQ_WQEVALID, cqp->polarity);
+	dma_wmb(); /* make sure WQE is written before valid bit is set */
+
+	set_64bit_val(wqe, 24, hdr);
+
+	print_hex_dump_debug("WQE: QP_CREATE WQE", DUMP_PREFIX_OFFSET, 16, 8,
+			     wqe, IRDMA_CQP_WQE_SIZE * 8, false);
+	if (post_sq)
+		irdma_sc_cqp_post_sq(cqp);
+
+	return 0;
+}
+
+static int irdma_sc_cq_create(struct irdma_sc_cq *cq, u64 scratch,
+			      bool check_overflow, bool post_sq)
+{
+	__le64 *wqe;
+	struct irdma_sc_cqp *cqp;
+	u64 hdr;
+	struct irdma_sc_ceq *ceq;
+	int ret_code = 0;
+
+	cqp = cq->dev->cqp;
+	if (cq->cq_uk.cq_id > (cqp->dev->hmc_info->hmc_obj[IRDMA_HMC_IW_CQ].max_cnt - 1))
+		return -EINVAL;
+
+	if (cq->ceq_id > (cq->dev->hmc_fpm_misc.max_ceqs - 1))
+		return -EINVAL;
+
+	ceq = cq->dev->ceq[cq->ceq_id];
+	if (ceq && ceq->reg_cq)
+		ret_code = irdma_sc_add_cq_ctx(ceq, cq);
+
+	if (ret_code)
+		return ret_code;
+
+	wqe = irdma_sc_cqp_get_next_send_wqe(cqp, scratch);
+	if (!wqe) {
+		if (ceq && ceq->reg_cq)
+			irdma_sc_remove_cq_ctx(ceq, cq);
+		return -ENOMEM;
+	}
+
+	set_64bit_val(wqe, 0, cq->cq_uk.cq_size);
+	set_64bit_val(wqe, 8, (uintptr_t)cq >> 1);
+	set_64bit_val(wqe, 16,
+		      FIELD_PREP(IRDMA_CQPSQ_CQ_SHADOW_READ_THRESHOLD, cq->shadow_read_threshold));
+	set_64bit_val(wqe, 32, (cq->virtual_map ? 0 : cq->cq_pa));
+	set_64bit_val(wqe, 40, cq->shadow_area_pa);
+	set_64bit_val(wqe, 48,
+		      FIELD_PREP(IRDMA_CQPSQ_CQ_FIRSTPMPBLIDX, (cq->virtual_map ? cq->first_pm_pbl_idx : 0)));
+	set_64bit_val(wqe, 56,
+		      FIELD_PREP(IRDMA_CQPSQ_TPHVAL, cq->tph_val) |
+		      FIELD_PREP(IRDMA_CQPSQ_VSIIDX, cq->vsi->vsi_idx));
+
+	hdr = FLD_LS_64(cq->dev, cq->cq_uk.cq_id, IRDMA_CQPSQ_CQ_CQID) |
+	      FLD_LS_64(cq->dev, (cq->ceq_id_valid ? cq->ceq_id : 0),
+			IRDMA_CQPSQ_CQ_CEQID) |
+	      FIELD_PREP(IRDMA_CQPSQ_OPCODE, IRDMA_CQP_OP_CREATE_CQ) |
+	      FIELD_PREP(IRDMA_CQPSQ_CQ_LPBLSIZE, cq->pbl_chunk_size) |
+	      FIELD_PREP(IRDMA_CQPSQ_CQ_CHKOVERFLOW, check_overflow) |
+	      FIELD_PREP(IRDMA_CQPSQ_CQ_VIRTMAP, cq->virtual_map) |
+	      FIELD_PREP(IRDMA_CQPSQ_CQ_ENCEQEMASK, cq->ceqe_mask) |
+	      FIELD_PREP(IRDMA_CQPSQ_CQ_CEQIDVALID, cq->ceq_id_valid) |
+	      FIELD_PREP(IRDMA_CQPSQ_TPHEN, cq->tph_en) |
+	      FIELD_PREP(IRDMA_CQPSQ_CQ_AVOIDMEMCNFLCT,
+			 cq->cq_uk.avoid_mem_cflct) |
+	      FIELD_PREP(IRDMA_CQPSQ_WQEVALID, cqp->polarity);
+	dma_wmb(); /* make sure WQE is written before valid bit is set */
+
+	set_64bit_val(wqe, 24, hdr);
+
+	print_hex_dump_debug("WQE: CQ_CREATE WQE", DUMP_PREFIX_OFFSET, 16, 8,
+			     wqe, IRDMA_CQP_WQE_SIZE * 8, false);
+	if (post_sq)
+		irdma_sc_cqp_post_sq(cqp);
+
+	return 0;
+}
+
+int irdma_sc_ceq_init(struct irdma_sc_ceq *ceq,
+		      struct irdma_ceq_init_info *info)
+{
+	u32 pble_obj_cnt;
+
+	if (info->elem_cnt < info->dev->hw_attrs.min_hw_ceq_size ||
+	    info->elem_cnt > info->dev->hw_attrs.max_hw_ceq_size)
+		return -EINVAL;
+
+	if (info->ceq_id > (info->dev->hmc_fpm_misc.max_ceqs - 1))
+		return -EINVAL;
+	pble_obj_cnt = info->dev->hmc_info->hmc_obj[IRDMA_HMC_IW_PBLE].cnt;
+
+	if (info->virtual_map && info->first_pm_pbl_idx >= pble_obj_cnt)
+		return -EINVAL;
+
+	ceq->size = sizeof(*ceq);
+	ceq->ceqe_base = (struct irdma_ceqe *)info->ceqe_base;
+	ceq->ceq_id = info->ceq_id;
+	ceq->dev = info->dev;
+	ceq->elem_cnt = info->elem_cnt;
+	ceq->ceq_elem_pa = info->ceqe_pa;
+	ceq->virtual_map = info->virtual_map;
+	ceq->itr_no_expire = info->itr_no_expire;
+	ceq->reg_cq = info->reg_cq;
+	ceq->reg_cq_size = 0;
+	spin_lock_init(&ceq->req_cq_lock);
+	ceq->pbl_chunk_size = (ceq->virtual_map ? info->pbl_chunk_size : 0);
+	ceq->first_pm_pbl_idx = (ceq->virtual_map ? info->first_pm_pbl_idx : 0);
+	ceq->pbl_list = (ceq->virtual_map ? info->pbl_list : NULL);
+	ceq->tph_en = info->tph_en;
+	ceq->tph_val = info->tph_val;
+	ceq->vsi = info->vsi;
+	ceq->polarity = 1;
+	IRDMA_RING_INIT(ceq->ceq_ring, ceq->elem_cnt);
+	ceq->dev->ceq[info->ceq_id] = ceq;
+
+	return 0;
+}
+
+int irdma_sc_ccq_init(struct irdma_sc_cq *cq, struct irdma_ccq_init_info *info)
+{
+	u32 pble_obj_cnt;
+
+	if (info->num_elem < info->dev->hw_attrs.uk_attrs.min_hw_cq_size ||
+	    info->num_elem > info->dev->hw_attrs.uk_attrs.max_hw_cq_size)
+		return -EINVAL;
+
+	if (info->ceq_id > (info->dev->hmc_fpm_misc.max_ceqs - 1))
+		return -EINVAL;
+
+	pble_obj_cnt = info->dev->hmc_info->hmc_obj[IRDMA_HMC_IW_PBLE].cnt;
+
+	if (info->virtual_map && info->first_pm_pbl_idx >= pble_obj_cnt)
+		return -EINVAL;
+
+	cq->cq_pa = info->cq_pa;
+	cq->cq_uk.cq_base = info->cq_base;
+	cq->shadow_area_pa = info->shadow_area_pa;
+	cq->cq_uk.shadow_area = info->shadow_area;
+	cq->shadow_read_threshold = info->shadow_read_threshold;
+	cq->dev = info->dev;
+	cq->ceq_id = info->ceq_id;
+	cq->cq_uk.cq_size = info->num_elem;
+	cq->cq_type = IRDMA_CQ_TYPE_CQP;
+	cq->ceqe_mask = info->ceqe_mask;
+	IRDMA_RING_INIT(cq->cq_uk.cq_ring, info->num_elem);
+	cq->cq_uk.cq_id = 0; /* control cq is id 0 always */
+	cq->ceq_id_valid = info->ceq_id_valid;
+	cq->tph_en = info->tph_en;
+	cq->tph_val = info->tph_val;
+	cq->cq_uk.avoid_mem_cflct = info->avoid_mem_cflct;
+	cq->pbl_list = info->pbl_list;
+	cq->virtual_map = info->virtual_map;
+	cq->pbl_chunk_size = info->pbl_chunk_size;
+	cq->first_pm_pbl_idx = info->first_pm_pbl_idx;
+	cq->cq_uk.polarity = true;
+	cq->vsi = info->vsi;
+	cq->cq_uk.cq_ack_db = cq->dev->cq_ack_db;
+
+	/* Only applicable to CQs other than CCQ so initialize to zero */
+	cq->cq_uk.cqe_alloc_db = NULL;
+
+	info->dev->ccq = cq;
+	return 0;
+}
+```

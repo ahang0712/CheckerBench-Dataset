@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "91bfe3104b8db0310f76f2dcb6aacef24c889366",
+  "after_commit": "2c58c3931ede7cd08cbecf1f1a4acaf0a04a41a9",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/706a741595047797872e669b3101429ab8d378ef/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/706a741595047797872e669b3101429ab8d378ef/compile_commands.json",
+  "changed_files": [
+    "fs/btrfs/delayed-inode.c"
+  ],
+  "commit_message": "btrfs: remove BUG() after failure to insert delayed dir index item\n\nInstead of calling BUG() when we fail to insert a delayed dir index item\ninto the delayed node's tree, we can just release all the resources we\nhave allocated/acquired before and return the error to the caller. This is\nfine because all existing call chains undo anything they have done before\ncalling btrfs_insert_delayed_dir_index() or BUG_ON (when creating pending\nsnapshots in the transaction commit path).\n\nSo remove the BUG() call and do proper error handling.\n\nThis relates to a syzbot report linked below, but does not fix it because\nit only prevents hitting a BUG(), it does not fix the issue where somehow\nwe attempt to use twice the same index number for different index items.\n\nLink: https://lore.kernel.org/linux-btrfs/00000000000036e1290603e097e0@google.com/\nCC: stable@vger.kernel.org # 5.4+\nReviewed-by: Qu Wenruo <wqu@suse.com>\nSigned-off-by: Filipe Manana <fdmanana@suse.com>\nReviewed-by: David Sterba <dsterba@suse.com>\nSigned-off-by: David Sterba <dsterba@suse.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,61 @@
+diff --git a/drivers/bluetooth/hci_ldisc.c b/drivers/bluetooth/hci_ldisc.c
+index f537673ede17..865112e96ff9 100644
+--- a/drivers/bluetooth/hci_ldisc.c
++++ b/drivers/bluetooth/hci_ldisc.c
+@@ -493,6 +493,11 @@ static int hci_uart_tty_open(struct tty_struct *tty)
+ 		BT_ERR("Can't allocate control structure");
+ 		return -ENFILE;
+ 	}
++	if (percpu_init_rwsem(&hu->proto_lock)) {
++		BT_ERR("Can't allocate semaphore structure");
++		kfree(hu);
++		return -ENOMEM;
++	}
+ 
+ 	tty->disc_data = hu;
+ 	hu->tty = tty;
+@@ -505,8 +510,6 @@ static int hci_uart_tty_open(struct tty_struct *tty)
+ 	INIT_WORK(&hu->init_ready, hci_uart_init_work);
+ 	INIT_WORK(&hu->write_work, hci_uart_write_work);
+ 
+-	percpu_init_rwsem(&hu->proto_lock);
+-
+ 	/* Flush any pending characters in the driver */
+ 	tty_driver_flush_buffer(tty);
+ 
+diff --git a/drivers/bluetooth/hci_serdev.c b/drivers/bluetooth/hci_serdev.c
+index c0e5f42ec6b7..f16fd79bc02b 100644
+--- a/drivers/bluetooth/hci_serdev.c
++++ b/drivers/bluetooth/hci_serdev.c
+@@ -310,11 +310,12 @@ int hci_uart_register_device(struct hci_uart *hu,
+ 
+ 	serdev_device_set_client_ops(hu->serdev, &hci_serdev_client_ops);
+ 
++	if (percpu_init_rwsem(&hu->proto_lock))
++		return -ENOMEM;
++
+ 	err = serdev_device_open(hu->serdev);
+ 	if (err)
+-		return err;
+-
+-	percpu_init_rwsem(&hu->proto_lock);
++		goto err_rwsem;
+ 
+ 	err = p->open(hu);
+ 	if (err)
+@@ -389,6 +390,8 @@ int hci_uart_register_device(struct hci_uart *hu,
+ 	p->close(hu);
+ err_open:
+ 	serdev_device_close(hu->serdev);
++err_rwsem:
++	percpu_free_rwsem(&hu->proto_lock);
+ 	return err;
+ }
+ EXPORT_SYMBOL_GPL(hci_uart_register_device);
+@@ -410,5 +413,6 @@ void hci_uart_unregister_device(struct hci_uart *hu)
+ 		clear_bit(HCI_UART_PROTO_READY, &hu->flags);
+ 		serdev_device_close(hu->serdev);
+ 	}
++	percpu_free_rwsem(&hu->proto_lock);
+ }
+ EXPORT_SYMBOL_GPL(hci_uart_unregister_device);

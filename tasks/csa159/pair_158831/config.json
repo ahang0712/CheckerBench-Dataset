@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "646be03ec46cc736d78ca4db2e0b00fa84446d77",
+  "after_commit": "f753a68980cf4b59a80fe677619da2b1804f526d",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/6d796c50f84ca79f1722bb131799e5a5710c4700/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/6d796c50f84ca79f1722bb131799e5a5710c4700/compile_commands.json",
+  "changed_files": [
+    "net/rds/message.c"
+  ],
+  "commit_message": "rds: rds_rm_zerocopy_callback() use list_first_entry()\n\nrds_rm_zerocopy_callback() uses list_entry() on the head of a list\ncausing a type confusion.\nUse list_first_entry() to actually access the first element of the\nrs_zcookie_queue list.\n\nFixes: 9426bbc6de99 (\"rds: use list structure to track information for zerocopy completion notification\")\nReviewed-by: Willem de Bruijn <willemb@google.com>\nSigned-off-by: Pietro Borrello <borrello@diag.uniroma1.it>\nLink: https://lore.kernel.org/r/20230202-rds-zerocopy-v3-1-83b0df974f9a@diag.uniroma1.it\nSigned-off-by: Paolo Abeni <pabeni@redhat.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

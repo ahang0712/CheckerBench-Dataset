@@ -1,0 +1,50 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-110ab7950a2c0b2c6f28",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-110ab7950a2c0b2c6f28",
+    "project_id": "morefixes__knative__func",
+    "language": "go",
+    "backend": "codeql"
+  },
+  "changed_go_files": [
+    "cmd/root.go",
+    "cmd/root_test.go",
+    "k8s/dialer.go"
+  ],
+  "patch_units": {
+    "before": [
+      "cmd/root.go",
+      "cmd/root_test.go",
+      "k8s/dialer.go"
+    ],
+    "after": [
+      "cmd/root.go",
+      "cmd/root_test.go",
+      "k8s/dialer.go"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/08284f23afbd2e56b5f3944acdb0c0975290472be54b872e2c20886e0b65c32f/database",
+      "cache_key": "08284f23afbd2e56b5f3944acdb0c0975290472be54b872e2c20886e0b65c32f",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/a8bac0a3442c882bbb51475fbca20f21b952efe6c1c0ac256b33e3ba4f4ea70c/database",
+      "cache_key": "a8bac0a3442c882bbb51475fbca20f21b952efe6c1c0ac256b33e3ba4f4ea70c",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/b6216b5c2d77b05bec8f32b5782769a2951f4c42109340ba350a5ccabd90b13d/database",
+      "cache_key": "b6216b5c2d77b05bec8f32b5782769a2951f4c42109340ba350a5ccabd90b13d",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-110ab7950a2c0b2c6f28/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-110ab7950a2c0b2c6f28/ (do not mount into agent)"
+  }
+}

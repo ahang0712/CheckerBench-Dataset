@@ -1,0 +1,47 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-bd86b40955cabdb21c65",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-bd86b40955cabdb21c65",
+    "project_id": "morefixes__gruntjs__grunt",
+    "language": "javascript",
+    "backend": "codeql"
+  },
+  "changed_javascript_files": [
+    "lib/grunt/file.js",
+    "test/grunt/file_test.js"
+  ],
+  "patch_units": {
+    "before": [
+      "lib/grunt/file.js",
+      "test/grunt/file_test.js"
+    ],
+    "after": [
+      "lib/grunt/file.js",
+      "test/grunt/file_test.js"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/02cb3a5b27277341fde7cb798eaeaeb3c5d83b4e4acd4d6b4a98965fc10e1605/database",
+      "cache_key": "02cb3a5b27277341fde7cb798eaeaeb3c5d83b4e4acd4d6b4a98965fc10e1605",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/eb77ea6d92b6c72eb8dc11aa246e47e216d8b48aef2ce4d6373612fe26b02352/database",
+      "cache_key": "eb77ea6d92b6c72eb8dc11aa246e47e216d8b48aef2ce4d6373612fe26b02352",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/f01b0853188109deaa475f66af5d68a75ba48999aadac9465325cf12fbd9367a/database",
+      "cache_key": "f01b0853188109deaa475f66af5d68a75ba48999aadac9465325cf12fbd9367a",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-bd86b40955cabdb21c65/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-bd86b40955cabdb21c65/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-cb3f3f84ff4550031205",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-cb3f3f84ff4550031205",
+    "project_id": "pyvul__ikus060__rdiffweb",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "rdiffweb/core/model/__init__.py",
+    "rdiffweb/core/model/_sshkey.py",
+    "rdiffweb/core/model/_user.py",
+    "rdiffweb/core/model/tests/test_user.py"
+  ],
+  "patch_units": {
+    "before": [
+      "module:<module>@22",
+      "module:<module>@23",
+      "module:<module>@27",
+      "module:<module>@28",
+      "module:<module>@19",
+      "class:UserObject",
+      "function:UserObject.add_authorizedkey",
+      "class:UserObjectTest",
+      "function:UserObjectTest.test_add_authorizedkey_duplicate",
+      "function:UserObjectTest.test_add_authorizedkey_with_file"
+    ],
+    "after": [
+      "function:db_after_create",
+      "module:<module>@22",
+      "module:<module>@27",
+      "module:<module>@19",
+      "module:<module>@33",
+      "class:UserObject",
+      "function:UserObject.add_authorizedkey",
+      "class:UserObjectTest",
+      "function:UserObjectTest.test_add_authorizedkey_duplicate",
+      "function:UserObjectTest.test_add_authorizedkey_duplicate_new_comment",
+      "function:UserObjectTest.test_add_authorizedkey_duplicate_new_user"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/b105431118758d5fc81074acd31302e52ce280c69f32cd7b72199adc30da4c28/database",
+      "cache_key": "b105431118758d5fc81074acd31302e52ce280c69f32cd7b72199adc30da4c28",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/89a2f292d736abdb3c9f59649bf2ddd0f941069b129ed959e36c371a2b47d422/database",
+      "cache_key": "89a2f292d736abdb3c9f59649bf2ddd0f941069b129ed959e36c371a2b47d422",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/1b8f80f5c99bf916a656f03c56b87928f4c2202ce53851102eff56ffb3a1c99d/database",
+      "cache_key": "1b8f80f5c99bf916a656f03c56b87928f4c2202ce53851102eff56ffb3a1c99d",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-cb3f3f84ff4550031205/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-cb3f3f84ff4550031205/ (do not mount into agent)"
+  }
+}

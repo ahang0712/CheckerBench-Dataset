@@ -1,0 +1,19 @@
+{
+  "project_id": "jerryscript-project_jerryscript",
+  "before_commit": "8fa7819c1f79c7c28aba7ed8ceb4d00cc007e839",
+  "after_commit": "2a3782141c75eb5be5d99eaab42541ea510321b4",
+  "repo_path": "/workspace/repo/jerryscript-project/jerryscript",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/jerryscript-project_jerryscript/c51b2682760e062c8735a91635ae1f02634aa74b/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/jerryscript-project_jerryscript/c51b2682760e062c8735a91635ae1f02634aa74b/compile_commands.json",
+  "changed_files": [
+    "jerry-core/vm/opcodes.c"
+  ],
+  "commit_message": "Fix fast array objects cannot hold private properties (#4952)\n\nThis patch fixes #4934.\n\nJerryScript-DCO-1.0-Signed-off-by: Robert Fancsik robert.fancsik@h-lab.eu",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

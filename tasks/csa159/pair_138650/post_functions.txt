@@ -1,0 +1,318 @@
+### File: src/lib/openjp2/j2k.c
+```c
+static OPJ_BOOL opj_j2k_read_SPCod_SPCoc(  opj_j2k_t *p_j2k,
+                                                                OPJ_UINT32 compno,
+                                                                OPJ_BYTE * p_header_data,
+                                                                OPJ_UINT32 * p_header_size,
+                                                                opj_event_mgr_t * p_manager)
+{
+        OPJ_UINT32 i, l_tmp;
+        opj_cp_t *l_cp = NULL;
+        opj_tcp_t *l_tcp = NULL;
+        opj_tccp_t *l_tccp = NULL;
+        OPJ_BYTE * l_current_ptr = NULL;
+
+        /* preconditions */
+        assert(p_j2k != 00);
+        assert(p_manager != 00);
+        assert(p_header_data != 00);
+
+        l_cp = &(p_j2k->m_cp);
+        l_tcp = (p_j2k->m_specific_param.m_decoder.m_state == J2K_STATE_TPH) ?
+                                &l_cp->tcps[p_j2k->m_current_tile_number] :
+                                p_j2k->m_specific_param.m_decoder.m_default_tcp;
+
+        /* precondition again */
+        assert(compno < p_j2k->m_private_image->numcomps);
+
+        l_tccp = &l_tcp->tccps[compno];
+        l_current_ptr = p_header_data;
+
+        /* make sure room is sufficient */
+        if (*p_header_size < 5) {
+                opj_event_msg(p_manager, EVT_ERROR, "Error reading SPCod SPCoc element\n");
+                return OPJ_FALSE;
+        }
+
+        opj_read_bytes(l_current_ptr, &l_tccp->numresolutions ,1);              /* SPcox (D) */
+        ++l_tccp->numresolutions;                                                                               /* tccp->numresolutions = read() + 1 */
+        if (l_tccp->numresolutions > OPJ_J2K_MAXRLVLS) {
+                opj_event_msg(p_manager, EVT_ERROR,
+                              "Invalid value for numresolutions : %d, max value is set in openjpeg.h at %d\n",
+                              l_tccp->numresolutions, OPJ_J2K_MAXRLVLS);
+                return OPJ_FALSE;
+        }
+        ++l_current_ptr;
+
+        /* If user wants to remove more resolutions than the codestream contains, return error */
+        if (l_cp->m_specific_param.m_dec.m_reduce >= l_tccp->numresolutions) {
+                opj_event_msg(p_manager, EVT_ERROR, "Error decoding component %d.\nThe number of resolutions to remove is higher than the number "
+                                        "of resolutions of this component\nModify the cp_reduce parameter.\n\n", compno);
+                p_j2k->m_specific_param.m_decoder.m_state |= 0x8000;/* FIXME J2K_DEC_STATE_ERR;*/
+                return OPJ_FALSE;
+        }
+
+        opj_read_bytes(l_current_ptr,&l_tccp->cblkw ,1);                /* SPcoc (E) */
+        ++l_current_ptr;
+        l_tccp->cblkw += 2;
+
+        opj_read_bytes(l_current_ptr,&l_tccp->cblkh ,1);                /* SPcoc (F) */
+        ++l_current_ptr;
+        l_tccp->cblkh += 2;
+
+        if ((l_tccp->cblkw > 10) || (l_tccp->cblkh > 10) || ((l_tccp->cblkw + l_tccp->cblkh) > 12)) {
+                opj_event_msg(p_manager, EVT_ERROR, "Error reading SPCod SPCoc element, Invalid cblkw/cblkh combination\n");
+                return OPJ_FALSE;
+        }
+	
+
+        opj_read_bytes(l_current_ptr,&l_tccp->cblksty ,1);              /* SPcoc (G) */
+        ++l_current_ptr;
+        if (l_tccp->cblksty & 0xC0U) { /* 2 msb are reserved, assume we can't read */
+                opj_event_msg(p_manager, EVT_ERROR, "Error reading SPCod SPCoc element, Invalid code-block style found\n");
+                return OPJ_FALSE;
+        }
+
+        opj_read_bytes(l_current_ptr,&l_tccp->qmfbid ,1);               /* SPcoc (H) */
+        ++l_current_ptr;
+
+        *p_header_size = *p_header_size - 5;
+
+        /* use custom precinct size ? */
+        if (l_tccp->csty & J2K_CCP_CSTY_PRT) {
+                if (*p_header_size < l_tccp->numresolutions) {
+                        opj_event_msg(p_manager, EVT_ERROR, "Error reading SPCod SPCoc element\n");
+                        return OPJ_FALSE;
+                }
+
+                for     (i = 0; i < l_tccp->numresolutions; ++i) {
+                        opj_read_bytes(l_current_ptr,&l_tmp ,1);                /* SPcoc (I_i) */
+                        ++l_current_ptr;
+                        /* Precinct exponent 0 is only allowed for lowest resolution level (Table A.21) */
+                        if ((i != 0) && (((l_tmp & 0xf) == 0) || ((l_tmp >> 4) == 0))) {
+                                opj_event_msg(p_manager, EVT_ERROR, "Invalid precinct size\n");
+                                return OPJ_FALSE;
+                        }
+                        l_tccp->prcw[i] = l_tmp & 0xf;
+                        l_tccp->prch[i] = l_tmp >> 4;
+                }
+
+                *p_header_size = *p_header_size - l_tccp->numresolutions;
+        }
+        else {
+                /* set default size for the precinct width and height */
+                for     (i = 0; i < l_tccp->numresolutions; ++i) {
+                        l_tccp->prcw[i] = 15;
+                        l_tccp->prch[i] = 15;
+                }
+        }
+
+#ifdef WIP_REMOVE_MSD
+        /* INDEX >> */
+        if (p_j2k->cstr_info && compno == 0) {
+                OPJ_UINT32 l_data_size = l_tccp->numresolutions * sizeof(OPJ_UINT32);
+
+                p_j2k->cstr_info->tile[p_j2k->m_current_tile_number].tccp_info[compno].cblkh = l_tccp->cblkh;
+                p_j2k->cstr_info->tile[p_j2k->m_current_tile_number].tccp_info[compno].cblkw = l_tccp->cblkw;
+                p_j2k->cstr_info->tile[p_j2k->m_current_tile_number].tccp_info[compno].numresolutions = l_tccp->numresolutions;
+                p_j2k->cstr_info->tile[p_j2k->m_current_tile_number].tccp_info[compno].cblksty = l_tccp->cblksty;
+                p_j2k->cstr_info->tile[p_j2k->m_current_tile_number].tccp_info[compno].qmfbid = l_tccp->qmfbid;
+
+                memcpy(p_j2k->cstr_info->tile[p_j2k->m_current_tile_number].pdx,l_tccp->prcw, l_data_size);
+                memcpy(p_j2k->cstr_info->tile[p_j2k->m_current_tile_number].pdy,l_tccp->prch, l_data_size);
+        }
+        /* << INDEX */
+#endif
+
+        return OPJ_TRUE;
+}
+```
+
+### File: src/lib/openjp2/t2.c
+```c
+static OPJ_BOOL opj_t2_read_packet_header( opj_t2_t* p_t2,
+                                    opj_tcd_tile_t *p_tile,
+                                    opj_tcp_t *p_tcp,
+                                    opj_pi_iterator_t *p_pi,
+                                    OPJ_BOOL * p_is_data_present,
+                                    OPJ_BYTE *p_src_data,
+                                    OPJ_UINT32 * p_data_read,
+                                    OPJ_UINT32 p_max_length,
+                                    opj_packet_info_t *p_pack_info,
+                                    opj_event_mgr_t *p_manager)
+
+{
+        /* loop */
+        OPJ_UINT32 bandno, cblkno;
+        OPJ_UINT32 l_nb_code_blocks;
+        OPJ_UINT32 l_remaining_length;
+        OPJ_UINT32 l_header_length;
+        OPJ_UINT32 * l_modified_length_ptr = 00;
+        OPJ_BYTE *l_current_data = p_src_data;
+        opj_cp_t *l_cp = p_t2->cp;
+        opj_bio_t *l_bio = 00;  /* BIO component */
+        opj_tcd_band_t *l_band = 00;
+        opj_tcd_cblk_dec_t* l_cblk = 00;
+        opj_tcd_resolution_t* l_res = &p_tile->comps[p_pi->compno].resolutions[p_pi->resno];
+
+        OPJ_BYTE *l_header_data = 00;
+        OPJ_BYTE **l_header_data_start = 00;
+
+        OPJ_UINT32 l_present;
+
+        if (p_pi->layno == 0) {
+                l_band = l_res->bands;
+
+                /* reset tagtrees */
+                for (bandno = 0; bandno < l_res->numbands; ++bandno) {
+                        if ( ! ((l_band->x1-l_band->x0 == 0)||(l_band->y1-l_band->y0 == 0)) ) {
+                                opj_tcd_precinct_t *l_prc = &l_band->precincts[p_pi->precno];
+                                if (!(p_pi->precno < (l_band->precincts_data_size / sizeof(opj_tcd_precinct_t)))) {
+                                        opj_event_msg(p_manager, EVT_ERROR, "Invalid precinct\n");
+                                        return OPJ_FALSE;
+                                }
+													
+													
+                                opj_tgt_reset(l_prc->incltree);
+                                opj_tgt_reset(l_prc->imsbtree);
+                                l_cblk = l_prc->cblks.dec;
+
+                                l_nb_code_blocks = l_prc->cw * l_prc->ch;
+                                for (cblkno = 0; cblkno < l_nb_code_blocks; ++cblkno) {
+                                        l_cblk->numsegs = 0;
+                                        l_cblk->real_num_segs = 0;
+                                        ++l_cblk;
+                                }
+                        }
+
+                        ++l_band;
+                }
+        }
+
+        /* SOP markers */
+
+        if (p_tcp->csty & J2K_CP_CSTY_SOP) {
+                if (p_max_length < 6) {
+												opj_event_msg(p_manager, EVT_WARNING, "Not enough space for expected SOP marker\n");
+                } else if ((*l_current_data) != 0xff || (*(l_current_data + 1) != 0x91)) {
+                        opj_event_msg(p_manager, EVT_WARNING, "Expected SOP marker\n");
+                } else {
+                        l_current_data += 6;
+                }
+
+                /** TODO : check the Nsop value */
+        }
+
+        /*
+        When the marker PPT/PPM is used the packet header are store in PPT/PPM marker
+        This part deal with this caracteristic
+        step 1: Read packet header in the saved structure
+        step 2: Return to codestream for decoding
+        */
+
+        l_bio = opj_bio_create();
+        if (! l_bio) {
+                return OPJ_FALSE;
+        }
+
+        if (l_cp->ppm == 1) { /* PPM */
+                l_header_data_start = &l_cp->ppm_data;
+                l_header_data = *l_header_data_start;
+                l_modified_length_ptr = &(l_cp->ppm_len);
+
+        }
+        else if (p_tcp->ppt == 1) { /* PPT */
+                l_header_data_start = &(p_tcp->ppt_data);
+                l_header_data = *l_header_data_start;
+                l_modified_length_ptr = &(p_tcp->ppt_len);
+        }
+        else {  /* Normal Case */
+                l_header_data_start = &(l_current_data);
+                l_header_data = *l_header_data_start;
+                l_remaining_length = (OPJ_UINT32)(p_src_data+p_max_length-l_header_data);
+                l_modified_length_ptr = &(l_remaining_length);
+        }
+
+        opj_bio_init_dec(l_bio, l_header_data,*l_modified_length_ptr);
+
+        l_present = opj_bio_read(l_bio, 1);
+        JAS_FPRINTF(stderr, "present=%d \n", l_present );
+        if (!l_present) {
+            /* TODO MSD: no test to control the output of this function*/
+                opj_bio_inalign(l_bio);
+                l_header_data += opj_bio_numbytes(l_bio);
+                opj_bio_destroy(l_bio);
+
+                /* EPH markers */
+                if (p_tcp->csty & J2K_CP_CSTY_EPH) {
+                        if ((*l_modified_length_ptr - (OPJ_UINT32)(l_header_data - *l_header_data_start)) < 2U) {
+                                opj_event_msg(p_manager, EVT_WARNING, "Not enough space for expected EPH marker\n");
+                        } else if ((*l_header_data) != 0xff || (*(l_header_data + 1) != 0x92)) {
+                                opj_event_msg(p_manager, EVT_WARNING, "Expected EPH marker\n");
+                        } else {
+                                l_header_data += 2;
+                        }
+                }
+
+                l_header_length = (OPJ_UINT32)(l_header_data - *l_header_data_start);
+                *l_modified_length_ptr -= l_header_length;
+                *l_header_data_start += l_header_length;
+
+                /* << INDEX */
+                /* End of packet header position. Currently only represents the distance to start of packet
+                   Will be updated later by incrementing with packet start value */
+                if (p_pack_info) {
+                        p_pack_info->end_ph_pos = (OPJ_INT32)(l_current_data - p_src_data);
+                }
+                /* INDEX >> */
+
+                * p_is_data_present = OPJ_FALSE;
+                *p_data_read = (OPJ_UINT32)(l_current_data - p_src_data);
+                return OPJ_TRUE;
+        }
+
+        l_band = l_res->bands;
+        for (bandno = 0; bandno < l_res->numbands; ++bandno) {
+                opj_tcd_precinct_t *l_prc = &(l_band->precincts[p_pi->precno]);
+
+                if ((l_band->x1-l_band->x0 == 0)||(l_band->y1-l_band->y0 == 0)) {
+                        ++l_band;
+                        continue;
+                }
+
+                l_nb_code_blocks = l_prc->cw * l_prc->ch;
+                l_cblk = l_prc->cblks.dec;
+                for (cblkno = 0; cblkno < l_nb_code_blocks; cblkno++) {
+                        OPJ_UINT32 l_included,l_increment, l_segno;
+                        OPJ_INT32 n;
+
+                        /* if cblk not yet included before --> inclusion tagtree */
+                        if (!l_cblk->numsegs) {
+                                l_included = opj_tgt_decode(l_bio, l_prc->incltree, cblkno, (OPJ_INT32)(p_pi->layno + 1));
+                                /* else one bit */
+                        }
+                        else {
+                                l_included = opj_bio_read(l_bio, 1);
+                        }
+
+                        /* if cblk not included */
+                        if (!l_included) {
+                                l_cblk->numnewpasses = 0;
+                                ++l_cblk;
+                                JAS_FPRINTF(stderr, "included=%d \n", l_included);
+                                continue;
+                        }
+
+                        /* if cblk not yet included --> zero-bitplane tagtree */
+                        if (!l_cblk->numsegs) {
+                                OPJ_UINT32 i = 0;
+
+                                while (!opj_tgt_decode(l_bio, l_prc->imsbtree, cblkno, (OPJ_INT32)i)) {
+                                        ++i;
+                                }
+
+                                l_cblk->numbps = (OPJ_UINT32)l_band->numbps + 1 - i;
+                               
+
+// ... (4174 more chars)
+```

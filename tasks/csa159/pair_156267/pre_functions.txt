@@ -1,0 +1,95 @@
+### File: drivers/phy/freescale/phy-fsl-lynx-28g.c
+```c
+static int lynx_28g_set_mode(struct phy *phy, enum phy_mode mode, int submode)
+{
+	struct lynx_28g_lane *lane = phy_get_drvdata(phy);
+	struct lynx_28g_priv *priv = lane->priv;
+	int powered_up = lane->powered_up;
+	int err = 0;
+
+	if (mode != PHY_MODE_ETHERNET)
+		return -EOPNOTSUPP;
+
+	if (lane->interface == PHY_INTERFACE_MODE_NA)
+		return -EOPNOTSUPP;
+
+	if (!lynx_28g_supports_interface(priv, submode))
+		return -EOPNOTSUPP;
+
+	/* If the lane is powered up, put the lane into the halt state while
+	 * the reconfiguration is being done.
+	 */
+	if (powered_up)
+		lynx_28g_power_off(phy);
+
+	switch (submode) {
+	case PHY_INTERFACE_MODE_SGMII:
+	case PHY_INTERFACE_MODE_1000BASEX:
+		lynx_28g_lane_set_sgmii(lane);
+		break;
+	case PHY_INTERFACE_MODE_10GBASER:
+		lynx_28g_lane_set_10gbaser(lane);
+		break;
+	default:
+		err = -EOPNOTSUPP;
+		goto out;
+	}
+
+	lane->interface = submode;
+
+out:
+	/* Power up the lane if necessary */
+	if (powered_up)
+		lynx_28g_power_on(phy);
+
+	return err;
+}
+
+static int lynx_28g_probe(struct platform_device *pdev)
+{
+	struct device *dev = &pdev->dev;
+	struct phy_provider *provider;
+	struct lynx_28g_priv *priv;
+	int i;
+
+	priv = devm_kzalloc(&pdev->dev, sizeof(*priv), GFP_KERNEL);
+	if (!priv)
+		return -ENOMEM;
+	priv->dev = &pdev->dev;
+
+	priv->base = devm_platform_ioremap_resource(pdev, 0);
+	if (IS_ERR(priv->base))
+		return PTR_ERR(priv->base);
+
+	lynx_28g_pll_read_configuration(priv);
+
+	for (i = 0; i < LYNX_28G_NUM_LANE; i++) {
+		struct lynx_28g_lane *lane = &priv->lane[i];
+		struct phy *phy;
+
+		memset(lane, 0, sizeof(*lane));
+
+		phy = devm_phy_create(&pdev->dev, NULL, &lynx_28g_ops);
+		if (IS_ERR(phy))
+			return PTR_ERR(phy);
+
+		lane->priv = priv;
+		lane->phy = phy;
+		lane->id = i;
+		phy_set_drvdata(phy, lane);
+		lynx_28g_lane_read_configuration(lane);
+	}
+
+	dev_set_drvdata(dev, priv);
+
+	INIT_DELAYED_WORK(&priv->cdr_check, lynx_28g_cdr_lock_check);
+
+	queue_delayed_work(system_power_efficient_wq, &priv->cdr_check,
+			   msecs_to_jiffies(1000));
+
+	dev_set_drvdata(&pdev->dev, priv);
+	provider = devm_of_phy_provider_register(&pdev->dev, lynx_28g_xlate);
+
+	return PTR_ERR_OR_ZERO(provider);
+}
+```

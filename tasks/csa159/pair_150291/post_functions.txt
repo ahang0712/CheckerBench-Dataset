@@ -1,0 +1,38 @@
+### File: drivers/md/md-llbitmap.c
+```c
+static struct page *llbitmap_read_page(struct llbitmap *llbitmap, int idx)
+{
+	struct mddev *mddev = llbitmap->mddev;
+	struct page *page = NULL;
+	struct md_rdev *rdev;
+
+	if (llbitmap->pctl && llbitmap->pctl[idx])
+		page = llbitmap->pctl[idx]->page;
+	if (page)
+		return page;
+
+	page = alloc_page(GFP_KERNEL | __GFP_ZERO);
+	if (!page)
+		return ERR_PTR(-ENOMEM);
+
+	rdev_for_each(rdev, mddev) {
+		sector_t sector;
+
+		if (rdev->raid_disk < 0 || test_bit(Faulty, &rdev->flags) ||
+		    !test_bit(In_sync, &rdev->flags))
+			continue;
+
+		sector = mddev->bitmap_info.offset +
+			 (idx << PAGE_SECTORS_SHIFT);
+
+		if (sync_page_io(rdev, sector, PAGE_SIZE, page, REQ_OP_READ,
+				 true))
+			return page;
+
+		md_error(mddev, rdev);
+	}
+
+	__free_page(page);
+	return ERR_PTR(-EIO);
+}
+```

@@ -1,0 +1,15 @@
+diff --git a/webkit/src/main/java/org/netbeans/html/presenters/webkit/UnJarResources.java b/webkit/src/main/java/org/netbeans/html/presenters/webkit/UnJarResources.java
+index fb00113..1559a6d 100644
+--- a/webkit/src/main/java/org/netbeans/html/presenters/webkit/UnJarResources.java
++++ b/webkit/src/main/java/org/netbeans/html/presenters/webkit/UnJarResources.java
+@@ -39,9 +39,7 @@ final class UnJarResources {
+         if (jar == null) {
+             return url;
+         }
+-        File dir = File.createTempFile(jar.getName(), ".dir");
+-        dir.delete();
+-        dir.mkdirs();
++        File dir = Files.createTempDirectory(jar.getName() + ".dir").toFile();
+ 
+         Enumeration<JarEntry> en = jar.entries();
+         while (en.hasMoreElements()) {

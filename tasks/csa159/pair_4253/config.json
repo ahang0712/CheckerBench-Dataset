@@ -1,0 +1,19 @@
+{
+  "project_id": "gpac_gpac",
+  "before_commit": "a97e5e8625e46eedd2512cc74727d662c9204e0e",
+  "after_commit": "9024531ee8e6ae8318a8fe0cbb64710d1acc31f6",
+  "repo_path": "/workspace/repo/gpac/gpac",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/gpac_gpac/040999e052bd084203e0447fac8f1f13eb7406d5/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/gpac_gpac/040999e052bd084203e0447fac8f1f13eb7406d5/compile_commands.json",
+  "changed_files": [
+    "src/isomedia/box_funcs.c"
+  ],
+  "commit_message": "fixed #2537",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

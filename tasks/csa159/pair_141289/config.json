@@ -1,0 +1,20 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "deee93d13d385103205879a8a0915036ecd83261",
+  "after_commit": "3124d320c22f3f4388d9ac5c8f37eaad0cefd6b1",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/88e500affe72fb704c4f201974b5199ca6f51e6c/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/88e500affe72fb704c4f201974b5199ca6f51e6c/compile_commands.json",
+  "changed_files": [
+    "drivers/bluetooth/hci_ldisc.c",
+    "drivers/bluetooth/hci_serdev.c"
+  ],
+  "commit_message": "Bluetooth: hci_{ldisc,serdev}: check percpu_init_rwsem() failure\n\nsyzbot is reporting NULL pointer dereference at hci_uart_tty_close() [1],\nfor rcu_sync_enter() is called without rcu_sync_init() due to\nhci_uart_tty_open() ignoring percpu_init_rwsem() failure.\n\nWhile we are at it, fix that hci_uart_register_device() ignores\npercpu_init_rwsem() failure and hci_uart_unregister_device() does not\ncall percpu_free_rwsem().\n\nLink: https://syzkaller.appspot.com/bug?extid=576dfca25381fb6fbc5f [1]\nReported-by: syzbot <syzbot+576dfca25381fb6fbc5f@syzkaller.appspotmail.com>\nSigned-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>\nFixes: 67d2f8781b9f00d1 (\"Bluetooth: hci_ldisc: Allow sleeping while proto locks are held.\")\nFixes: d73e172816652772 (\"Bluetooth: hci_serdev: Init hci_uart proto_lock to avoid oops\")\nSigned-off-by: Luiz Augusto von Dentz <luiz.von.dentz@intel.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

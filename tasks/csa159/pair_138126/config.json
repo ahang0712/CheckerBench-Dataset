@@ -1,0 +1,19 @@
+{
+  "project_id": "CESNET_libyang",
+  "before_commit": "19a0d6778999a2fea68db2fd7407cba1f954d895",
+  "after_commit": "a1f17693904ed6fecc8902c747fc50a8f20e6af8",
+  "repo_path": "/workspace/repo/CESNET/libyang",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/CESNET_libyang/19a0d6778999a2fea68db2fd7407cba1f954d895/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/CESNET_libyang/19a0d6778999a2fea68db2fd7407cba1f954d895/compile_commands.json",
+  "changed_files": [
+    "src/parser_yang_bis.c"
+  ],
+  "commit_message": "yang parser BUGFIX allocate more patterns than currently needed\n\nFixes #740",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "61d099ac4a7a8fb11ebdb6e2ec8d77f38e77362f",
+  "after_commit": "1333eee56cdf3f0cf67c6ab4114c2c9e0a952026",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f/compile_commands.json",
+  "changed_files": [
+    "drivers/target/loopback/tcm_loop.c"
+  ],
+  "commit_message": "scsi: target: tcm_loop: Drain commands in target_reset handler\n\ntcm_loop_target_reset() violates the SCSI EH contract: it returns SUCCESS\nwithout draining any in-flight commands.  The SCSI EH documentation\n(scsi_eh.rst) requires that when a reset handler returns SUCCESS the driver\nhas made lower layers \"forget about timed out scmds\" and is ready for new\ncommands.  Every other SCSI LLD (virtio_scsi, mpt3sas, ipr, scsi_debug,\nmpi3mr) enforces this by draining or completing outstanding commands before\nreturning SUCCESS.\n\nBecause tcm_loop_target_reset() doesn't drain, the SCSI EH reuses in-flight\nscsi_cmnd structures for recovery commands (e.g. TUR) while the target core\nstill has async completion work queued for the old se_cmd.  The memset in\nqueuecommand zeroes se_lun and lun_ref_active, causing\ntransport_lun_remove_cmd() to skip its percpu_ref_put().  The leaked LUN\nreference prevents transport_clear_lun_ref() from completing, hanging\nconfigfs LUN unlink forever in D-state:\n\n  INFO: task rm:264 blocked for more than 122 seconds.\n  rm              D    0   264    258 0x00004000\n  Call Trace:\n   __schedule+0x3d0/0x8e0\n   schedule+0x36/0xf0\n   transport_clear_lun_ref+0x78/0x90 [target_core_mod]\n   core_tpg_remove_lun+0x28/0xb0 [target_core_mod]\n   target_fabric_port_unlink+0x50/0x60 [target_core_mod]\n   configfs_unlink+0x156/0x1f0 [configfs]\n   vfs_unlink+0x109/0x290\n   do_unlinkat+0x1d5/0x2d0\n\nFix this by making tcm_loop_target_reset() actually drain commands:\n\n 1. Issue TMR_LUN_RESET via tcm_loop_issue_tmr() to drain all commands that\n    the target core knows about (those not yet CMD_T_COMPLETE).\n\n 2. Use blk_mq_tagset_busy_iter() to iterate all started requests and\n    flush_work() on each se_cmd — this drains any deferred completion work\n    for commands that already had CMD_T_COMPLETE set before the TMR (which\n    the TMR skips via __target_check_io_state()).  This is the same pattern\n    used by mpi3mr, scsi_debug, and libsas to drain outstanding commands\n    during reset.\n\nFixes: e0eb5d38b732 (\"scsi: target: tcm_loop: Use block cmd allocator for se_cmds\")\nCc: stable@vger.kernel.org\nAssisted-by: Claude:claude-opus-4-6\nSigned-off-by: Josef Bacik <josef@toxicpanda.com>\nLink: https://patch.msgid.link/27011aa34c8f6b1b94d2e3cf5655b6d037f53428.1773706803.git.josef@toxicpanda.com\nSigned-off-by: Martin K. Petersen <martin.petersen@oracle.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-ff1e02f88768f34e43fb",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-ff1e02f88768f34e43fb",
+    "project_id": "pyvul__dedsecinside__torbot",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "torbot/modules/validators.py"
+  ],
+  "patch_units": {
+    "before": [
+      "function:validate_email",
+      "function:validate_link",
+      "module:<module>@1"
+    ],
+    "after": []
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/cd89e0b8eefefaf75bf5849ee4b36c79864f39fffb229b039387addb18da3715/database",
+      "cache_key": "cd89e0b8eefefaf75bf5849ee4b36c79864f39fffb229b039387addb18da3715",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/52be73c6def3c938193fe86d1b31746a4dfdba192902768ffd0229acfd82c142/database",
+      "cache_key": "52be73c6def3c938193fe86d1b31746a4dfdba192902768ffd0229acfd82c142",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/3eb30acb3ddeef44ea60ec174a82d145e2571cece0fc40ddcd7c99f0aa13d7c6/database",
+      "cache_key": "3eb30acb3ddeef44ea60ec174a82d145e2571cece0fc40ddcd7c99f0aa13d7c6",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-ff1e02f88768f34e43fb/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-ff1e02f88768f34e43fb/ (do not mount into agent)"
+  }
+}

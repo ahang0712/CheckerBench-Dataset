@@ -1,0 +1,19 @@
+{
+  "project_id": "saitoha_libsixel",
+  "before_commit": "77c8077232baaa3b10638caec47a7aa9d78b2fb4",
+  "after_commit": "e17c0765ed708186865f0f8badfed44181063776",
+  "repo_path": "/workspace/repo/saitoha/libsixel",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/saitoha_libsixel/2df64373e58c4f48fbb72032a66473e71fc2a6ce/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/saitoha_libsixel/2df64373e58c4f48fbb72032a66473e71fc2a6ce/compile_commands.json",
+  "changed_files": [
+    "src/frompnm.c"
+  ],
+  "commit_message": "fix issue that the width and the deps miss checks",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

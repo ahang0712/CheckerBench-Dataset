@@ -1,0 +1,63 @@
+diff --git a/src/main/java/org/jenkinsci/plugins/codedx/CodeDxPublisher.java b/src/main/java/org/jenkinsci/plugins/codedx/CodeDxPublisher.java
+index 5880869..600593a 100644
+--- a/src/main/java/org/jenkinsci/plugins/codedx/CodeDxPublisher.java
++++ b/src/main/java/org/jenkinsci/plugins/codedx/CodeDxPublisher.java
+@@ -785,11 +785,14 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
+ 			return FormValidation.ok();
+ 		}
+ 
++		@POST
+ 		public FormValidation doCheckSourceAndBinaryFiles(@QueryParameter final String value, @QueryParameter final boolean gitFetchConfiguration, @QueryParameter final String toolOutputFiles, @AncestorInPath AbstractProject project) {
+ 			if (project == null) {
+ 				return FormValidation.ok();
+ 			}
+ 
++			project.checkPermission(AbstractProject.CONFIGURE);
++
+ 			if (value.length() == 0) {
+ 				if (gitFetchConfiguration)
+ 					return FormValidation.ok();
+@@ -802,20 +805,25 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
+ 			return Util.checkCSVGlobMatches(value, project.getSomeWorkspace());
+ 		}
+ 
++		@POST
+ 		public FormValidation doCheckExcludedSourceAndBinaryFiles(@QueryParameter final String value, @AncestorInPath AbstractProject project) {
+ 			if (project == null) {
+ 				return FormValidation.ok();
+ 			} else {
++				project.checkPermission(AbstractProject.CONFIGURE);
+ 				return Util.checkCSVGlobMatches(value, project.getSomeWorkspace());
+ 			}
+ 		}
+ 
++		@POST
+ 		public FormValidation doCheckToolOutputFiles(@QueryParameter final String value, @QueryParameter final String sourceAndBinaryFiles, @QueryParameter final boolean gitFetchConfiguration, @AncestorInPath AbstractProject project) {
+ 
+ 			if (project == null) {
+ 				return FormValidation.ok();
+ 			}
+ 
++			project.checkPermission(AbstractProject.CONFIGURE);
++
+ 			if (value.length() == 0 && sourceAndBinaryFiles.length() == 0 && !gitFetchConfiguration) {
+ 				return FormValidation.error("You must specify \"Tool Output Files\" and/or \"Source and Binary Files\", or enable \"Include Git Source\"");
+ 			}
+diff --git a/src/main/java/org/jenkinsci/plugins/codedx/Util.java b/src/main/java/org/jenkinsci/plugins/codedx/Util.java
+index ef156ea..603858e 100755
+--- a/src/main/java/org/jenkinsci/plugins/codedx/Util.java
++++ b/src/main/java/org/jenkinsci/plugins/codedx/Util.java
+@@ -67,10 +67,12 @@ public class Util {
+ 
+ 		if(value.length() != 0  && workspace != null){
+ 
++			String basePath = workspace.getRemote();
+ 			for(String path : Util.commaSeparatedToArray(value)){
+ 
+ 				try {
+-					if(path.length() == 0 || ! new FilePath(workspace, path).exists()){
++					FilePath subPath = new FilePath(workspace, path);
++					if(path.length() == 0 || !subPath.exists() || !subPath.absolutize().getRemote().startsWith(basePath)){
+ 
+ 						return FormValidation.warning(path + " does not exist in the workspace.");
+ 					}

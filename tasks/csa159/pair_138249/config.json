@@ -1,0 +1,19 @@
+{
+  "project_id": "LibreDWG_libredwg",
+  "before_commit": "5c19f597ca87363be1bcaf5d7fa06942120a8280",
+  "after_commit": "fc8c16ccf36dd4d7168231a66489a904a142059c",
+  "repo_path": "/workspace/repo/LibreDWG/libredwg",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/LibreDWG_libredwg/a75b8ff1d13cfe28ec3b86b82b22082a82e8d519/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/LibreDWG_libredwg/a75b8ff1d13cfe28ec3b86b82b22082a82e8d519/compile_commands.json",
+  "changed_files": [
+    "src/decode_r2007.c"
+  ],
+  "commit_message": "add r2007 Page out of bounds check\n\nFixes case 1 of GH #179",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,19 @@
+{
+  "project_id": "ImageMagick_ImageMagick",
+  "before_commit": "ccdc01180276aa2cb3d4a32a611aa4f417061cd8",
+  "after_commit": "cca607366fb38c2dde019a9088b8415ffba3a835",
+  "repo_path": "/workspace/repo/ImageMagick/ImageMagick",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/ImageMagick_ImageMagick/03d19de047d7ce79e1f617562c43184ba54fa06e/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/ImageMagick_ImageMagick/03d19de047d7ce79e1f617562c43184ba54fa06e/compile_commands.json",
+  "changed_files": [
+    "MagickCore/resize.c"
+  ],
+  "commit_message": "https://github.com/ImageMagick/ImageMagick/security/advisories/GHSA-pcvx-ph33-r5vv",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

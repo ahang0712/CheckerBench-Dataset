@@ -1,0 +1,47 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-1218ce956f8120d59555",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-1218ce956f8120d59555",
+    "project_id": "morefixes__foxcpp__maddy",
+    "language": "go",
+    "backend": "codeql"
+  },
+  "changed_go_files": [
+    "internal/auth/sasl.go",
+    "internal/auth/sasl_test.go"
+  ],
+  "patch_units": {
+    "before": [
+      "internal/auth/sasl.go",
+      "internal/auth/sasl_test.go"
+    ],
+    "after": [
+      "internal/auth/sasl.go",
+      "internal/auth/sasl_test.go"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/297a2997b5dbaf0c3f2ec5bd076a5c48f0f78f39868fa1885a46527d767c2b57/database",
+      "cache_key": "297a2997b5dbaf0c3f2ec5bd076a5c48f0f78f39868fa1885a46527d767c2b57",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/7100a54fd5d68f59a609a4c488783ac815450be284e9be4fcbcf7bec2f8f9ff2/database",
+      "cache_key": "7100a54fd5d68f59a609a4c488783ac815450be284e9be4fcbcf7bec2f8f9ff2",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/4d3b2f52ade6fd693fb89b668e2930cde2c10d683d8746040152bcbd1b0c9b08/database",
+      "cache_key": "4d3b2f52ade6fd693fb89b668e2930cde2c10d683d8746040152bcbd1b0c9b08",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-1218ce956f8120d59555/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-1218ce956f8120d59555/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "e39c600049d0822284da2cef3bd7ced40dc3524f",
+  "after_commit": "b3236a64ddd125a455ef5b5316c1b9051b732974",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/f2906aa863381afb0015a9eb7fefad885d4e5a56/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/f2906aa863381afb0015a9eb7fefad885d4e5a56/compile_commands.json",
+  "changed_files": [
+    "drivers/infiniband/hw/qedr/verbs.c"
+  ],
+  "commit_message": "RDMA/qedr: Fix potential memory leak in __qedr_alloc_mr()\n\n__qedr_alloc_mr() allocates a memory chunk for \"mr->info.pbl_table\" with\ninit_mr_info(). When rdma_alloc_tid() and rdma_register_tid() fail, \"mr\"\nis released while \"mr->info.pbl_table\" is not released, which will lead\nto a memory leak.\n\nWe should release the \"mr->info.pbl_table\" with qedr_free_pbl() when error\noccurs to fix the memory leak.\n\nFixes: e0290cce6ac0 (\"qedr: Add support for memory registeration verbs\")\nLink: https://lore.kernel.org/r/20220714061505.2342759-1-niejianglei2021@163.com\nSigned-off-by: Jianglei Nie <niejianglei2021@163.com>\nAcked-by: Michal Kalderon <michal.kalderon@marvell.com>\nSigned-off-by: Leon Romanovsky <leon@kernel.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

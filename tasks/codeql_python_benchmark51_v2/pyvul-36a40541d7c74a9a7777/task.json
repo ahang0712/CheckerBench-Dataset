@@ -1,0 +1,46 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-36a40541d7c74a9a7777",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-36a40541d7c74a9a7777",
+    "project_id": "pyvul__pytorchlightning__pytorch-lightning",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "pytorch_lightning/utilities/argparse.py"
+  ],
+  "patch_units": {
+    "before": [
+      "function:parse_env_variables",
+      "module:<module>@20"
+    ],
+    "after": [
+      "function:parse_env_variables",
+      "module:<module>@20"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/f904a001805ca2a12850f3d3056b70f7b209467a621d3da7fe0e4e98faa4b9c9/database",
+      "cache_key": "f904a001805ca2a12850f3d3056b70f7b209467a621d3da7fe0e4e98faa4b9c9",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/f9a6566d69a61c361650443ebcecb4d650d674333e5dda7f6c57320a8ff0a764/database",
+      "cache_key": "f9a6566d69a61c361650443ebcecb4d650d674333e5dda7f6c57320a8ff0a764",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/0e9729244a800a484f57498b45d84807d5007185f2cdaea70346b3a3ea9f43bc/database",
+      "cache_key": "0e9729244a800a484f57498b45d84807d5007185f2cdaea70346b3a3ea9f43bc",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-36a40541d7c74a9a7777/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-36a40541d7c74a9a7777/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,249 @@
+### File: libde265/image.cc
+```c
+de265_error de265_image::alloc_image(int w,int h, enum de265_chroma c,
+                                     std::shared_ptr<const seq_parameter_set> sps, bool allocMetadata,
+                                     decoder_context* dctx,
+                                     //encoder_context* ectx,
+                                     de265_PTS pts, void* user_data,
+                                     bool useCustomAllocFunc)
+{
+  //if (allocMetadata) { assert(sps); }
+  if (allocMetadata) { assert(sps); }
+
+  if (sps) { this->sps = sps; }
+
+  release(); /* TODO: review code for efficient allocation when arrays are already
+                allocated to the requested size. Without the release, the old image-data
+                will not be freed. */
+
+  static std::atomic<uint32_t> s_next_image_ID(0);
+  ID = s_next_image_ID++;
+  removed_at_picture_id = std::numeric_limits<uint32_t>::max();
+
+  decctx = dctx;
+  //encctx = ectx;
+
+  // --- allocate image buffer ---
+
+  chroma_format= c;
+
+  width = w;
+  height = h;
+  chroma_width = w;
+  chroma_height= h;
+
+  this->user_data = user_data;
+  this->pts = pts;
+
+  de265_image_spec spec;
+
+  uint8_t WinUnitX, WinUnitY;
+
+  switch (chroma_format) {
+    case de265_chroma_mono: WinUnitX=1; WinUnitY=1; break;
+    case de265_chroma_420:  WinUnitX=2; WinUnitY=2; break;
+    case de265_chroma_422:  WinUnitX=2; WinUnitY=1; break;
+    case de265_chroma_444:  WinUnitX=1; WinUnitY=1; break;
+    default:
+      assert(0);
+      WinUnitX = WinUnitY = 0;
+  }
+
+  switch (chroma_format) {
+  case de265_chroma_420:
+    spec.format = de265_image_format_YUV420P8;
+    chroma_width  = (chroma_width +1)/2;
+    chroma_height = (chroma_height+1)/2;
+    SubWidthC  = 2;
+    SubHeightC = 2;
+    break;
+
+  case de265_chroma_422:
+    spec.format = de265_image_format_YUV422P8;
+    chroma_width = (chroma_width+1)/2;
+    SubWidthC  = 2;
+    SubHeightC = 1;
+    break;
+
+  case de265_chroma_444:
+    spec.format = de265_image_format_YUV444P8;
+    SubWidthC  = 1;
+    SubHeightC = 1;
+    break;
+
+  case de265_chroma_mono:
+    spec.format = de265_image_format_mono8;
+    chroma_width = 0;
+    chroma_height= 0;
+    SubWidthC  = 1;
+    SubHeightC = 1;
+    break;
+
+  default:
+    assert(false);
+    break;
+  }
+
+  if (chroma_format != de265_chroma_mono && sps) {
+    assert(sps->SubWidthC  == SubWidthC);
+    assert(sps->SubHeightC == SubHeightC);
+  }
+
+  spec.width  = w;
+  spec.height = h;
+  spec.alignment = STANDARD_ALIGNMENT;
+
+
+  // conformance window cropping
+
+  int left   = sps ? sps->conf_win_left_offset : 0;
+  int right  = sps ? sps->conf_win_right_offset : 0;
+  int top    = sps ? sps->conf_win_top_offset : 0;
+  int bottom = sps ? sps->conf_win_bottom_offset : 0;
+
+  if ((left+right)*WinUnitX >= width) {
+    return DE265_ERROR_CODED_PARAMETER_OUT_OF_RANGE;
+  }
+
+  if ((top+bottom)*WinUnitY >= height) {
+    return DE265_ERROR_CODED_PARAMETER_OUT_OF_RANGE;
+  }
+
+  width_confwin = width - (left+right)*WinUnitX;
+  height_confwin= height- (top+bottom)*WinUnitY;
+  chroma_width_confwin = chroma_width -left-right;
+  chroma_height_confwin= chroma_height-top-bottom;
+
+  spec.crop_left  = left *WinUnitX;
+  spec.crop_right = right*WinUnitX;
+  spec.crop_top   = top   *WinUnitY;
+  spec.crop_bottom= bottom*WinUnitY;
+
+  spec.visible_width = width_confwin;
+  spec.visible_height= height_confwin;
+
+
+  BitDepth_Y = (sps==NULL) ? 8 : sps->BitDepth_Y;
+  BitDepth_C = (sps==NULL) ? 8 : sps->BitDepth_C;
+
+  bpp_shift[0] = (BitDepth_Y <= 8) ? 0 : 1;
+  bpp_shift[1] = (BitDepth_C <= 8) ? 0 : 1;
+  bpp_shift[2] = bpp_shift[1];
+
+
+  // allocate memory and set conformance window pointers
+
+  void* alloc_userdata = NULL;
+  if (decctx) alloc_userdata = decctx->param_image_allocation_userdata;
+  // if (encctx) alloc_userdata = encctx->param_image_allocation_userdata; // actually not needed
+
+  /*
+  if (encctx && useCustomAllocFunc) {
+    encoder_image_release_func = encctx->release_func;
+
+    // if we do not provide a release function, use our own
+
+    if (encoder_image_release_func == NULL) {
+      image_allocation_functions = de265_image::default_image_allocation;
+    }
+    else {
+      image_allocation_functions.get_buffer     = NULL;
+      image_allocation_functions.release_buffer = NULL;
+    }
+  }
+  else*/ if (decctx && useCustomAllocFunc) {
+    image_allocation_functions = decctx->param_image_allocation_functions;
+  }
+  else {
+    image_allocation_functions = de265_image::default_image_allocation;
+  }
+
+  bool mem_alloc_success = true;
+
+  if (image_allocation_functions.get_buffer != NULL) {
+    mem_alloc_success = image_allocation_functions.get_buffer(decctx, &spec, this,
+                                                              alloc_userdata);
+
+    pixels_confwin[0] = pixels[0] + left*WinUnitX + top*WinUnitY*stride;
+
+    if (chroma_format != de265_chroma_mono) {
+      pixels_confwin[1] = pixels[1] + left + top*chroma_stride;
+      pixels_confwin[2] = pixels[2] + left + top*chroma_stride;
+    }
+    else {
+      pixels_confwin[1] = NULL;
+      pixels_confwin[2] = NULL;
+    }
+
+    // check for memory shortage
+
+    if (!mem_alloc_success)
+      {
+        return DE265_ERROR_OUT_OF_MEMORY;
+      }
+  }
+
+  //alloc_functions = *allocfunc;
+  //alloc_userdata  = userdata;
+
+  // --- allocate decoding info arrays ---
+
+  if (allocMetadata) {
+    // intra pred mode
+
+    mem_alloc_success &= intraPredMode.alloc(sps->PicWidthInMinPUs, sps->PicHeightInMinPUs,
+                                             sps->Log2MinPUSize);
+
+    mem_alloc_success &= intraPredModeC.alloc(sps->PicWidthInMinPUs, sps->PicHeightInMinPUs,
+                                              sps->Log2MinPUSize);
+
+    // cb info
+
+    mem_alloc_success &= cb_info.alloc(sps->PicWidthInMinCbsY, sps->PicHeightInMinCbsY,
+                                       sps->Log2MinCbSizeY);
+
+    // pb info
+
+    int puWidth  = sps->PicWidthInMinCbsY  << (sps->Log2MinCbSizeY -2);
+    int puHeight = sps->PicHeightInMinCbsY << (sps->Log2MinCbSizeY -2);
+
+    mem_alloc_success &= pb_info.alloc(puWidth,puHeight, 2);
+
+
+    // tu info
+
+    mem_alloc_success &= tu_info.alloc(sps->PicWidthInTbsY, sps->PicHeightInTbsY,
+                                       sps->Log2MinTrafoSize);
+
+    // deblk info
+
+    int deblk_w = (sps->pic_width_in_luma_samples +3)/4;
+    int deblk_h = (sps->pic_height_in_luma_samples+3)/4;
+
+    mem_alloc_success &= deblk_info.alloc(deblk_w, deblk_h, 2);
+
+    // CTB info
+
+    if (ctb_info.width_in_units != sps->PicWidthInCtbsY ||
+        ctb_info.height_in_units != sps->PicHeightInCtbsY)
+      {
+        delete[] ctb_progress;
+
+        mem_alloc_success &= ctb_info.alloc(sps->PicWidthInCtbsY, sps->PicHeightInCtbsY,
+                                            sps->Log2CtbSizeY);
+
+        ctb_progress = new de265_progress_lock[ ctb_info.data_size ];
+      }
+
+
+    // check for memory shortage
+
+    if (!mem_alloc_success)
+      {
+        return DE265_ERROR_OUT_OF_MEMORY;
+      }
+  }
+
+  return DE265_OK;
+}
+```

@@ -1,0 +1,50 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-0ea8f5f13e7432539721",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-0ea8f5f13e7432539721",
+    "project_id": "morefixes__prismjs__prism",
+    "language": "javascript",
+    "backend": "codeql"
+  },
+  "changed_javascript_files": [
+    "components/prism-markup.js",
+    "components/prism-markup.min.js",
+    "prism.js"
+  ],
+  "patch_units": {
+    "before": [
+      "components/prism-markup.js",
+      "components/prism-markup.min.js",
+      "prism.js"
+    ],
+    "after": [
+      "components/prism-markup.js",
+      "components/prism-markup.min.js",
+      "prism.js"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/7a2be081c8d08a299085201bf61f5e90bea990c15697b646d5f14f60cba4d333/database",
+      "cache_key": "7a2be081c8d08a299085201bf61f5e90bea990c15697b646d5f14f60cba4d333",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/17fb3e24d75708473cfe67957748649a8b1ea2a22318e0aee0b407a913d91c58/database",
+      "cache_key": "17fb3e24d75708473cfe67957748649a8b1ea2a22318e0aee0b407a913d91c58",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/31cdc25081a2b27651e8c034778d6ebc10fd7673321dca729139637333347160/database",
+      "cache_key": "31cdc25081a2b27651e8c034778d6ebc10fd7673321dca729139637333347160",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-0ea8f5f13e7432539721/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-0ea8f5f13e7432539721/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-810ace2bf3e4aa0f04a1",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-810ace2bf3e4aa0f04a1",
+    "project_id": "pyvul__zwczou__weixin-python",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "weixin/msg.py",
+    "weixin/pay.py"
+  ],
+  "patch_units": {
+    "before": [
+      "class:WeixinMsg",
+      "function:WeixinMsg.parse",
+      "class:WeixinPay",
+      "function:WeixinPay.to_dict"
+    ],
+    "after": [
+      "class:WeixinMsg",
+      "function:WeixinMsg.parse",
+      "class:WeixinPay",
+      "function:WeixinPay.to_dict"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/88fd491ac2223f17096e1644358fe8bfac8e522f10dde97495b9538244921b2d/database",
+      "cache_key": "88fd491ac2223f17096e1644358fe8bfac8e522f10dde97495b9538244921b2d",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/a087e5f4d76385ca8edc63b272ae5e9a0be31d86b1d996f2ca3e646c88d54b8a/database",
+      "cache_key": "a087e5f4d76385ca8edc63b272ae5e9a0be31d86b1d996f2ca3e646c88d54b8a",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/123a35fe09b8125937c943f3980787bcc75454305a8fabf03bb63a36478af1a5/database",
+      "cache_key": "123a35fe09b8125937c943f3980787bcc75454305a8fabf03bb63a36478af1a5",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-810ace2bf3e4aa0f04a1/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-810ace2bf3e4aa0f04a1/ (do not mount into agent)"
+  }
+}

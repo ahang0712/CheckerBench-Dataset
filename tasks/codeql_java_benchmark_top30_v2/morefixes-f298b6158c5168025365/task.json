@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-f298b6158c5168025365",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-f298b6158c5168025365",
+    "project_id": "morefixes__bspkrs__mcpmappingviewer",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "src/main/java/bspkrs/mmv/RemoteZipHandler.java"
+  ],
+  "patch_units": {
+    "before": [
+      "src/main/java/bspkrs/mmv/RemoteZipHandler.java"
+    ],
+    "after": [
+      "src/main/java/bspkrs/mmv/RemoteZipHandler.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/25ca0960ffc6b42f2a46a53625dd4333210dd10b90a44800d17ddc79e5feab16/database",
+      "cache_key": "25ca0960ffc6b42f2a46a53625dd4333210dd10b90a44800d17ddc79e5feab16",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/bec4e4cbec3834a135c289fc0426c24406223feeb43be87bef114f35b1947224/database",
+      "cache_key": "bec4e4cbec3834a135c289fc0426c24406223feeb43be87bef114f35b1947224",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/f618ceebc5547f0be5b841c4caf7830de75e06d12e3b84bd25e28fe045f0a1db/database",
+      "cache_key": "f618ceebc5547f0be5b841c4caf7830de75e06d12e3b84bd25e28fe045f0a1db",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-f298b6158c5168025365/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-f298b6158c5168025365/ (do not mount into agent)"
+  }
+}

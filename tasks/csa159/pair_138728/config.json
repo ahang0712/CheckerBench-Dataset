@@ -1,0 +1,20 @@
+{
+  "project_id": "ImageMagick_ImageMagick",
+  "before_commit": "8cb2a8ebbe3a8cc6dc4e5475ca54fa23e495c091",
+  "after_commit": "f86452a8aea37bf2b4bd36127f836dcc5f138b38",
+  "repo_path": "/workspace/repo/ImageMagick/ImageMagick",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/ImageMagick_ImageMagick/03d19de047d7ce79e1f617562c43184ba54fa06e/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/ImageMagick_ImageMagick/03d19de047d7ce79e1f617562c43184ba54fa06e/compile_commands.json",
+  "changed_files": [
+    "coders/json.c",
+    "coders/yaml.c"
+  ],
+  "commit_message": "https://github.com/ImageMagick/ImageMagick/security/advisories/GHSA-5592-p365-24xh",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

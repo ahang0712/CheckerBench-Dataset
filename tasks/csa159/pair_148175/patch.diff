@@ -1,0 +1,12 @@
+diff --git a/fs/ntfs3/inode.c b/fs/ntfs3/inode.c
+index 37cbbee7fa58..b08b00912165 100644
+--- a/fs/ntfs3/inode.c
++++ b/fs/ntfs3/inode.c
+@@ -471,6 +471,7 @@ static struct inode *ntfs_read_mft(struct inode *inode,
+ 		   fname->home.seq == cpu_to_le16(MFT_REC_EXTEND)) {
+ 		/* Records in $Extend are not a files or general directories. */
+ 		inode->i_op = &ntfs_file_inode_operations;
++		mode = S_IFREG;
+ 	} else {
+ 		err = -EINVAL;
+ 		goto out;

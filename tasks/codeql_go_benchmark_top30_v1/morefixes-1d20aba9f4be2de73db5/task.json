@@ -1,0 +1,112 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-1d20aba9f4be2de73db5",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-1d20aba9f4be2de73db5",
+    "project_id": "morefixes__aws__aws-sdk-go",
+    "language": "go",
+    "backend": "codeql"
+  },
+  "changed_go_files": [
+    "internal/sync/singleflight/singleflight_test.go",
+    "service/s3/s3crypto/aes_cbc_content_cipher.go",
+    "service/s3/s3crypto/aes_gcm_content_cipher.go",
+    "service/s3/s3crypto/aes_gcm_content_cipher_test.go",
+    "service/s3/s3crypto/aes_gcm_test.go",
+    "service/s3/s3crypto/cipher_util.go",
+    "service/s3/s3crypto/cipher_util_test.go",
+    "service/s3/s3crypto/decryption_client.go",
+    "service/s3/s3crypto/decryption_client_v2.go",
+    "service/s3/s3crypto/decryption_client_v2_test.go",
+    "service/s3/s3crypto/deprecations.go",
+    "service/s3/s3crypto/deprecations_test.go",
+    "service/s3/s3crypto/doc.go",
+    "service/s3/s3crypto/encryption_client.go",
+    "service/s3/s3crypto/encryption_client_v2.go",
+    "service/s3/s3crypto/envelope.go",
+    "service/s3/s3crypto/integration/main_test.go",
+    "service/s3/s3crypto/key_handler.go",
+    "service/s3/s3crypto/key_handler_test.go",
+    "service/s3/s3crypto/kms_key_handler.go",
+    "service/s3/s3crypto/kms_key_handler_test.go",
+    "service/s3/s3crypto/migrations_test.go",
+    "service/s3/s3crypto/mock_test.go",
+    "service/s3/s3crypto/shared_client.go",
+    "service/s3/s3crypto/strategy.go",
+    "service/s3/s3crypto/strategy_test.go"
+  ],
+  "patch_units": {
+    "before": [
+      "internal/sync/singleflight/singleflight_test.go",
+      "service/s3/s3crypto/aes_cbc_content_cipher.go",
+      "service/s3/s3crypto/aes_gcm_content_cipher.go",
+      "service/s3/s3crypto/aes_gcm_content_cipher_test.go",
+      "service/s3/s3crypto/aes_gcm_test.go",
+      "service/s3/s3crypto/cipher_util.go",
+      "service/s3/s3crypto/cipher_util_test.go",
+      "service/s3/s3crypto/decryption_client.go",
+      "service/s3/s3crypto/decryption_client.go",
+      "service/s3/s3crypto/doc.go",
+      "service/s3/s3crypto/encryption_client.go",
+      "service/s3/s3crypto/envelope.go",
+      "service/s3/s3crypto/key_handler.go",
+      "service/s3/s3crypto/key_handler_test.go",
+      "service/s3/s3crypto/kms_key_handler.go",
+      "service/s3/s3crypto/kms_key_handler_test.go",
+      "service/s3/s3crypto/mock_test.go",
+      "service/s3/s3crypto/strategy.go",
+      "service/s3/s3crypto/strategy_test.go"
+    ],
+    "after": [
+      "internal/sync/singleflight/singleflight_test.go",
+      "service/s3/s3crypto/aes_cbc_content_cipher.go",
+      "service/s3/s3crypto/aes_gcm_content_cipher.go",
+      "service/s3/s3crypto/aes_gcm_content_cipher_test.go",
+      "service/s3/s3crypto/aes_gcm_test.go",
+      "service/s3/s3crypto/cipher_util.go",
+      "service/s3/s3crypto/cipher_util_test.go",
+      "service/s3/s3crypto/decryption_client.go",
+      "service/s3/s3crypto/decryption_client_v2.go",
+      "service/s3/s3crypto/decryption_client_v2_test.go",
+      "service/s3/s3crypto/deprecations.go",
+      "service/s3/s3crypto/deprecations_test.go",
+      "service/s3/s3crypto/doc.go",
+      "service/s3/s3crypto/encryption_client.go",
+      "service/s3/s3crypto/encryption_client_v2.go",
+      "service/s3/s3crypto/envelope.go",
+      "service/s3/s3crypto/integration/main_test.go",
+      "service/s3/s3crypto/key_handler.go",
+      "service/s3/s3crypto/key_handler_test.go",
+      "service/s3/s3crypto/kms_key_handler.go",
+      "service/s3/s3crypto/kms_key_handler_test.go",
+      "service/s3/s3crypto/migrations_test.go",
+      "service/s3/s3crypto/mock_test.go",
+      "service/s3/s3crypto/shared_client.go",
+      "service/s3/s3crypto/strategy.go",
+      "service/s3/s3crypto/strategy_test.go"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/d5abce377c248d4771e6bee53c477a8d898672f602e5f8d94e3b689f9e1124db/database",
+      "cache_key": "d5abce377c248d4771e6bee53c477a8d898672f602e5f8d94e3b689f9e1124db",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/ac5f78df614fa9486f4ac35b5bbf5f976979eb0229e2acc69138ed900b87a569/database",
+      "cache_key": "ac5f78df614fa9486f4ac35b5bbf5f976979eb0229e2acc69138ed900b87a569",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/af291f667a688cfb10c62f3aa75bfd20007e4cbb0d2cff416d94e6f01383d19a/database",
+      "cache_key": "af291f667a688cfb10c62f3aa75bfd20007e4cbb0d2cff416d94e6f01383d19a",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-1d20aba9f4be2de73db5/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-1d20aba9f4be2de73db5/ (do not mount into agent)"
+  }
+}

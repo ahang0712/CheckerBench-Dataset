@@ -1,0 +1,46 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-135c7fcada946877931a",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-135c7fcada946877931a",
+    "project_id": "pyvul__openstack__ceilometer",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "ceilometer/agent.py"
+  ],
+  "patch_units": {
+    "before": [
+      "class:ConfigManagerBase",
+      "function:ConfigManagerBase.load_config"
+    ],
+    "after": [
+      "class:ConfigManagerBase",
+      "function:ConfigManagerBase.load_config"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/f022072268dc0d63ba2bc7ace23475f5b0838788cedc50f1ab3ca317bd497a9c/database",
+      "cache_key": "f022072268dc0d63ba2bc7ace23475f5b0838788cedc50f1ab3ca317bd497a9c",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/77a547bde6ee86ed66b8da21943f029bce82e8f9c3d3c35c67be1c91ceff713c/database",
+      "cache_key": "77a547bde6ee86ed66b8da21943f029bce82e8f9c3d3c35c67be1c91ceff713c",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/fb25fd30414c07d66c9983e68bbef7834bb171dba215ca71c76209e2c2d475f3/database",
+      "cache_key": "fb25fd30414c07d66c9983e68bbef7834bb171dba215ca71c76209e2c2d475f3",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-135c7fcada946877931a/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-135c7fcada946877931a/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,33 @@
+### File: net/ipv4/fib_semantics.c
+```c
+void fib_select_multipath(struct fib_result *res, int hash)
+{
+	struct fib_info *fi = res->fi;
+	struct net *net = fi->fib_net;
+	bool first = false;
+
+	if (unlikely(res->fi->nh)) {
+		nexthop_path_fib_result(res, hash);
+		return;
+	}
+
+	change_nexthops(fi) {
+		if (net->ipv4.sysctl_fib_multipath_use_neigh) {
+			if (!fib_good_nh(nexthop_nh))
+				continue;
+			if (!first) {
+				res->nh_sel = nhsel;
+				res->nhc = &nexthop_nh->nh_common;
+				first = true;
+			}
+		}
+
+		if (hash > atomic_read(&nexthop_nh->fib_nh_upper_bound))
+			continue;
+
+		res->nh_sel = nhsel;
+		res->nhc = &nexthop_nh->nh_common;
+		return;
+	} endfor_nexthops(fi);
+}
+```

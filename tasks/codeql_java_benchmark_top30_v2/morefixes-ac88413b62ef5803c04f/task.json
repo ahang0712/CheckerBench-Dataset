@@ -1,0 +1,46 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-ac88413b62ef5803c04f",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-ac88413b62ef5803c04f",
+    "project_id": "morefixes__netplex__json-smart-v2",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "json-smart/src/main/java/net/minidev/json/parser/JSONParser.java",
+    "json-smart/src/test/java/net/minidev/json/test/TestCVE202457699.java"
+  ],
+  "patch_units": {
+    "before": [
+      "json-smart/src/main/java/net/minidev/json/parser/JSONParser.java"
+    ],
+    "after": [
+      "json-smart/src/main/java/net/minidev/json/parser/JSONParser.java",
+      "json-smart/src/test/java/net/minidev/json/test/TestCVE202457699.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/bc3b82e3c9c90372700edd31f21569cbcd40cea6d3375c9cbff76c7800dfe8f0/database",
+      "cache_key": "bc3b82e3c9c90372700edd31f21569cbcd40cea6d3375c9cbff76c7800dfe8f0",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/0d22bd699e61e6086286dd1d8ad11bebdb4724c08ee44a6554e54c1894f6f211/database",
+      "cache_key": "0d22bd699e61e6086286dd1d8ad11bebdb4724c08ee44a6554e54c1894f6f211",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/f89d4c979d413df59742a9cf6b7113608980b95958c7af94ba498eab220a947e/database",
+      "cache_key": "f89d4c979d413df59742a9cf6b7113608980b95958c7af94ba498eab220a947e",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-ac88413b62ef5803c04f/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-ac88413b62ef5803c04f/ (do not mount into agent)"
+  }
+}

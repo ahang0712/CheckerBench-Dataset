@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "96b45776995653a4971329c7f62ff6aa324027a2",
+  "after_commit": "18e126e97c961f7a93823795c879d7c085fe5098",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/895ae5bee159d148bac21a82899292c408c1aab1/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/895ae5bee159d148bac21a82899292c408c1aab1/compile_commands.json",
+  "changed_files": [
+    "drivers/firmware/dmi-sysfs.c"
+  ],
+  "commit_message": "firmware: dmi-sysfs: Fix null-ptr-deref in dmi_sysfs_register_handle\n\nKASAN reported a null-ptr-deref error:\n\nKASAN: null-ptr-deref in range [0x0000000000000008-0x000000000000000f]\nCPU: 0 PID: 1373 Comm: modprobe\nHardware name: QEMU Standard PC (i440FX + PIIX, 1996)\nRIP: 0010:dmi_sysfs_entry_release\n...\nCall Trace:\n <TASK>\n kobject_put\n dmi_sysfs_register_handle (drivers/firmware/dmi-sysfs.c:540) dmi_sysfs\n dmi_decode_table (drivers/firmware/dmi_scan.c:133)\n dmi_walk (drivers/firmware/dmi_scan.c:1115)\n dmi_sysfs_init (drivers/firmware/dmi-sysfs.c:149) dmi_sysfs\n do_one_initcall (init/main.c:1296)\n ...\nKernel panic - not syncing: Fatal exception\nKernel Offset: 0x4000000 from 0xffffffff81000000\n---[ end Kernel panic - not syncing: Fatal exception ]---\n\nIt is because previous patch added kobject_put() to release the memory\nwhich will call  dmi_sysfs_entry_release() and list_del().\n\nHowever, list_add_tail(entry->list) is called after the error block,\nso the list_head is uninitialized and cannot be deleted.\n\nMove error handling to after list_add_tail to fix this.\n\nFixes: 660ba678f999 (\"firmware: dmi-sysfs: Fix memory leak in dmi_sysfs_register_handle\")\nSigned-off-by: Chen Zhongjin <chenzhongjin@huawei.com>\nLink: https://lore.kernel.org/r/20221111015326.251650-2-chenzhongjin@huawei.com\nSigned-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

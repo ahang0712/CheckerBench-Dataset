@@ -1,0 +1,153 @@
+### File: src/anet.c
+```c
+int anetSetSockMarkId(char *err, int fd, uint32_t id) {
+#ifdef HAVE_SOCKOPTMARKID
+    if (setsockopt(fd, SOL_SOCKET, SOCKOPTMARKID, (void *)&id, sizeof(id)) == -1) {
+        anetSetError(err, "setsockopt: %s", strerror(errno));
+        return ANET_ERR;
+    }
+    return ANET_OK;
+#else
+    UNUSED(fd);
+    UNUSED(id);
+    anetSetError(err,"anetSetSockMarkid unsupported on this platform");
+    return ANET_OK;
+#endif
+}
+
+int anetIsFifo(char *filepath) {
+    struct stat sb;
+    if (stat(filepath, &sb) == -1) return 0;
+    return S_ISFIFO(sb.st_mode);
+}
+
+int anetIsFifo(char *filepath) {
+    struct stat sb;
+    if (stat(filepath, &sb) == -1) return 0;
+    return S_ISFIFO(sb.st_mode);
+}
+```
+
+### File: src/cluster_legacy.c
+```c
+void clusterAcceptHandler(aeEventLoop *el, int fd, void *privdata, int mask) {
+    int cport, cfd;
+    int max = MAX_CLUSTER_ACCEPTS_PER_CALL;
+    char cip[NET_IP_STR_LEN];
+    int require_auth = TLS_CLIENT_AUTH_YES;
+    UNUSED(el);
+    UNUSED(mask);
+    UNUSED(privdata);
+
+    /* If the server is starting up, don't accept cluster connections:
+     * UPDATE messages may interact with the database content. */
+    if (server.masterhost == NULL && server.loading) return;
+
+    while(max--) {
+        cfd = anetTcpAccept(server.neterr, fd, cip, sizeof(cip), &cport);
+        if (cfd == ANET_ERR) {
+            if (errno != EWOULDBLOCK)
+                serverLog(LL_VERBOSE,
+                    "Error accepting cluster node: %s", server.neterr);
+            return;
+        }
+
+        connection *conn = connCreateAccepted(server.el, connTypeOfCluster(), cfd, &require_auth);
+
+        /* Make sure connection is not in an error state */
+        if (connGetState(conn) != CONN_STATE_ACCEPTING) {
+            serverLog(LL_VERBOSE,
+                "Error creating an accepting connection for cluster node: %s",
+                    connGetLastError(conn));
+            connClose(conn);
+            return;
+        }
+        connEnableTcpNoDelay(conn);
+        connKeepAlive(conn,server.cluster_node_timeout / 1000 * 2);
+
+        /* Use non-blocking I/O for cluster messages. */
+        serverLog(LL_VERBOSE,"Accepting cluster node connection from %s:%d", cip, cport);
+
+        /* Accept the connection now.  connAccept() may call our handler directly
+         * or schedule it for later depending on connection implementation.
+         */
+        if (connAccept(conn, clusterConnAcceptHandler) == C_ERR) {
+            if (connGetState(conn) == CONN_STATE_ERROR)
+                serverLog(LL_VERBOSE,
+                        "Error accepting cluster node connection: %s",
+                        connGetLastError(conn));
+            connClose(conn);
+            return;
+        }
+    }
+}
+```
+
+### File: src/socket.c
+```c
+static void connSocketAcceptHandler(aeEventLoop *el, int fd, void *privdata, int mask) {
+    int cport, cfd;
+    int max = server.max_new_conns_per_cycle;
+    char cip[NET_IP_STR_LEN];
+    UNUSED(mask);
+    UNUSED(privdata);
+
+    while(max--) {
+        cfd = anetTcpAccept(server.neterr, fd, cip, sizeof(cip), &cport);
+        if (cfd == ANET_ERR) {
+            if (errno != EWOULDBLOCK)
+                serverLog(LL_WARNING,
+                    "Accepting client connection: %s", server.neterr);
+            return;
+        }
+        serverLog(LL_VERBOSE,"Accepted %s:%d", cip, cport);
+        acceptCommonHandler(connCreateAcceptedSocket(el,cfd,NULL), 0, cip);
+    }
+}
+```
+
+### File: src/tls.c
+```c
+static void tlsAcceptHandler(aeEventLoop *el, int fd, void *privdata, int mask) {
+    int cport, cfd;
+    int max = server.max_new_tls_conns_per_cycle;
+    char cip[NET_IP_STR_LEN];
+    UNUSED(mask);
+    UNUSED(privdata);
+
+    while(max--) {
+        cfd = anetTcpAccept(server.neterr, fd, cip, sizeof(cip), &cport);
+        if (cfd == ANET_ERR) {
+            if (errno != EWOULDBLOCK)
+                serverLog(LL_WARNING,
+                    "Accepting client connection: %s", server.neterr);
+            return;
+        }
+        serverLog(LL_VERBOSE,"Accepted %s:%d", cip, cport);
+        acceptCommonHandler(connCreateAcceptedTLS(el,cfd,&server.tls_auth_clients), 0, cip);
+    }
+}
+```
+
+### File: src/unix.c
+```c
+static void connUnixAcceptHandler(aeEventLoop *el, int fd, void *privdata, int mask) {
+    int cfd;
+    int max = server.max_new_conns_per_cycle;
+    UNUSED(el);
+    UNUSED(mask);
+    UNUSED(privdata);
+
+    while(max--) {
+        cfd = anetUnixAccept(server.neterr, fd);
+        if (cfd == ANET_ERR) {
+            if (errno != EWOULDBLOCK)
+                serverLog(LL_WARNING,
+                    "Accepting client connection: %s", server.neterr);
+            return;
+        }
+        serverLog(LL_VERBOSE,"Accepted connection to %s", server.unixsocket);
+        acceptCommonHandler(connCreateAcceptedUnix(el, cfd, NULL),CLIENT_UNIX_SOCKET,NULL);
+    }
+}
+```

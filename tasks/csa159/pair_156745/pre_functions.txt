@@ -1,0 +1,61 @@
+### File: drivers/dma-buf/dma-heap.c
+```c
+static long dma_heap_ioctl(struct file *file, unsigned int ucmd,
+			   unsigned long arg)
+{
+	char stack_kdata[128];
+	char *kdata = stack_kdata;
+	unsigned int kcmd;
+	unsigned int in_size, out_size, drv_size, ksize;
+	int nr = _IOC_NR(ucmd);
+	int ret = 0;
+
+	if (nr >= ARRAY_SIZE(dma_heap_ioctl_cmds))
+		return -EINVAL;
+
+	/* Get the kernel ioctl cmd that matches */
+	kcmd = dma_heap_ioctl_cmds[nr];
+
+	/* Figure out the delta between user cmd size and kernel cmd size */
+	drv_size = _IOC_SIZE(kcmd);
+	out_size = _IOC_SIZE(ucmd);
+	in_size = out_size;
+	if ((ucmd & kcmd & IOC_IN) == 0)
+		in_size = 0;
+	if ((ucmd & kcmd & IOC_OUT) == 0)
+		out_size = 0;
+	ksize = max(max(in_size, out_size), drv_size);
+
+	/* If necessary, allocate buffer for ioctl argument */
+	if (ksize > sizeof(stack_kdata)) {
+		kdata = kmalloc(ksize, GFP_KERNEL);
+		if (!kdata)
+			return -ENOMEM;
+	}
+
+	if (copy_from_user(kdata, (void __user *)arg, in_size) != 0) {
+		ret = -EFAULT;
+		goto err;
+	}
+
+	/* zero out any difference between the kernel/user structure size */
+	if (ksize > in_size)
+		memset(kdata + in_size, 0, ksize - in_size);
+
+	switch (kcmd) {
+	case DMA_HEAP_IOCTL_ALLOC:
+		ret = dma_heap_ioctl_allocate(file, kdata);
+		break;
+	default:
+		ret = -ENOTTY;
+		goto err;
+	}
+
+	if (copy_to_user((void __user *)arg, kdata, out_size) != 0)
+		ret = -EFAULT;
+err:
+	if (kdata != stack_kdata)
+		kfree(kdata);
+	return ret;
+}
+```

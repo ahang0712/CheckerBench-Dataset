@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-19d7bda86b839e7fc493",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-19d7bda86b839e7fc493",
+    "project_id": "morefixes__xuxueli__xxl-job",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "xxl-job-admin/src/main/java/com/xxl/job/admin/controller/JobLogController.java"
+  ],
+  "patch_units": {
+    "before": [
+      "xxl-job-admin/src/main/java/com/xxl/job/admin/controller/JobLogController.java"
+    ],
+    "after": [
+      "xxl-job-admin/src/main/java/com/xxl/job/admin/controller/JobLogController.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/d6be94d4f161181116212a30be8d9addee217190df6282b76137f5b047bb312c/database",
+      "cache_key": "d6be94d4f161181116212a30be8d9addee217190df6282b76137f5b047bb312c",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/6309ca52ed49821dad4191b599c8d55604bbec86743d0f138a145ea649cf723b/database",
+      "cache_key": "6309ca52ed49821dad4191b599c8d55604bbec86743d0f138a145ea649cf723b",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/d0d203a4b762f36f6af7445faeda3efb05f818d6fe79237c1d45d75d36c2a04d/database",
+      "cache_key": "d0d203a4b762f36f6af7445faeda3efb05f818d6fe79237c1d45d75d36c2a04d",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-19d7bda86b839e7fc493/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-19d7bda86b839e7fc493/ (do not mount into agent)"
+  }
+}

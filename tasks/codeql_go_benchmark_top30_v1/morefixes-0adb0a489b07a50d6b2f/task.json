@@ -1,0 +1,53 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-0adb0a489b07a50d6b2f",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-0adb0a489b07a50d6b2f",
+    "project_id": "morefixes__weaveworks__tf-controller",
+    "language": "go",
+    "backend": "codeql"
+  },
+  "changed_go_files": [
+    "runner/server.go",
+    "runner/server_plan.go",
+    "runner/server_save_tfplan.go",
+    "runner/server_show_plan.go"
+  ],
+  "patch_units": {
+    "before": [
+      "runner/server.go",
+      "runner/server_plan.go",
+      "runner/server_save_tfplan.go",
+      "runner/server_show_plan.go"
+    ],
+    "after": [
+      "runner/server.go",
+      "runner/server_plan.go",
+      "runner/server_save_tfplan.go",
+      "runner/server_show_plan.go"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/526bd22241fda08aa14f3aff637753e5a43fbb91c6797071cb3459ad1b5c5977/database",
+      "cache_key": "526bd22241fda08aa14f3aff637753e5a43fbb91c6797071cb3459ad1b5c5977",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/9ed4d3837482420c6ba2d63dce2e8616009a054f4fbc06d4e97455bd3bbebd32/database",
+      "cache_key": "9ed4d3837482420c6ba2d63dce2e8616009a054f4fbc06d4e97455bd3bbebd32",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/ceaf049c8c906e9fc480038bd793145a9875fb9cfb427cf067b39438de42a041/database",
+      "cache_key": "ceaf049c8c906e9fc480038bd793145a9875fb9cfb427cf067b39438de42a041",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-0adb0a489b07a50d6b2f/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-0adb0a489b07a50d6b2f/ (do not mount into agent)"
+  }
+}

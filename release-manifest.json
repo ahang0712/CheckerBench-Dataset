@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "tag": "checkerbench-300-v1",
+  "task_count": 300,
+  "packages": [
+    {
+      "key": "codeql_go_benchmark_top30_v1",
+      "kind": "dataset",
+      "archive": "codeql_go_benchmark_top30_v1.tar.gz",
+      "bytes": 1255620410,
+      "sha256": "f1c061beb65d425414f8d20938b8918e521c6c908a706cbcdab2db568e269bd2",
+      "parts": [
+        {
+          "name": "codeql_go_benchmark_top30_v1.tar.gz",
+          "bytes": 1255620410,
+          "sha256": "f1c061beb65d425414f8d20938b8918e521c6c908a706cbcdab2db568e269bd2"
+        }
+      ],
+      "root": "codeql_go_benchmark_top30_v1",
+      "task_count": 30
+    },
+    {
+      "key": "codeql_java_benchmark_top30_v2",
+      "kind": "dataset",
+      "archive": "codeql_java_benchmark_top30_v2.tar.gz",
+      "bytes": 258511734,
+      "sha256": "94584869e15e944bdf4b48df044debff02a4607a60ba360ccc9db554037595bb",
+      "parts": [
+        {
+          "name": "codeql_java_benchmark_top30_v2.tar.gz",
+          "bytes": 258511734,
+          "sha256": "94584869e15e944bdf4b48df044debff02a4607a60ba360ccc9db554037595bb"
+        }
+      ],
+      "root": "codeql_java_benchmark_top30_v2",
+      "task_count": 30
+    },
+    {
+      "key": "codeql_javascript_benchmark_top30_v1",
+      "kind": "dataset",
+      "archive": "codeql_javascript_benchmark_top30_v1.tar.gz",
+      "bytes": 2879812908,
+      "sha256": "57bacbb732adfd1afc499afb561604afbffbd54f6b74c0fe7ec49c3432652292",
+      "parts": [
+        {
+          "name": "codeql_javascript_benchmark_top30_v1.tar.gz.part000",
+          "bytes": 1572864000,
+          "sha256": "229fcbf134d2df605599a341245bef39dbce57d44b3e15a612bedb2e2fc21607"
+        },
+        {
+          "name": "codeql_javascript_benchmark_top30_v1.tar.gz.part001",
+          "bytes": 1306948908,
+          "sha256": "f47cfe368d0f645445f5abc4b35c900640f0e97f5303a3e4704dce2178421183"
+        }
+      ],
+      "root": "codeql_javascript_benchmark_top30_v1",
+      "task_count": 30
+    },
+    {
+      "key": "codeql_python_benchmark51_v2",
+      "kind": "dataset",
+      "archive": "codeql_python_benchmark51_v2.tar.gz",
+      "bytes": 1652172553,
+      "sha256": "167a9b7225a969fe5a053a7bdbda59765bc97beaf6ec8fef09ba7257fbd2c4c6",
+      "parts": [
+        {
+          "name": "codeql_python_benchmark51_v2.tar.gz.part000",
+          "bytes": 1572864000,
+          "sha256": "c19e99879456b637ded3ad3b8b524f0d7cf29d81af261fdb5d1086e57d7ae78c"
+        },
+        {
+          "name": "codeql_python_benchmark51_v2.tar.gz.part001",
+          "bytes": 79308553,
+          "sha256": "37c12d1e099d89f65fdcb69677adca1e9f94e35f7372fb89ae92ea6dcee72d42"
+        }
+      ],
+      "root": "codeql_python_benchmark51_v2",
+      "task_count": 51
+    },
+    {
+      "key": "csa159",
+      "kind": "dataset",
+      "archive": "checkerbench-csa159.tar.gz",
+      "bytes": 5195950032,
+      "sha256": "9700929add77ea04bd171fb0946ae9910e6d1a14067199ce7e10d232d647366f",
+      "parts": [
+        {
+          "name": "checkerbench-csa159.tar.gz.part000",
+          "bytes": 1572864000,
+          "sha256": "7fddb3afd80e67d8eec2694e9704e24e65ce318dfb5d1260b8058dbc84c23830"
+        },
+        {
+          "name": "checkerbench-csa159.tar.gz.part001",
+          "bytes": 1572864000,
+          "sha256": "0615ba64af1cb7e526c741eca523c1dd2a98ef9214b4834e229c92f7d6113706"
+        },
+        {
+          "name": "checkerbench-csa159.tar.gz.part002",
+          "bytes": 1572864000,
+          "sha256": "54d83cf819a8d0777f1bcded9848cfe96605a7201878cbc563205880ab5ae85a"
+        },
+        {
+          "name": "checkerbench-csa159.tar.gz.part003",
+          "bytes": 477358032,
+          "sha256": "b483ff23fcb3a303032ce2f7956e3e5280849491d917d8e565333077b818ba43"
+        }
+      ],
+      "root": "csa159",
+      "task_count": 159
+    },
+    {
+      "key": "environment",
+      "kind": "docker-image",
+      "archive": "checkerbench-environment-linux-amd64.tar.gz",
+      "bytes": 2046492607,
+      "sha256": "1c7778d6e92e5acd97469d644ff81c4bf4cb8819205794c6c98111c38c0c63f7",
+      "parts": [
+        {
+          "name": "checkerbench-environment-linux-amd64.tar.gz.part000",
+          "bytes": 1572864000,
+          "sha256": "6dcc402d563e599525e9fb748244d754a983a48318ec6c871a85cfa18c854976"
+        },
+        {
+          "name": "checkerbench-environment-linux-amd64.tar.gz.part001",
+          "bytes": 473628607,
+          "sha256": "976c8e16a733cd76540f5374756c155a122edef44585b0eea12589d6f0ac09b9"
+        }
+      ],
+      "image": "checkerbench-runtime:review-v1",
+      "image_id": "sha256:6b6aff6ee4502aac70a6d518965fa63a8953483ff506a5cbd8d7b06faa18f9b6",
+      "platform": "linux/amd64"
+    }
+  ]
+}

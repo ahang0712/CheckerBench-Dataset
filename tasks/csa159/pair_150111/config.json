@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "4280197d154cae1d1d5acb54484da26da04eac32",
+  "after_commit": "2537089413514caaa9a5fdeeac3a34d45100f747",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/8f0b4cce4481fb22653697cced8d0d04027cb1e8/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/8f0b4cce4481fb22653697cced8d0d04027cb1e8/compile_commands.json",
+  "changed_files": [
+    "drivers/i3c/master/dw-i3c-master.c"
+  ],
+  "commit_message": "i3c: dw: Fix memory leak in dw_i3c_master_i2c_xfers()\n\nThe dw_i3c_master_i2c_xfers() function allocates memory for the xfer\nstructure using dw_i3c_master_alloc_xfer(). If pm_runtime_resume_and_get()\nfails, the function returns without freeing the allocated xfer, resulting\nin a memory leak.\n\nAdd a dw_i3c_master_free_xfer() call to the error path to ensure the\nallocated memory is properly freed.\n\nCompile tested only. Issue found using a prototype static analysis tool\nand code review.\n\nFixes: 62fe9d06f570 (\"i3c: dw: Add power management support\")\nSigned-off-by: Zilin Guan <zilin@seu.edu.cn>\nReviewed-by: Frank Li <Frank.Li@nxp.com>\nLink: https://patch.msgid.link/20260126081121.644099-1-zilin@seu.edu.cn\nSigned-off-by: Alexandre Belloni <alexandre.belloni@bootlin.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

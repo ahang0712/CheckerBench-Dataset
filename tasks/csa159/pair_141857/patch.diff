@@ -1,0 +1,22 @@
+diff --git a/drivers/android/binder_alloc.c b/drivers/android/binder_alloc.c
+index 9d2eff70c3ba..adcec5ec0959 100644
+--- a/drivers/android/binder_alloc.c
++++ b/drivers/android/binder_alloc.c
+@@ -271,7 +271,7 @@ static int binder_update_page_range(struct binder_alloc *alloc, int allocate,
+ 	}
+ 	if (mm) {
+ 		mmap_write_unlock(mm);
+-		mmput(mm);
++		mmput_async(mm);
+ 	}
+ 	return 0;
+ 
+@@ -304,7 +304,7 @@ static int binder_update_page_range(struct binder_alloc *alloc, int allocate,
+ err_no_vma:
+ 	if (mm) {
+ 		mmap_write_unlock(mm);
+-		mmput(mm);
++		mmput_async(mm);
+ 	}
+ 	return vma ? -ENOMEM : -ESRCH;
+ }

@@ -1,0 +1,22 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "2f2d42a17b5a6711378d39df74f1f69a831c5d4e",
+  "after_commit": "99f9a97dce39ad413c39b92c90393bbd6778f3fd",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/038d61fd642278bab63ee8ef722c50d10ab01e8f/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/038d61fd642278bab63ee8ef722c50d10ab01e8f/compile_commands.json",
+  "changed_files": [
+    "fs/exfat/dir.c",
+    "fs/exfat/fatent.c",
+    "fs/exfat/namei.c",
+    "fs/exfat/super.c"
+  ],
+  "commit_message": "exfat: add cluster chain loop check for dir\n\nAn infinite loop may occur if the following conditions occur due to\nfile system corruption.\n\n(1) Condition for exfat_count_dir_entries() to loop infinitely.\n    - The cluster chain includes a loop.\n    - There is no UNUSED entry in the cluster chain.\n\n(2) Condition for exfat_create_upcase_table() to loop infinitely.\n    - The cluster chain of the root directory includes a loop.\n    - There are no UNUSED entry and up-case table entry in the cluster\n      chain of the root directory.\n\n(3) Condition for exfat_load_bitmap() to loop infinitely.\n    - The cluster chain of the root directory includes a loop.\n    - There are no UNUSED entry and bitmap entry in the cluster chain\n      of the root directory.\n\n(4) Condition for exfat_find_dir_entry() to loop infinitely.\n    - The cluster chain includes a loop.\n    - The unused directory entries were exhausted by some operation.\n\n(5) Condition for exfat_check_dir_empty() to loop infinitely.\n    - The cluster chain includes a loop.\n    - The unused directory entries were exhausted by some operation.\n    - All files and sub-directories under the directory are deleted.\n\nThis commit adds checks to break the above infinite loop.\n\nSigned-off-by: Yuezhang Mo <Yuezhang.Mo@sony.com>\nSigned-off-by: Namjae Jeon <linkinjeon@kernel.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

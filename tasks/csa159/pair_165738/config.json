@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "f6837f34a34973ef6600c08195ed300e24e97317",
+  "after_commit": "504fa212d7030fb1c042290dc2eb92b21515573a",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/b7bfaa761d760e72a969d116517eaa12e404c262/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/b7bfaa761d760e72a969d116517eaa12e404c262/compile_commands.json",
+  "changed_files": [
+    "drivers/base/dd.c"
+  ],
+  "commit_message": "driver core: Make driver_deferred_probe_timeout a static variable\n\nIt is not used outside of its compilation unit, so there's no need to\nexport this variable.\n\nSigned-off-by: Javier Martinez Canillas <javierm@redhat.com>\nReviewed-by: Andrew Halaney <ahalaney@redhat.com>\nAcked-by: John Stultz <jstultz@google.com>\nLink: https://lore.kernel.org/r/20221227232152.3094584-1-javierm@redhat.com\nSigned-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

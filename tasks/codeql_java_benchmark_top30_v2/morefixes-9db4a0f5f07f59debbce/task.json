@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-9db4a0f5f07f59debbce",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-9db4a0f5f07f59debbce",
+    "project_id": "morefixes__apache__netbeans-html4j",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "webkit/src/main/java/org/netbeans/html/presenters/webkit/UnJarResources.java"
+  ],
+  "patch_units": {
+    "before": [
+      "webkit/src/main/java/org/netbeans/html/presenters/webkit/UnJarResources.java"
+    ],
+    "after": [
+      "webkit/src/main/java/org/netbeans/html/presenters/webkit/UnJarResources.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/1801b7174841eabd9ca7f58dc29a6f4d93eb4dedf6140f5737b60fdcc05d1538/database",
+      "cache_key": "1801b7174841eabd9ca7f58dc29a6f4d93eb4dedf6140f5737b60fdcc05d1538",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/a06a937702b1c39584429c045f84f60d837083e9232c369c510eb8108611dab3/database",
+      "cache_key": "a06a937702b1c39584429c045f84f60d837083e9232c369c510eb8108611dab3",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/3d62b08edc0781b3a8e576f6773c182323f4c4127093549a6232828cedffdc52/database",
+      "cache_key": "3d62b08edc0781b3a8e576f6773c182323f4c4127093549a6232828cedffdc52",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-9db4a0f5f07f59debbce/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-9db4a0f5f07f59debbce/ (do not mount into agent)"
+  }
+}

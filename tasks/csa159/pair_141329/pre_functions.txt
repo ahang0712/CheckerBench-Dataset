@@ -1,0 +1,18 @@
+### File: net/bluetooth/hci_sysfs.c
+```c
+void hci_conn_add_sysfs(struct hci_conn *conn)
+{
+	struct hci_dev *hdev = conn->hdev;
+
+	BT_DBG("conn %p", conn);
+
+	dev_set_name(&conn->dev, "%s:%d", hdev->name, conn->handle);
+
+	if (device_add(&conn->dev) < 0) {
+		bt_dev_err(hdev, "failed to register connection device");
+		return;
+	}
+
+	hci_dev_hold(hdev);
+}
+```

@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "43eef70e7e2ac74e7767731dd806720c7fb5e010",
+  "after_commit": "7eb75ce7527129d7f1fee6951566af409a37a1c4",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/42f7652d3eb527d03665b09edac47f85fb600924/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/42f7652d3eb527d03665b09edac47f85fb600924/compile_commands.json",
+  "changed_files": [
+    "io_uring/tctx.c"
+  ],
+  "commit_message": "io_uring/tctx: work around xa_store() allocation error issue\n\nsyzbot triggered the following WARN_ON:\n\nWARNING: CPU: 0 PID: 16 at io_uring/tctx.c:51 __io_uring_free+0xfa/0x140 io_uring/tctx.c:51\n\nwhich is the\n\nWARN_ON_ONCE(!xa_empty(&tctx->xa));\n\nsanity check in __io_uring_free() when a io_uring_task is going through\nits final put. The syzbot test case includes injecting memory allocation\nfailures, and it very much looks like xa_store() can fail one of its\nmemory allocations and end up with ->head being non-NULL even though no\nentries exist in the xarray.\n\nUntil this issue gets sorted out, work around it by attempting to\niterate entries in our xarray, and WARN_ON_ONCE() if one is found.\n\nReported-by: syzbot+cc36d44ec9f368e443d3@syzkaller.appspotmail.com\nLink: https://lore.kernel.org/io-uring/673c1643.050a0220.87769.0066.GAE@google.com/\nSigned-off-by: Jens Axboe <axboe@kernel.dk>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

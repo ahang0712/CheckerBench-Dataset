@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-ab625a5d0d2a27547494",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-ab625a5d0d2a27547494",
+    "project_id": "morefixes__cowtowncoder__java-merge-sort",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "src/main/java/com/fasterxml/sort/std/StdTempFileProvider.java"
+  ],
+  "patch_units": {
+    "before": [
+      "src/main/java/com/fasterxml/sort/std/StdTempFileProvider.java"
+    ],
+    "after": [
+      "src/main/java/com/fasterxml/sort/std/StdTempFileProvider.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/fadd11f6466f3d2d143f4c84089c9501f02da11f1d3459b835d6ac777e6161e6/database",
+      "cache_key": "fadd11f6466f3d2d143f4c84089c9501f02da11f1d3459b835d6ac777e6161e6",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/6ee0369a06ba0d8ee873d2da7a958b276f319194d853a484723bfa42f77c766f/database",
+      "cache_key": "6ee0369a06ba0d8ee873d2da7a958b276f319194d853a484723bfa42f77c766f",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/8fe90006c45c60b1d3a5d4f91387f1b4cf2fd84b74a89bb18a5655c3ff19134b/database",
+      "cache_key": "8fe90006c45c60b1d3a5d4f91387f1b4cf2fd84b74a89bb18a5655c3ff19134b",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-ab625a5d0d2a27547494/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-ab625a5d0d2a27547494/ (do not mount into agent)"
+  }
+}

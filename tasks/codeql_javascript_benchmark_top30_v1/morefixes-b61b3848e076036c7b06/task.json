@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-b61b3848e076036c7b06",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-b61b3848e076036c7b06",
+    "project_id": "morefixes__decolua__9router",
+    "language": "javascript",
+    "backend": "codeql"
+  },
+  "changed_javascript_files": [
+    "src/dashboardGuard.js"
+  ],
+  "patch_units": {
+    "before": [
+      "src/dashboardGuard.js"
+    ],
+    "after": [
+      "src/dashboardGuard.js"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/2f133db8dd621d1e9009e0e1933e1430ff5c4d7dfc037e79340dc33dd49253e9/database",
+      "cache_key": "2f133db8dd621d1e9009e0e1933e1430ff5c4d7dfc037e79340dc33dd49253e9",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/bf2caec7ec7aceb42c40875011e8fe1153217a3bf6b5b21aa65a940e6e8289d3/database",
+      "cache_key": "bf2caec7ec7aceb42c40875011e8fe1153217a3bf6b5b21aa65a940e6e8289d3",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/d62586e77a6d10075a2478b7a103b3afc2d117472c5243a6717cdc04f5312961/database",
+      "cache_key": "d62586e77a6d10075a2478b7a103b3afc2d117472c5243a6717cdc04f5312961",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-b61b3848e076036c7b06/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-b61b3848e076036c7b06/ (do not mount into agent)"
+  }
+}

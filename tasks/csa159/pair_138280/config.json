@@ -1,0 +1,19 @@
+{
+  "project_id": "LibreDWG_libredwg",
+  "before_commit": "cc9f02ac405fe8d53666984c87ac038e51c53285",
+  "after_commit": "9b6e0ff9ef02818df034fc42c3bd149a5ff89342",
+  "repo_path": "/workspace/repo/LibreDWG/libredwg",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/LibreDWG_libredwg/91fdb39d43d84e089ba00ea61f1ab87449d5f444/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/LibreDWG_libredwg/91fdb39d43d84e089ba00ea61f1ab87449d5f444/compile_commands.json",
+  "changed_files": [
+    "src/encode.c"
+  ],
+  "commit_message": "encode: avoid hdl_dat double-free\n\nIn case of an handle overflow, such as num_reactors.\nFixes oss-fuzz issue 31724.",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

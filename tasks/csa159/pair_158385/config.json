@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "54eed5c7b938dc4ef6b14d4ee048bbdafdbce352",
+  "after_commit": "62ac2473553a00229e67bdf3cb023b62cf7f5a9a",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/4b0986a3613c92f4ec1bdc7f60ec66fea135991f/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/4b0986a3613c92f4ec1bdc7f60ec66fea135991f/compile_commands.json",
+  "changed_files": [
+    "drivers/hid/hid-mcp2221.c"
+  ],
+  "commit_message": "HID: mcp2221: prevent a buffer overflow in mcp_smbus_write()\n\nSmatch Warning:\ndrivers/hid/hid-mcp2221.c:388 mcp_smbus_write() error: __memcpy()\n'&mcp->txbuf[5]' too small (59 vs 255)\ndrivers/hid/hid-mcp2221.c:388 mcp_smbus_write() error: __memcpy() 'buf'\ntoo small (34 vs 255)\n\nThe 'len' variable can take a value between 0-255 as it can come from\ndata->block[0] and it is user data. So add an bound check to prevent a\nbuffer overflow in memcpy().\n\nFixes: 67a95c21463d (\"HID: mcp2221: add usb to i2c-smbus host bridge\")\nSigned-off-by: Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>\nSigned-off-by: Jiri Kosina <jkosina@suse.cz>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

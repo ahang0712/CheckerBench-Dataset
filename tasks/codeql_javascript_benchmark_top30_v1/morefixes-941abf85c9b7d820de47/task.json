@@ -1,0 +1,50 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-941abf85c9b7d820de47",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-941abf85c9b7d820de47",
+    "project_id": "morefixes__panva__jose",
+    "language": "javascript",
+    "backend": "codeql"
+  },
+  "changed_javascript_files": [
+    "lib/jwe/decrypt.js",
+    "test/jwe/sanity.test.js",
+    "types/index.d.ts"
+  ],
+  "patch_units": {
+    "before": [
+      "lib/jwe/decrypt.js",
+      "test/jwe/sanity.test.js",
+      "types/index.d.ts"
+    ],
+    "after": [
+      "lib/jwe/decrypt.js",
+      "test/jwe/sanity.test.js",
+      "types/index.d.ts"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/65125c32f8247ea4c58fcce410d86318c87fe72a7318673317e29a8f60d0d75c/database",
+      "cache_key": "65125c32f8247ea4c58fcce410d86318c87fe72a7318673317e29a8f60d0d75c",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/8fb1c425a8bcd14813bcf91aeeb5d2c481daf12972e7069102ebf96fc7a7332a/database",
+      "cache_key": "8fb1c425a8bcd14813bcf91aeeb5d2c481daf12972e7069102ebf96fc7a7332a",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/153c9d10069842b81ccac06300310805713996dc0dbb50696b21da61345cc6ff/database",
+      "cache_key": "153c9d10069842b81ccac06300310805713996dc0dbb50696b21da61345cc6ff",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-941abf85c9b7d820de47/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-941abf85c9b7d820de47/ (do not mount into agent)"
+  }
+}

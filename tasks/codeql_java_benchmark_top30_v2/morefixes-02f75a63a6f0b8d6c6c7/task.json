@@ -1,0 +1,47 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-02f75a63a6f0b8d6c6c7",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-02f75a63a6f0b8d6c6c7",
+    "project_id": "morefixes__jenkinsci__codedx-plugin",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "src/main/java/org/jenkinsci/plugins/codedx/CodeDxPublisher.java",
+    "src/main/java/org/jenkinsci/plugins/codedx/Util.java"
+  ],
+  "patch_units": {
+    "before": [
+      "src/main/java/org/jenkinsci/plugins/codedx/CodeDxPublisher.java",
+      "src/main/java/org/jenkinsci/plugins/codedx/Util.java"
+    ],
+    "after": [
+      "src/main/java/org/jenkinsci/plugins/codedx/CodeDxPublisher.java",
+      "src/main/java/org/jenkinsci/plugins/codedx/Util.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/fa0f653d10e83fda0d93d7ea0c86edacba3c6244c1df592a36bd55995eccf00c/database",
+      "cache_key": "fa0f653d10e83fda0d93d7ea0c86edacba3c6244c1df592a36bd55995eccf00c",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/068f69bbed31e2097d164ad68b72f1c032ff75a5d11d563a5b884d1772b97fe3/database",
+      "cache_key": "068f69bbed31e2097d164ad68b72f1c032ff75a5d11d563a5b884d1772b97fe3",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/7854338a0efe77646ce5d5f3a5a8c347377c5ae80da56fe7a62d7c89da72dc7c/database",
+      "cache_key": "7854338a0efe77646ce5d5f3a5a8c347377c5ae80da56fe7a62d7c89da72dc7c",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-02f75a63a6f0b8d6c6c7/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-02f75a63a6f0b8d6c6c7/ (do not mount into agent)"
+  }
+}

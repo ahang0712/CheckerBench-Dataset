@@ -1,0 +1,318 @@
+### File: libfreerdp/core/orders.c
+```c
+BYTE get_primary_drawing_order_field_bytes(UINT32 orderType, BOOL* pValid)
+{
+	if (pValid)
+		*pValid = TRUE;
+	switch (orderType)
+	{
+		case 0:
+			return DSTBLT_ORDER_FIELD_BYTES;
+		case 1:
+			return PATBLT_ORDER_FIELD_BYTES;
+		case 2:
+			return SCRBLT_ORDER_FIELD_BYTES;
+		case 3:
+			return 0;
+		case 4:
+			return 0;
+		case 5:
+			return 0;
+		case 6:
+			return 0;
+		case 7:
+			return DRAW_NINE_GRID_ORDER_FIELD_BYTES;
+		case 8:
+			return MULTI_DRAW_NINE_GRID_ORDER_FIELD_BYTES;
+		case 9:
+			return LINE_TO_ORDER_FIELD_BYTES;
+		case 10:
+			return OPAQUE_RECT_ORDER_FIELD_BYTES;
+		case 11:
+			return SAVE_BITMAP_ORDER_FIELD_BYTES;
+		case 12:
+			return 0;
+		case 13:
+			return MEMBLT_ORDER_FIELD_BYTES;
+		case 14:
+			return MEM3BLT_ORDER_FIELD_BYTES;
+		case 15:
+			return MULTI_DSTBLT_ORDER_FIELD_BYTES;
+		case 16:
+			return MULTI_PATBLT_ORDER_FIELD_BYTES;
+		case 17:
+			return MULTI_SCRBLT_ORDER_FIELD_BYTES;
+		case 18:
+			return MULTI_OPAQUE_RECT_ORDER_FIELD_BYTES;
+		case 19:
+			return FAST_INDEX_ORDER_FIELD_BYTES;
+		case 20:
+			return POLYGON_SC_ORDER_FIELD_BYTES;
+		case 21:
+			return POLYGON_CB_ORDER_FIELD_BYTES;
+		case 22:
+			return POLYLINE_ORDER_FIELD_BYTES;
+		case 23:
+			return 0;
+		case 24:
+			return FAST_GLYPH_ORDER_FIELD_BYTES;
+		case 25:
+			return ELLIPSE_SC_ORDER_FIELD_BYTES;
+		case 26:
+			return ELLIPSE_CB_ORDER_FIELD_BYTES;
+		case 27:
+			return GLYPH_INDEX_ORDER_FIELD_BYTES;
+		default:
+			if (pValid)
+				*pValid = FALSE;
+			WLog_WARN(TAG, "Invalid orderType 0x%08X received", orderType);
+			return 0;
+	}
+}
+
+static BOOL check_order_activated(wLog* log, rdpSettings* settings, const char* orderName,
+                                  BOOL condition)
+{
+	if (!condition)
+	{
+		if (settings->AllowUnanouncedOrdersFromServer)
+		{
+			WLog_Print(log, WLOG_WARN,
+			           "%s - SERVER BUG: The support for this feature was not announced!",
+			           orderName);
+			return TRUE;
+		}
+		else
+		{
+			WLog_Print(log, WLOG_ERROR,
+			           "%s - SERVER BUG: The support for this feature was not announced! Use "
+			           "/relax-order-checks to ignore",
+			           orderName);
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+static INLINE BOOL update_read_brush(wStream* s, rdpBrush* brush, BYTE fieldFlags)
+{
+	if (fieldFlags & ORDER_FIELD_01)
+	{
+		if (Stream_GetRemainingLength(s) < 1)
+			return FALSE;
+
+		Stream_Read_UINT8(s, brush->x);
+	}
+
+	if (fieldFlags & ORDER_FIELD_02)
+	{
+		if (Stream_GetRemainingLength(s) < 1)
+			return FALSE;
+
+		Stream_Read_UINT8(s, brush->y);
+	}
+
+	if (fieldFlags & ORDER_FIELD_03)
+	{
+		if (Stream_GetRemainingLength(s) < 1)
+			return FALSE;
+
+		Stream_Read_UINT8(s, brush->style);
+	}
+
+	if (fieldFlags & ORDER_FIELD_04)
+	{
+		if (Stream_GetRemainingLength(s) < 1)
+			return FALSE;
+
+		Stream_Read_UINT8(s, brush->hatch);
+	}
+
+	if (brush->style & CACHED_BRUSH)
+	{
+		brush->index = brush->hatch;
+		brush->bpp = BMF_BPP[brush->style & 0x07];
+
+		if (brush->bpp == 0)
+			brush->bpp = 1;
+	}
+
+	if (fieldFlags & ORDER_FIELD_05)
+	{
+		if (Stream_GetRemainingLength(s) < 7)
+			return FALSE;
+
+		brush->data = (BYTE*)brush->p8x8;
+		Stream_Read_UINT8(s, brush->data[7]);
+		Stream_Read_UINT8(s, brush->data[6]);
+		Stream_Read_UINT8(s, brush->data[5]);
+		Stream_Read_UINT8(s, brush->data[4]);
+		Stream_Read_UINT8(s, brush->data[3]);
+		Stream_Read_UINT8(s, brush->data[2]);
+		Stream_Read_UINT8(s, brush->data[1]);
+		brush->data[0] = brush->hatch;
+	}
+
+	return TRUE;
+}
+
+static INLINE BOOL update_write_brush(wStream* s, rdpBrush* brush, BYTE fieldFlags)
+{
+	if (fieldFlags & ORDER_FIELD_01)
+	{
+		Stream_Write_UINT8(s, brush->x);
+	}
+
+	if (fieldFlags & ORDER_FIELD_02)
+	{
+		Stream_Write_UINT8(s, brush->y);
+	}
+
+	if (fieldFlags & ORDER_FIELD_03)
+	{
+		Stream_Write_UINT8(s, brush->style);
+	}
+
+	if (brush->style & CACHED_BRUSH)
+	{
+		brush->hatch = brush->index;
+		brush->bpp = BMF_BPP[brush->style & 0x07];
+
+		if (brush->bpp == 0)
+			brush->bpp = 1;
+	}
+
+	if (fieldFlags & ORDER_FIELD_04)
+	{
+		Stream_Write_UINT8(s, brush->hatch);
+	}
+
+	if (fieldFlags & ORDER_FIELD_05)
+	{
+		brush->data = (BYTE*)brush->p8x8;
+		Stream_Write_UINT8(s, brush->data[7]);
+		Stream_Write_UINT8(s, brush->data[6]);
+		Stream_Write_UINT8(s, brush->data[5]);
+		Stream_Write_UINT8(s, brush->data[4]);
+		Stream_Write_UINT8(s, brush->data[3]);
+		Stream_Write_UINT8(s, brush->data[2]);
+		Stream_Write_UINT8(s, brush->data[1]);
+		brush->data[0] = brush->hatch;
+	}
+
+	return TRUE;
+}
+
+BOOL update_write_cache_bitmap_order(wStream* s, const CACHE_BITMAP_ORDER* cache_bitmap,
+                                     BOOL compressed, UINT16* flags)
+{
+	UINT32 bitmapLength = cache_bitmap->bitmapLength;
+	int inf = update_approximate_cache_bitmap_order(cache_bitmap, compressed, flags);
+
+	if (!Stream_EnsureRemainingCapacity(s, inf))
+		return FALSE;
+
+	*flags = NO_BITMAP_COMPRESSION_HDR;
+
+	if ((*flags & NO_BITMAP_COMPRESSION_HDR) == 0)
+		bitmapLength += 8;
+
+	Stream_Write_UINT8(s, cache_bitmap->cacheId);      /* cacheId (1 byte) */
+	Stream_Write_UINT8(s, 0);                          /* pad1Octet (1 byte) */
+	Stream_Write_UINT8(s, cache_bitmap->bitmapWidth);  /* bitmapWidth (1 byte) */
+	Stream_Write_UINT8(s, cache_bitmap->bitmapHeight); /* bitmapHeight (1 byte) */
+	Stream_Write_UINT8(s, cache_bitmap->bitmapBpp);    /* bitmapBpp (1 byte) */
+	Stream_Write_UINT16(s, bitmapLength);              /* bitmapLength (2 bytes) */
+	Stream_Write_UINT16(s, cache_bitmap->cacheIndex);  /* cacheIndex (2 bytes) */
+
+	if (compressed)
+	{
+		if ((*flags & NO_BITMAP_COMPRESSION_HDR) == 0)
+		{
+			BYTE* bitmapComprHdr = (BYTE*)&(cache_bitmap->bitmapComprHdr);
+			Stream_Write(s, bitmapComprHdr, 8); /* bitmapComprHdr (8 bytes) */
+			bitmapLength -= 8;
+		}
+
+		Stream_Write(s, cache_bitmap->bitmapDataStream, bitmapLength);
+	}
+	else
+	{
+		Stream_Write(s, cache_bitmap->bitmapDataStream, bitmapLength);
+	}
+
+	return TRUE;
+}
+
+static CACHE_BITMAP_V2_ORDER* update_read_cache_bitmap_v2_order(rdpUpdate* update, wStream* s,
+                                                                BOOL compressed, UINT16 flags)
+{
+	BYTE bitsPerPixelId;
+	CACHE_BITMAP_V2_ORDER* cache_bitmap_v2;
+
+	if (!update || !s)
+		return NULL;
+
+	cache_bitmap_v2 = calloc(1, sizeof(CACHE_BITMAP_V2_ORDER));
+
+	if (!cache_bitmap_v2)
+		goto fail;
+
+	cache_bitmap_v2->cacheId = flags & 0x0003;
+	cache_bitmap_v2->flags = (flags & 0xFF80) >> 7;
+	bitsPerPixelId = (flags & 0x0078) >> 3;
+	cache_bitmap_v2->bitmapBpp = CBR2_BPP[bitsPerPixelId];
+
+	if (cache_bitmap_v2->flags & CBR2_PERSISTENT_KEY_PRESENT)
+	{
+		if (Stream_GetRemainingLength(s) < 8)
+			goto fail;
+
+		Stream_Read_UINT32(s, cache_bitmap_v2->key1); /* key1 (4 bytes) */
+		Stream_Read_UINT32(s, cache_bitmap_v2->key2); /* key2 (4 bytes) */
+	}
+
+	if (cache_bitmap_v2->flags & CBR2_HEIGHT_SAME_AS_WIDTH)
+	{
+		if (!update_read_2byte_unsigned(s, &cache_bitmap_v2->bitmapWidth)) /* bitmapWidth */
+			goto fail;
+
+		cache_bitmap_v2->bitmapHeight = cache_bitmap_v2->bitmapWidth;
+	}
+	else
+	{
+		if (!update_read_2byte_unsigned(s, &cache_bitmap_v2->bitmapWidth) || /* bitmapWidth */
+		    !update_read_2byte_unsigned(s, &cache_bitmap_v2->bitmapHeight))  /* bitmapHeight */
+			goto fail;
+	}
+
+	if (!update_read_4byte_unsigned(s, &cache_bitmap_v2->bitmapLength) || /* bitmapLength */
+	    !update_read_2byte_unsigned(s, &cache_bitmap_v2->cacheIndex))     /* cacheIndex */
+		goto fail;
+
+	if (cache_bitmap_v2->flags & CBR2_DO_NOT_CACHE)
+		cache_bitmap_v2->cacheIndex = BITMAP_CACHE_WAITING_LIST_INDEX;
+
+	if (compressed)
+	{
+		if (!(cache_bitmap_v2->flags & CBR2_NO_BITMAP_COMPRESSION_HDR))
+		{
+			if (Stream_GetRemainingLength(s) < 8)
+				goto fail;
+
+			Stream_Read_UINT16(
+			    s, cache_bitmap_v2->cbCompFirstRowSize); /* cbCompFirstRowSize (2 bytes) */
+			Stream_Read_UINT16(
+			    s, cache_bitmap_v2->cbCompMainBodySize);         /* cbCompMainBodySize (2 bytes) */
+			Stream_Read_UINT16(s, cache_bitmap_v2->cbScanWidth); /* cbScanWidth (2 bytes) */
+			Stream_Read_UINT16(
+			    s, cache_bitmap_v2->cbUncompressedSize); /* cbUncompressedSize (2 bytes) */
+			cache_bitmap_v2->bitmapLength = cache_bitmap_v2->cbCompMainBodySize;
+		}
+	}
+
+	
+
+// ... (10828 more chars)
+```

@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-461c7bace102119cf443",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-461c7bace102119cf443",
+    "project_id": "morefixes__duke-git__lancet",
+    "language": "go",
+    "backend": "codeql"
+  },
+  "changed_go_files": [
+    "fileutil/file.go"
+  ],
+  "patch_units": {
+    "before": [
+      "fileutil/file.go"
+    ],
+    "after": [
+      "fileutil/file.go"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/3bd1b643d4d658488ff75b34a7408f63e3e7c48bbcf20b8b851f5d2586a4074f/database",
+      "cache_key": "3bd1b643d4d658488ff75b34a7408f63e3e7c48bbcf20b8b851f5d2586a4074f",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/e3aec19fe853ea77aae05e80146065b40cdf4f0c26609690dc1fa506fda65079/database",
+      "cache_key": "e3aec19fe853ea77aae05e80146065b40cdf4f0c26609690dc1fa506fda65079",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/29c3f2fc77a1f798684693af1c740f407431b34eb0f47ef6a05f3bbb6a540366/database",
+      "cache_key": "29c3f2fc77a1f798684693af1c740f407431b34eb0f47ef6a05f3bbb6a540366",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-461c7bace102119cf443/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-461c7bace102119cf443/ (do not mount into agent)"
+  }
+}

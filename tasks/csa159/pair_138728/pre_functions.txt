@@ -1,0 +1,456 @@
+### File: coders/json.c
+```c
+static MagickBooleanType EncodeImageAttributes(Image *image,FILE *file,
+  ExceptionInfo *exception)
+{
+  char
+    color[MagickPathExtent],
+    format[MagickPathExtent],
+    key[MagickPathExtent];
+
+  ChannelFeatures
+    *channel_features;
+
+  ChannelMoments
+    *channel_moments;
+
+  ChannelPerceptualHash
+    *channel_phash;
+
+  ChannelStatistics
+    *channel_statistics;
+
+  const char
+    *artifact,
+    *locate,
+    *name,
+    *property,
+    *registry,
+    *value;
+
+  const MagickInfo
+    *magick_info;
+
+  double
+    elapsed_time,
+    scale,
+    user_time,
+    version;
+
+  ImageType
+    type;
+
+  MagickBooleanType
+    ping;
+
+  size_t
+    depth,
+    distance;
+
+  ssize_t
+    i,
+    x,
+    y;
+
+  struct stat
+    properties;
+
+  assert(image != (Image *) NULL);
+  assert(image->signature == MagickCoreSignature);
+  if (IsEventLogging() != MagickFalse)
+    (void) LogMagickEvent(TraceEvent,GetMagickModule(),"%s",image->filename);
+  *format='\0';
+  elapsed_time=GetElapsedTime(&image->timer);
+  user_time=GetUserTime(&image->timer);
+  GetTimerInfo(&image->timer);
+  ping=MagickTrue;
+  if (GetVirtualPixels(image,0,0,1,1,exception) != (const Quantum *) NULL)
+    ping=MagickFalse;
+  (void) ping;
+  (void) SignatureImage(image,exception);
+  (void) FormatLocaleFile(file,"{\n");
+  version=1.0;
+  artifact=GetImageArtifact(image,"json:version");
+  if (artifact != (const char *) NULL)
+    version=StringToDouble(artifact,(char **) NULL);
+  if (version >= 1.0)
+    (void) FormatLocaleFile(file,"  \"version\": \"%.1f\",\n",version);
+  if (*image->magick_filename == '\0')
+    JSONFormatLocaleFile(file,"  \"image\": {\n    \"name\": %s,\n",
+      image->filename);
+  else
+    {
+      JSONFormatLocaleFile(file,"  \"image\": {\n    \"name\": %s,\n",
+        image->magick_filename);
+      if (LocaleCompare(image->magick_filename,image->filename) != 0)
+        {   
+          char
+            filename[MagickPathExtent];
+          
+          GetPathComponent(image->magick_filename,TailPath,filename);
+          JSONFormatLocaleFile(file,"    \"baseName\": %s,\n",filename);
+        }
+    }
+  properties=(*GetBlobProperties(image));
+  if (properties.st_mode != 0)
+    (void) FormatLocaleFile(file,"    \"permissions\": %d%d%d,\n",
+      (properties.st_mode >> 6) & 0x07,(properties.st_mode >> 3) & 0x07,
+      (properties.st_mode >> 0) & 0x07);
+  JSONFormatLocaleFile(file,"    \"format\": %s,\n",image->magick);
+  magick_info=GetMagickInfo(image->magick,exception);
+  if ((magick_info != (const MagickInfo *) NULL) &&
+      (GetMagickDescription(magick_info) != (const char *) NULL))
+    JSONFormatLocaleFile(file,"    \"formatDescription\": %s,\n",
+      GetMagickDescription(magick_info));
+  if ((magick_info != (const MagickInfo *) NULL) &&
+      (GetMagickMimeType(magick_info) != (const char *) NULL))
+    JSONFormatLocaleFile(file,"    \"mimeType\": %s,\n",GetMagickMimeType(
+      magick_info));
+  JSONFormatLocaleFile(file,"    \"class\": %s,\n",CommandOptionToMnemonic(
+    MagickClassOptions,(ssize_t) image->storage_class));
+  (void) FormatLocaleFile(file,"    \"geometry\": {\n"
+    "      \"width\": %g,\n      \"height\": %g,\n"
+    "      \"x\": %g,\n      \"y\": %g\n    },\n",
+    (double) image->columns,(double) image->rows,(double) image->tile_offset.x,
+    (double) image->tile_offset.y);
+  if ((image->magick_columns != 0) || (image->magick_rows != 0))
+    if ((image->magick_columns != image->columns) ||
+        (image->magick_rows != image->rows))
+      (void) FormatLocaleFile(file,"    \"baseGeometry\": {\n"
+        "      \"width\": %g,\n      \"height\": %g\n    },\n",(double)
+        image->magick_columns,(double) image->magick_rows);
+  if ((image->resolution.x != 0.0) && (image->resolution.y != 0.0))
+    {
+      (void) FormatLocaleFile(file,"    \"resolution\": {\n"
+        "      \"x\": %g,\n      \"y\": %g\n    },\n",image->resolution.x,
+        image->resolution.y);
+      (void) FormatLocaleFile(file,"    \"printSize\": {\n"
+        "      \"x\": %.*g,\n      \"y\": %.*g\n    },\n",GetMagickPrecision(),
+        image->columns/image->resolution.x,GetMagickPrecision(),(double)
+        image->rows/image->resolution.y);
+    }
+  JSONFormatLocaleFile(file,"    \"units\": %s,\n",CommandOptionToMnemonic(
+    MagickResolutionOptions,(ssize_t) image->units));
+  type=IdentifyImageCoderType(image,exception);
+  JSONFormatLocaleFile(file,"    \"type\": %s,\n",CommandOptionToMnemonic(
+    MagickTypeOptions,(ssize_t) type));
+  if (image->type != type)
+    JSONFormatLocaleFile(file,"    \"baseType\": %s,\n",
+      CommandOptionToMnemonic(MagickTypeOptions,(ssize_t) image->type));
+  if (version < 1.0)
+    JSONFormatLocaleFile(file,"    \"endianess\": %s,\n",
+      CommandOptionToMnemonic(MagickEndianOptions,(ssize_t) image->endian));
+  else
+    JSONFormatLocaleFile(file,"    \"endianness\": %s,\n",
+      CommandOptionToMnemonic(MagickEndianOptions,(ssize_t) image->endian));
+  locate=GetImageArtifact(image,"identify:locate");
+  if (locate == (const char *) NULL)
+    locate=GetImageArtifact(image,"json:locate");
+  if (locate != (const char *) NULL)
+    {
+      const char
+        *limit;
+
+      size_t
+        max_locations;
+
+      StatisticType
+        statistic_type;
+
+      /*
+        Display minimum, maximum, or mean pixel locations.
+      */
+      statistic_type=(StatisticType) ParseCommandOption(MagickStatisticOptions,
+        MagickFalse,locate);
+      limit=GetImageArtifact(image,"identify:limit");
+      if (limit == (const char *) NULL)
+        limit=GetImageArtifact(image,"json:limit");
+      max_locations=0;
+      if (limit != (const char *) NULL)
+        max_locations=StringToUnsignedLong(limit);
+      channel_statistics=GetLocationStatistics(image,statistic_type,exception);
+      if (channel_statistics == (ChannelStatistics *) NULL)
+        return(MagickFalse);
+      (void) FormatLocaleFile(file,"    \"channel%s\": {\n",locate);
+      if (image->alpha_trait != UndefinedPixelTrait)
+        (void) PrintChannelLocations(file,image,AlphaPixelChannel,"alpha",
+          statistic_type,max_locations,MagickTrue,channel_statistics);
+      switch (image->colorspace)
+      {
+        case RGBColorspace:
+        default:
+        {
+          (void) PrintChannelLocations(file,image,RedPixelChannel,"red",
+            statistic_type,max_locations,MagickTrue,channel_statistics);
+          (void) PrintChannelLocations(file,image,GreenPixelChannel,"green",
+            statistic_type,max_locations,MagickTrue,channel_statistics);
+          (void) PrintChannelLocations(file,image,BluePixelChannel,"blue",
+            statistic_type,max_locations,MagickFalse,channel_statistics);
+          break;
+        }
+        case CMYKColorspace:
+        {
+          (void) PrintChannelLocations(file,image,CyanPixelChannel,"cyan",
+            statistic_type,max_locations,MagickTrue,channel_statistics);
+          (void) PrintChannelLocations(file,image,MagentaPixelChannel,
+            "magenta",statistic_type,max_locations,MagickTrue,
+            channel_statistics);
+          (void) PrintChannelLocations(file,image,YellowPixelChannel,"yellow",
+            statistic_type,max_locations,MagickTrue,channel_statistics);
+          (void) PrintChannelLocations(file,image,BlackPixelChannel,"black",
+            statistic_type,max_locations,MagickFalse,channel_statistics);
+          break;
+        }
+        case LinearGRAYColorspace:
+        case GRAYColorspace:
+        {
+          (void) PrintChannelLocations(file,image,GrayPixelChannel,"gray",
+            statistic_type,max_locations,MagickFalse,channel_statistics);
+          break;
+        }
+      }
+      (void) FormatLocaleFile(file,"    },\n");
+      channel_statistics=(ChannelStatistics *) RelinquishMagickMemory(
+        channel_statistics);
+    }
+  /*
+    Detail channel depth and extrema.
+  */
+  JSONFormatLocaleFile(file,"    \"colorspace\": %s,\n",
+    CommandOptionToMnemonic(MagickColorspaceOptions,(ssize_t)
+    image->colorspace));
+  channel_statistics=(ChannelStatistics *) NULL;
+  channe
+
+// ... (22062 more chars)
+```
+
+### File: coders/yaml.c
+```c
+static MagickBooleanType EncodeImageAttributes(Image *image,FILE *file,
+  ExceptionInfo *exception)
+{
+  char
+    color[MagickPathExtent],
+    format[MagickPathExtent],
+    key[MagickPathExtent];
+
+  ChannelFeatures
+    *channel_features;
+
+  ChannelMoments
+    *channel_moments;
+
+  ChannelPerceptualHash
+    *channel_phash;
+
+  ChannelStatistics
+    *channel_statistics;
+
+  const char
+    *artifact,
+    *locate,
+    *name,
+    *property,
+    *registry,
+    *value;
+
+  const MagickInfo
+    *magick_info;
+
+  double
+    elapsed_time,
+    scale,
+    user_time,
+    version;
+
+  ImageType
+    type;
+
+  MagickBooleanType
+    ping;
+
+  size_t
+    depth,
+    distance;
+
+  ssize_t
+    i,
+    x,
+    y;
+
+  struct stat
+    properties;
+
+  assert(image != (Image *) NULL);
+  assert(image->signature == MagickCoreSignature);
+  if (IsEventLogging() != MagickFalse)
+    (void) LogMagickEvent(TraceEvent,GetMagickModule(),"%s",image->filename);
+  *format='\0';
+  elapsed_time=GetElapsedTime(&image->timer);
+  user_time=GetUserTime(&image->timer);
+  GetTimerInfo(&image->timer);
+  ping=MagickTrue;
+  if (GetVirtualPixels(image,0,0,1,1,exception) != (const Quantum *) NULL)
+    ping=MagickFalse;
+  (void) ping;
+  (void) SignatureImage(image,exception);
+  (void) FormatLocaleFile(file,"---\n");
+  version=1.0;
+  artifact=GetImageArtifact(image,"yaml:version");
+  if (artifact != (const char *) NULL)
+    version=StringToDouble(artifact,(char **) NULL);
+  if (version >= 1.0)
+    (void) FormatLocaleFile(file,"  version: %.1f\n",version);
+  if (*image->magick_filename == '\0')
+    YAMLFormatLocaleFile(file,"  image: \n    name: %s\n",
+      image->filename);
+  else
+    {
+      YAMLFormatLocaleFile(file,"  image: \n    name: %s\n",
+        image->magick_filename);
+      if (LocaleCompare(image->magick_filename,image->filename) != 0)
+        {   
+          char
+            filename[MagickPathExtent];
+          
+          GetPathComponent(image->magick_filename,TailPath,filename);
+          YAMLFormatLocaleFile(file,"    baseName: %s\n",filename);
+        }
+    }
+  properties=(*GetBlobProperties(image));
+  if (properties.st_mode != 0)
+    (void) FormatLocaleFile(file,"    permissions: %d%d%d\n",
+      (properties.st_mode >> 6) & 0x07,(properties.st_mode >> 3) & 0x07,
+      (properties.st_mode >> 0) & 0x07);
+  YAMLFormatLocaleFile(file,"    format: %s\n",image->magick);
+  magick_info=GetMagickInfo(image->magick,exception);
+  if ((magick_info != (const MagickInfo *) NULL) &&
+      (GetMagickDescription(magick_info) != (const char *) NULL))
+    YAMLFormatLocaleFile(file,"    formatDescription: %s\n",
+      GetMagickDescription(magick_info));
+  if ((magick_info != (const MagickInfo *) NULL) &&
+      (GetMagickMimeType(magick_info) != (const char *) NULL))
+    YAMLFormatLocaleFile(file,"    mimeType: %s\n",GetMagickMimeType(
+      magick_info));
+  YAMLFormatLocaleFile(file,"    class: %s\n",CommandOptionToMnemonic(
+    MagickClassOptions,(ssize_t) image->storage_class));
+  (void) FormatLocaleFile(file,"    geometry: \n"
+    "      width: %g\n      height: %g\n"
+    "      x: %g\n      y: %g\n    \n",
+    (double) image->columns,(double) image->rows,(double) image->tile_offset.x,
+    (double) image->tile_offset.y);
+  if ((image->magick_columns != 0) || (image->magick_rows != 0))
+    if ((image->magick_columns != image->columns) ||
+        (image->magick_rows != image->rows))
+      (void) FormatLocaleFile(file,"    baseGeometry: \n"
+        "      width: %g\n      height: %g\n    \n",(double)
+        image->magick_columns,(double) image->magick_rows);
+  if ((image->resolution.x != 0.0) && (image->resolution.y != 0.0))
+    {
+      (void) FormatLocaleFile(file,"    resolution: \n"
+        "      x: %g\n      y: %g\n    \n",image->resolution.x,
+        image->resolution.y);
+      (void) FormatLocaleFile(file,"    printSize: \n"
+        "      x: %.*g\n      y: %.*g\n    \n",GetMagickPrecision(),
+        image->columns/image->resolution.x,GetMagickPrecision(),(double)
+        image->rows/image->resolution.y);
+    }
+  YAMLFormatLocaleFile(file,"    units: %s\n",CommandOptionToMnemonic(
+    MagickResolutionOptions,(ssize_t) image->units));
+  type=IdentifyImageCoderType(image,exception);
+  YAMLFormatLocaleFile(file,"    type: %s\n",CommandOptionToMnemonic(
+    MagickTypeOptions,(ssize_t) type));
+  if (image->type != type)
+    YAMLFormatLocaleFile(file,"    baseType: %s\n",
+      CommandOptionToMnemonic(MagickTypeOptions,(ssize_t) image->type));
+  if (version < 1.0)
+    YAMLFormatLocaleFile(file,"    endianess: %s\n",
+      CommandOptionToMnemonic(MagickEndianOptions,(ssize_t) image->endian));
+  else
+    YAMLFormatLocaleFile(file,"    endianness: %s\n",
+      CommandOptionToMnemonic(MagickEndianOptions,(ssize_t) image->endian));
+  locate=GetImageArtifact(image,"identify:locate");
+  if (locate == (const char *) NULL)
+    locate=GetImageArtifact(image,"yaml:locate");
+  if (locate != (const char *) NULL)
+    {
+      const char
+        *limit;
+
+      size_t
+        max_locations;
+
+      StatisticType
+        statistic_type;
+
+      /*
+        Display minimum, maximum, or mean pixel locations.
+      */
+      statistic_type=(StatisticType) ParseCommandOption(MagickStatisticOptions,
+        MagickFalse,locate);
+      limit=GetImageArtifact(image,"identify:limit");
+      if (limit == (const char *) NULL)
+        limit=GetImageArtifact(image,"yaml:limit");
+      max_locations=0;
+      if (limit != (const char *) NULL)
+        max_locations=StringToUnsignedLong(limit);
+      channel_statistics=GetLocationStatistics(image,statistic_type,exception);
+      if (channel_statistics == (ChannelStatistics *) NULL)
+        return(MagickFalse);
+      (void) FormatLocaleFile(file,"    channel%s: \n",locate);
+      if (image->alpha_trait != UndefinedPixelTrait)
+        (void) PrintChannelLocations(file,image,AlphaPixelChannel,"alpha",
+          statistic_type,max_locations,MagickTrue,channel_statistics);
+      switch (image->colorspace)
+      {
+        case RGBColorspace:
+        default:
+        {
+          (void) PrintChannelLocations(file,image,RedPixelChannel,"red",
+            statistic_type,max_locations,MagickTrue,channel_statistics);
+          (void) PrintChannelLocations(file,image,GreenPixelChannel,"green",
+            statistic_type,max_locations,MagickTrue,channel_statistics);
+          (void) PrintChannelLocations(file,image,BluePixelChannel,"blue",
+            statistic_type,max_locations,MagickFalse,channel_statistics);
+          break;
+        }
+        case CMYKColorspace:
+        {
+          (void) PrintChannelLocations(file,image,CyanPixelChannel,"cyan",
+            statistic_type,max_locations,MagickTrue,channel_statistics);
+          (void) PrintChannelLocations(file,image,MagentaPixelChannel,
+            "magenta",statistic_type,max_locations,MagickTrue,
+            channel_statistics);
+          (void) PrintChannelLocations(file,image,YellowPixelChannel,"yellow",
+            statistic_type,max_locations,MagickTrue,channel_statistics);
+          (void) PrintChannelLocations(file,image,BlackPixelChannel,"black",
+            statistic_type,max_locations,MagickFalse,channel_statistics);
+          break;
+        }
+        case LinearGRAYColorspace:
+        case GRAYColorspace:
+        {
+          (void) PrintChannelLocations(file,image,GrayPixelChannel,"gray",
+            statistic_type,max_locations,MagickFalse,channel_statistics);
+          break;
+        }
+      }
+      (void) FormatLocaleFile(file,"    \n");
+      channel_statistics=(ChannelStatistics *) RelinquishMagickMemory(
+        channel_statistics);
+    }
+  /*
+    Detail channel depth and extrema.
+  */
+  YAMLFormatLocaleFile(file,"    colorspace: %s\n",
+    CommandOptionToMnemonic(MagickColorspaceOptions,(ssize_t)
+    image->colorspace));
+  channel_statistics=(ChannelStatistics *) NULL;
+  channel_moments=(ChannelMoments *) NULL;
+  channel_phash=(ChannelPerceptualHash *) NULL;
+  channel_features=(ChannelFeatures *) NULL;
+  channel_statistics=GetImageStatistics(
+
+// ... (21173 more chars)
+```

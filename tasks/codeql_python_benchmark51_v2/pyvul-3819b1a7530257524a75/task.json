@@ -1,0 +1,50 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-3819b1a7530257524a75",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-3819b1a7530257524a75",
+    "project_id": "pyvul__xsuchy__templated-dictionary",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "templated_dictionary/__init__.py"
+  ],
+  "patch_units": {
+    "before": [
+      "class:TemplatedDictionary",
+      "function:TemplatedDictionary.__init__",
+      "function:TemplatedDictionary.__render_string",
+      "module:<module>@5"
+    ],
+    "after": [
+      "class:TemplatedDictionary",
+      "function:TemplatedDictionary.__init__",
+      "function:TemplatedDictionary.__render_string",
+      "module:<module>@5"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/60090dd1e3d668fdc545d407347c4a6ba0250326e30297f90b2d463919aae8b3/database",
+      "cache_key": "60090dd1e3d668fdc545d407347c4a6ba0250326e30297f90b2d463919aae8b3",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/95b9d1bbebc8c5a413369012e35afae0fd0b6205fae69cab5ce281dfe2a80f3d/database",
+      "cache_key": "95b9d1bbebc8c5a413369012e35afae0fd0b6205fae69cab5ce281dfe2a80f3d",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/9782c933de0fe5c1d90834d158773b8aa4076e68abc282bfc920352b51cc5b7b/database",
+      "cache_key": "9782c933de0fe5c1d90834d158773b8aa4076e68abc282bfc920352b51cc5b7b",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-3819b1a7530257524a75/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-3819b1a7530257524a75/ (do not mount into agent)"
+  }
+}

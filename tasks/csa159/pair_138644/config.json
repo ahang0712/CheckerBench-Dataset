@@ -1,0 +1,19 @@
+{
+  "project_id": "strukturag_libheif",
+  "before_commit": "fc9ad8469eebf742c119981fa0e4b1eca7888c4a",
+  "after_commit": "2591939c530c2406dd9c8ab63d0f3a73622358ca",
+  "repo_path": "/workspace/repo/strukturag/libheif",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/strukturag_libheif/c6883e684723de86f60f544b7c4073c2c80c8dae/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/strukturag_libheif/c6883e684723de86f60f544b7c4073c2c80c8dae/compile_commands.json",
+  "changed_files": [
+    "examples/encoder_png.cc"
+  ],
+  "commit_message": "exif: protected against large offset values\n\nResolves #1042",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

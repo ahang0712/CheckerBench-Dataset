@@ -1,0 +1,136 @@
+diff --git a/web/pgadmin/misc/__init__.py b/web/pgadmin/misc/__init__.py
+index 15adccf51..451271e07 100644
+--- a/web/pgadmin/misc/__init__.py
++++ b/web/pgadmin/misc/__init__.py
+@@ -13,7 +13,8 @@ from pgadmin.utils import driver
+ from flask import url_for, render_template, Response, request, current_app
+ from flask_babel import gettext
+ from flask_security import login_required
+-from pgadmin.utils import PgAdminModule, replace_binary_path
++from pgadmin.utils import PgAdminModule, replace_binary_path, \
++    get_binary_path_versions
+ from pgadmin.utils.csrf import pgCSRFProtect
+ from pgadmin.utils.session import cleanup_session_files
+ from pgadmin.misc.themes import get_all_themes
+@@ -254,37 +255,13 @@ def validate_binary_path():
+ 
+     version_str = ''
+     if 'utility_path' in data and data['utility_path'] is not None:
+-        # Check if "$DIR" present in binary path
+-        binary_path = replace_binary_path(data['utility_path'])
+-
+-        for utility in UTILITIES_ARRAY:
+-            full_path = os.path.abspath(
+-                os.path.join(binary_path,
+-                             (utility if os.name != 'nt' else
+-                              (utility + '.exe'))))
+-
+-            try:
+-                # if path doesn't exist raise exception
+-                if not os.path.exists(binary_path):
+-                    current_app.logger.warning('Invalid binary path.')
+-                    raise Exception()
+-                # escape double quotes to avoid command injection.
+-                # Get the output of the '--version' command
+-                version_string = \
+-                    subprocess.getoutput(r'"{0}" --version'.format(
+-                        full_path.replace('"', '""')))
+-                # Get the version number by splitting the result string
+-                version_string.split(") ", 1)[1].split('.', 1)[0]
+-            except Exception:
++        binary_versions = get_binary_path_versions(data['utility_path'])
++        for utility, version in binary_versions.items():
++            if version is None:
+                 version_str += "<b>" + utility + ":</b> " + \
+                                "not found on the specified binary path.<br/>"
+-                continue
+-
+-            # Replace the name of the utility from the result to avoid
+-            # duplicate name.
+-            result_str = version_string.replace(utility, '')
+-
+-            version_str += "<b>" + utility + ":</b> " + result_str + "<br/>"
++            else:
++                version_str += "<b>" + utility + ":</b> " + version + "<br/>"
+     else:
+         return precondition_required(gettext('Invalid binary path.'))
+ 
+diff --git a/web/pgadmin/utils/__init__.py b/web/pgadmin/utils/__init__.py
+index 0d27fee6b..36eeefecf 100644
+--- a/web/pgadmin/utils/__init__.py
++++ b/web/pgadmin/utils/__init__.py
+@@ -351,6 +351,40 @@ def get_server(sid):
+     return server
+ 
+ 
++def get_binary_path_versions(binary_path: str) -> dict:
++    ret = {}
++    binary_path = os.path.abspath(
++        replace_binary_path(binary_path)
++    )
++
++    for utility in UTILITIES_ARRAY:
++        ret[utility] = None
++        full_path = os.path.join(binary_path,
++                                 (utility if os.name != 'nt' else
++                                  (utility + '.exe')))
++
++        try:
++            # if path doesn't exist raise exception
++            if not os.path.isdir(binary_path):
++                current_app.logger.warning('Invalid binary path.')
++                raise Exception()
++            # Get the output of the '--version' command
++            cmd = subprocess.run(
++                [full_path, '--version'],
++                shell=False,
++                capture_output=True,
++                text=True
++            )
++            if cmd.returncode == 0:
++                ret[utility] = cmd.stdout.split(") ", 1)[1].strip()
++            else:
++                raise Exception()
++        except Exception as _:
++            continue
++
++    return ret
++
++
+ def set_binary_path(binary_path, bin_paths, server_type,
+                     version_number=None, set_as_default=False):
+     """
+@@ -358,28 +392,13 @@ def set_binary_path(binary_path, bin_paths, server_type,
+     default binary path.
+     """
+     path_with_dir = binary_path if "$DIR" in binary_path else None
++    binary_versions = get_binary_path_versions(binary_path)
+ 
+-    # Check if "$DIR" present in binary path
+-    binary_path = replace_binary_path(binary_path)
+-
+-    for utility in UTILITIES_ARRAY:
+-        full_path = os.path.abspath(
+-            os.path.join(binary_path, (utility if os.name != 'nt' else
+-                                       (utility + '.exe'))))
+-
++    for utility, version in binary_versions.items():
++        version_number = version if version_number is None else version_number
++        if version_number.find('.'):
++            version_number = version_number.split('.', 1)[0]
+         try:
+-            # if version_number is provided then no need to fetch it.
+-            if version_number is None:
+-                # Get the output of the '--version' command
+-                version_string = \
+-                    subprocess.getoutput('"{0}" --version'.format(full_path))
+-
+-                # Get the version number by splitting the result string
+-                version_number = \
+-                    version_string.split(") ", 1)[1].split('.', 1)[0]
+-            elif version_number.find('.'):
+-                version_number = version_number.split('.', 1)[0]
+-
+             # Get the paths array based on server type
+             if 'pg_bin_paths' in bin_paths or 'as_bin_paths' in bin_paths:
+                 paths_array = bin_paths['pg_bin_paths']

@@ -1,0 +1,47 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-040d724ca8211a3aaf1d",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-040d724ca8211a3aaf1d",
+    "project_id": "morefixes__craftcms__cms",
+    "language": "javascript",
+    "backend": "codeql"
+  },
+  "changed_javascript_files": [
+    "src/web/assets/quickpost/dist/QuickPostWidget.js",
+    "src/web/assets/quickpost/src/QuickPostWidget.js"
+  ],
+  "patch_units": {
+    "before": [
+      "src/web/assets/quickpost/dist/QuickPostWidget.js",
+      "src/web/assets/quickpost/src/QuickPostWidget.js"
+    ],
+    "after": [
+      "src/web/assets/quickpost/dist/QuickPostWidget.js",
+      "src/web/assets/quickpost/src/QuickPostWidget.js"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/8ace7d726624e7d66fc1020b678e70e424fef0ca7014a8f701ec57e852611545/database",
+      "cache_key": "8ace7d726624e7d66fc1020b678e70e424fef0ca7014a8f701ec57e852611545",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/44515c8fbd2f94356f1ca3c671d28040980d889a21040970c72f07348e2d5cf5/database",
+      "cache_key": "44515c8fbd2f94356f1ca3c671d28040980d889a21040970c72f07348e2d5cf5",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/a44ba13552741978284f84b0a218c62a0e8c39778c98227423d8d30d62727035/database",
+      "cache_key": "a44ba13552741978284f84b0a218c62a0e8c39778c98227423d8d30d62727035",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-040d724ca8211a3aaf1d/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-040d724ca8211a3aaf1d/ (do not mount into agent)"
+  }
+}

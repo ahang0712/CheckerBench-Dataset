@@ -1,0 +1,51 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-394adf7b067d96b356ca",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-394adf7b067d96b356ca",
+    "project_id": "pyvul__petl-developers__petl",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "petl/io/xml.py"
+  ],
+  "patch_units": {
+    "before": [
+      "function:fromxml",
+      "class:XmlView",
+      "function:XmlView.__iter__",
+      "function:element_text_getter"
+    ],
+    "after": [
+      "function:fromxml",
+      "class:XmlView",
+      "function:XmlView.__init__",
+      "function:XmlView.__iter__",
+      "function:_create_xml_parser"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/fcb47a17185a332c24eecb3d2d4506cc6dd1ab2f313ab3bcf087aed38ddb4ecb/database",
+      "cache_key": "fcb47a17185a332c24eecb3d2d4506cc6dd1ab2f313ab3bcf087aed38ddb4ecb",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/c269b96e8d78a0ff93ceeec45f19adcb8bd0807c764fc5ff1ddf3e141ec1e71a/database",
+      "cache_key": "c269b96e8d78a0ff93ceeec45f19adcb8bd0807c764fc5ff1ddf3e141ec1e71a",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/83698b843f83dfc980db192656c5e8ad2835066c6e096f242e89cf727ededf65/database",
+      "cache_key": "83698b843f83dfc980db192656c5e8ad2835066c6e096f242e89cf727ededf65",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-394adf7b067d96b356ca/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-394adf7b067d96b356ca/ (do not mount into agent)"
+  }
+}

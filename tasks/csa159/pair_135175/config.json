@@ -1,0 +1,19 @@
+{
+  "project_id": "libical_libical",
+  "before_commit": "04d84749e53db08c71ed0ce8b6ba5c11082743cd",
+  "after_commit": "830d9530817516377c2bc3b532798ce2c6b4765a",
+  "repo_path": "/workspace/repo/libical/libical",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/libical_libical/19acf43794ad4c99f7e6687cb39424a82b737828/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/libical_libical/19acf43794ad4c99f7e6687cb39424a82b737828/compile_commands.json",
+  "changed_files": [
+    "src/libical/icalparser.c"
+  ],
+  "commit_message": "icalparser.c: don't create two ICAL_XLICINVALID_COMPONENT for an invalid component",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

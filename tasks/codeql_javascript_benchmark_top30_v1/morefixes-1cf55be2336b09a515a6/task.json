@@ -1,0 +1,74 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-1cf55be2336b09a515a6",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-1cf55be2336b09a515a6",
+    "project_id": "morefixes__auth0__nextjs-auth0",
+    "language": "javascript",
+    "backend": "codeql"
+  },
+  "changed_javascript_files": [
+    "src/server/auth-client.test.ts",
+    "src/server/cookies.test.ts",
+    "src/server/cookies.ts",
+    "src/server/session/stateful-session-store.test.ts",
+    "src/server/session/stateful-session-store.ts",
+    "src/server/session/stateless-session-store.test.ts",
+    "src/server/session/stateless-session-store.ts",
+    "src/server/transaction-store.test.ts",
+    "src/server/transaction-store.ts",
+    "src/testing/generate-session-cookie.test.ts",
+    "src/testing/generate-session-cookie.ts"
+  ],
+  "patch_units": {
+    "before": [
+      "src/server/auth-client.test.ts",
+      "src/server/cookies.test.ts",
+      "src/server/cookies.ts",
+      "src/server/session/stateful-session-store.test.ts",
+      "src/server/session/stateful-session-store.ts",
+      "src/server/session/stateless-session-store.test.ts",
+      "src/server/session/stateless-session-store.ts",
+      "src/server/transaction-store.test.ts",
+      "src/server/transaction-store.ts",
+      "src/testing/generate-session-cookie.test.ts",
+      "src/testing/generate-session-cookie.ts"
+    ],
+    "after": [
+      "src/server/auth-client.test.ts",
+      "src/server/cookies.test.ts",
+      "src/server/cookies.ts",
+      "src/server/session/stateful-session-store.test.ts",
+      "src/server/session/stateful-session-store.ts",
+      "src/server/session/stateless-session-store.test.ts",
+      "src/server/session/stateless-session-store.ts",
+      "src/server/transaction-store.test.ts",
+      "src/server/transaction-store.ts",
+      "src/testing/generate-session-cookie.test.ts",
+      "src/testing/generate-session-cookie.ts"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/8e6973791aa982be5ab95a490f71ec3e7afcf0efadc04e8381ef7e6d85246c84/database",
+      "cache_key": "8e6973791aa982be5ab95a490f71ec3e7afcf0efadc04e8381ef7e6d85246c84",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/176c984d0e1e9b8cf4a0421ae97803d2951bb9ace15a54ebe65710cd754114e2/database",
+      "cache_key": "176c984d0e1e9b8cf4a0421ae97803d2951bb9ace15a54ebe65710cd754114e2",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/0e08a49a02c021725c77f9359555119f73220db98b4f5a1afe5b4733f36877d2/database",
+      "cache_key": "0e08a49a02c021725c77f9359555119f73220db98b4f5a1afe5b4733f36877d2",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-1cf55be2336b09a515a6/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-1cf55be2336b09a515a6/ (do not mount into agent)"
+  }
+}

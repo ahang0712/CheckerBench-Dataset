@@ -1,0 +1,46 @@
+diff --git a/net/bridge/br_multicast.c b/net/bridge/br_multicast.c
+index 1377f31b719c..8ce145938b02 100644
+--- a/net/bridge/br_multicast.c
++++ b/net/bridge/br_multicast.c
+@@ -4818,6 +4818,14 @@ void br_multicast_set_query_intvl(struct net_bridge_mcast *brmctx,
+ 		intvl_jiffies = BR_MULTICAST_QUERY_INTVL_MIN;
+ 	}
+ 
++	if (intvl_jiffies > BR_MULTICAST_QUERY_INTVL_MAX) {
++		br_info(brmctx->br,
++			"trying to set multicast query interval above maximum, setting to %lu (%ums)\n",
++			jiffies_to_clock_t(BR_MULTICAST_QUERY_INTVL_MAX),
++			jiffies_to_msecs(BR_MULTICAST_QUERY_INTVL_MAX));
++		intvl_jiffies = BR_MULTICAST_QUERY_INTVL_MAX;
++	}
++
+ 	brmctx->multicast_query_interval = intvl_jiffies;
+ }
+ 
+@@ -4834,6 +4842,14 @@ void br_multicast_set_startup_query_intvl(struct net_bridge_mcast *brmctx,
+ 		intvl_jiffies = BR_MULTICAST_STARTUP_QUERY_INTVL_MIN;
+ 	}
+ 
++	if (intvl_jiffies > BR_MULTICAST_STARTUP_QUERY_INTVL_MAX) {
++		br_info(brmctx->br,
++			"trying to set multicast startup query interval above maximum, setting to %lu (%ums)\n",
++			jiffies_to_clock_t(BR_MULTICAST_STARTUP_QUERY_INTVL_MAX),
++			jiffies_to_msecs(BR_MULTICAST_STARTUP_QUERY_INTVL_MAX));
++		intvl_jiffies = BR_MULTICAST_STARTUP_QUERY_INTVL_MAX;
++	}
++
+ 	brmctx->multicast_startup_query_interval = intvl_jiffies;
+ }
+ 
+diff --git a/net/bridge/br_private.h b/net/bridge/br_private.h
+index b159aae594c0..8de0904b9627 100644
+--- a/net/bridge/br_private.h
++++ b/net/bridge/br_private.h
+@@ -31,6 +31,8 @@
+ #define BR_MULTICAST_DEFAULT_HASH_MAX 4096
+ #define BR_MULTICAST_QUERY_INTVL_MIN msecs_to_jiffies(1000)
+ #define BR_MULTICAST_STARTUP_QUERY_INTVL_MIN BR_MULTICAST_QUERY_INTVL_MIN
++#define BR_MULTICAST_QUERY_INTVL_MAX msecs_to_jiffies(86400000) /* 24 hours */
++#define BR_MULTICAST_STARTUP_QUERY_INTVL_MAX BR_MULTICAST_QUERY_INTVL_MAX
+ 
+ #define BR_HWDOM_MAX BITS_PER_LONG

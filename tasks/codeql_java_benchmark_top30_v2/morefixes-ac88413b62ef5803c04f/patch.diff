@@ -1,0 +1,91 @@
+diff --git a/json-smart/src/main/java/net/minidev/json/parser/JSONParser.java b/json-smart/src/main/java/net/minidev/json/parser/JSONParser.java
+index 7a46065..e33015f 100644
+--- a/json-smart/src/main/java/net/minidev/json/parser/JSONParser.java
++++ b/json-smart/src/main/java/net/minidev/json/parser/JSONParser.java
+@@ -115,7 +115,7 @@ public class JSONParser {
+ 	 * 
+ 	 * @since 1.0.6
+ 	 */
+-	public final static int MODE_RFC4627 = USE_INTEGER_STORAGE | USE_HI_PRECISION_FLOAT | ACCEPT_TAILLING_SPACE;
++	public final static int MODE_RFC4627 = USE_INTEGER_STORAGE | USE_HI_PRECISION_FLOAT | ACCEPT_TAILLING_SPACE | LIMIT_JSON_DEPTH;
+ 	/**
+ 	 * Parse Object like json-simple
+ 	 * 
+@@ -123,13 +123,13 @@ public class JSONParser {
+ 	 * 
+ 	 * @since 1.0.7
+ 	 */
+-	public final static int MODE_JSON_SIMPLE = ACCEPT_USELESS_COMMA | USE_HI_PRECISION_FLOAT | ACCEPT_TAILLING_DATA | ACCEPT_TAILLING_SPACE | REJECT_127_CHAR | BIG_DIGIT_UNRESTRICTED;
++	public final static int MODE_JSON_SIMPLE = ACCEPT_USELESS_COMMA | USE_HI_PRECISION_FLOAT | ACCEPT_TAILLING_DATA | ACCEPT_TAILLING_SPACE | REJECT_127_CHAR | BIG_DIGIT_UNRESTRICTED | LIMIT_JSON_DEPTH;
+ 	/**
+ 	 * Strictest parsing mode
+ 	 * 
+ 	 * @since 2.0.1
+ 	 */
+-	public final static int MODE_STRICTEST = USE_INTEGER_STORAGE | USE_HI_PRECISION_FLOAT | REJECT_127_CHAR;
++	public final static int MODE_STRICTEST = USE_INTEGER_STORAGE | USE_HI_PRECISION_FLOAT | REJECT_127_CHAR | LIMIT_JSON_DEPTH;
+ 	/**
+ 	 * Default json-smart processing mode
+ 	 */
+diff --git a/json-smart/src/test/java/net/minidev/json/test/TestCVE202457699.java b/json-smart/src/test/java/net/minidev/json/test/TestCVE202457699.java
+new file mode 100644
+index 0000000..afd0d9e
+--- /dev/null
++++ b/json-smart/src/test/java/net/minidev/json/test/TestCVE202457699.java
+@@ -0,0 +1,56 @@
++package net.minidev.json.test;
++
++import net.minidev.json.parser.JSONParser;
++import net.minidev.json.parser.ParseException;
++import org.junit.jupiter.api.Test;
++
++import static org.junit.jupiter.api.Assertions.assertThrows;
++
++public class TestCVE202457699 {
++
++    private static final String MALICIOUS_STRING = createMaliciousString();
++
++    @Test
++    public void jsonSimpleParserShouldRestrictDepth() {
++        JSONParser p = new JSONParser(JSONParser.MODE_JSON_SIMPLE);
++        assertThrows(ParseException.class,
++                () -> p.parse(MALICIOUS_STRING),
++                "Malicious payload, having non natural depths");
++    }
++
++    @Test
++    public void strictestParserShouldRestrictDepth() {
++        JSONParser p = new JSONParser(JSONParser.MODE_STRICTEST);
++        assertThrows(ParseException.class,
++                () -> p.parse(MALICIOUS_STRING),
++                "Malicious payload, having non natural depths");
++    }
++
++    @Test
++    public void rfc4627ParserShouldRestrictDepth() {
++        JSONParser p = new JSONParser(JSONParser.MODE_RFC4627);
++        assertThrows(ParseException.class,
++                () -> p.parse(MALICIOUS_STRING),
++                "Malicious payload, having non natural depths");
++    }
++
++    @Test
++    public void permissiveParserShouldRestrictDepth() {
++        JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
++        assertThrows(ParseException.class,
++                () -> p.parse(MALICIOUS_STRING),
++                "Malicious payload, having non natural depths");
++    }
++
++    private static String createMaliciousString() {
++        StringBuilder sb = new StringBuilder();
++        for (int i = 0; i < 10000 ; i++) {
++            sb.append("{\"a\":");
++        }
++        sb.append("1");
++        for (int i = 0; i < 10000 ; i++) {
++            sb.append("}");
++        }
++        return sb.toString();
++    }
++}

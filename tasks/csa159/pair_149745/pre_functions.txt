@@ -1,0 +1,77 @@
+### File: drivers/mfd/macsmc.c
+```c
+static int apple_smc_probe(struct platform_device *pdev)
+{
+	struct device *dev = &pdev->dev;
+	struct apple_smc *smc;
+	u32 count;
+	int ret;
+
+	smc = devm_kzalloc(dev, sizeof(*smc), GFP_KERNEL);
+	if (!smc)
+		return -ENOMEM;
+
+	smc->dev = &pdev->dev;
+	smc->sram_base = devm_platform_get_and_ioremap_resource(pdev, 1, &smc->sram);
+	if (IS_ERR(smc->sram_base))
+		return dev_err_probe(dev, PTR_ERR(smc->sram_base), "Failed to map SRAM region");
+
+	smc->rtk = devm_apple_rtkit_init(dev, smc, NULL, 0, &apple_smc_rtkit_ops);
+	if (IS_ERR(smc->rtk))
+		return dev_err_probe(dev, PTR_ERR(smc->rtk), "Failed to initialize RTKit");
+
+	smc->boot_stage = APPLE_SMC_BOOTING;
+	ret = apple_rtkit_wake(smc->rtk);
+	if (ret)
+		return dev_err_probe(dev, ret, "Failed to wake up SMC");
+
+	ret = devm_add_action_or_reset(dev, apple_smc_rtkit_shutdown, smc);
+	if (ret)
+		return ret;
+
+	ret = apple_rtkit_start_ep(smc->rtk, SMC_ENDPOINT);
+	if (ret)
+		return dev_err_probe(dev, ret, "Failed to start SMC endpoint");
+
+	init_completion(&smc->init_done);
+	init_completion(&smc->cmd_done);
+
+	ret = apple_rtkit_send_message(smc->rtk, SMC_ENDPOINT,
+				       FIELD_PREP(SMC_MSG, SMC_MSG_INITIALIZE), NULL, false);
+	if (ret)
+		return dev_err_probe(dev, ret, "Failed to send init message");
+
+	if (wait_for_completion_timeout(&smc->init_done, msecs_to_jiffies(SMC_TIMEOUT_MS)) == 0) {
+		dev_err(dev, "Timed out initializing SMC");
+		return -ETIMEDOUT;
+	}
+
+	if (smc->boot_stage != APPLE_SMC_INITIALIZED) {
+		dev_err(dev, "SMC failed to boot successfully, boot stage=%d\n", smc->boot_stage);
+		return -EIO;
+	}
+
+	dev_set_drvdata(&pdev->dev, smc);
+	BLOCKING_INIT_NOTIFIER_HEAD(&smc->event_handlers);
+
+	ret = apple_smc_read_u32(smc, SMC_KEY(#KEY), &count);
+	if (ret)
+		return dev_err_probe(smc->dev, ret, "Failed to get key count");
+	smc->key_count = be32_to_cpu(count);
+
+	/* Enable notifications */
+	apple_smc_write_flag(smc, SMC_KEY(NTAP), true);
+	ret = devm_add_action_or_reset(dev, apple_smc_disable_notifications, smc);
+	if (ret)
+		return ret;
+
+	ret = devm_mfd_add_devices(smc->dev, PLATFORM_DEVID_NONE,
+				   apple_smc_devs, ARRAY_SIZE(apple_smc_devs),
+				   NULL, 0, NULL);
+	if (ret)
+		return dev_err_probe(smc->dev, ret, "Failed to register sub-devices");
+
+
+	return 0;
+}
+```

@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-1a630dd8f83b2e29740d",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-1a630dd8f83b2e29740d",
+    "project_id": "pyvul__mlflow__mlflow",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "mlflow/utils/file_utils.py"
+  ],
+  "patch_units": {
+    "before": [
+      "function:make_tarfile"
+    ],
+    "after": [
+      "function:make_tarfile"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/19fa596228b1fb4b86e469be665edd7d7dbeb9b0b3686da07895004356b280c4/database",
+      "cache_key": "19fa596228b1fb4b86e469be665edd7d7dbeb9b0b3686da07895004356b280c4",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/6542ed4eb6001d9e9ca948df5dfeebb2e57bc60e826ac0604d9041b761dd7fcf/database",
+      "cache_key": "6542ed4eb6001d9e9ca948df5dfeebb2e57bc60e826ac0604d9041b761dd7fcf",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/f5ac0d40fec4af9c5fe47b810e939639e7cc56bf5fc589efd3262e3aab0aae88/database",
+      "cache_key": "f5ac0d40fec4af9c5fe47b810e939639e7cc56bf5fc589efd3262e3aab0aae88",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-1a630dd8f83b2e29740d/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-1a630dd8f83b2e29740d/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-89a9ff0f9cf4f2f4cc91",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-89a9ff0f9cf4f2f4cc91",
+    "project_id": "pyvul__mansuf__mangadex-downloader",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "mangadex_downloader/cli/validator.py"
+  ],
+  "patch_units": {
+    "before": [
+      "function:validate_url",
+      "function:validate"
+    ],
+    "after": [
+      "function:_try_read",
+      "function:validate_url",
+      "function:validate"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/23d707c0bd3bf71758a5f368228f179b47efb72e4c3965ad8014ad75f68d5ce9/database",
+      "cache_key": "23d707c0bd3bf71758a5f368228f179b47efb72e4c3965ad8014ad75f68d5ce9",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/72ab075a870b759a5b5a1bd7c7d2ab3ea3a28685cd9b0907fb700b4721240bfd/database",
+      "cache_key": "72ab075a870b759a5b5a1bd7c7d2ab3ea3a28685cd9b0907fb700b4721240bfd",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/8cac6f7f21266f2feefffb54c343d94c004b24e3c805fe078e2334be72f8a58c/database",
+      "cache_key": "8cac6f7f21266f2feefffb54c343d94c004b24e3c805fe078e2334be72f8a58c",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-89a9ff0f9cf4f2f4cc91/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-89a9ff0f9cf4f2f4cc91/ (do not mount into agent)"
+  }
+}

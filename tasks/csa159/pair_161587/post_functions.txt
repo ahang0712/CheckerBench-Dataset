@@ -1,0 +1,114 @@
+### File: net/bluetooth/hci_sock.c
+```c
+static void hci_sock_destruct(struct sock *sk)
+{
+	mgmt_cleanup(sk);
+	skb_queue_purge(&sk->sk_receive_queue);
+	skb_queue_purge(&sk->sk_write_queue);
+	skb_queue_purge(&sk->sk_error_queue);
+}
+```
+
+### File: net/bluetooth/iso.c
+```c
+static void iso_sock_destruct(struct sock *sk)
+{
+	BT_DBG("sk %p", sk);
+
+	iso_conn_put(iso_pi(sk)->conn);
+
+	skb_queue_purge(&sk->sk_receive_queue);
+	skb_queue_purge(&sk->sk_write_queue);
+	skb_queue_purge(&sk->sk_error_queue);
+}
+
+static void iso_sock_cleanup_listen(struct sock *parent)
+{
+	struct sock *sk;
+
+	BT_DBG("parent %p", parent);
+
+	/* Close not yet accepted channels */
+	while ((sk = bt_accept_dequeue(parent, NULL))) {
+		iso_sock_close(sk);
+		iso_sock_kill(sk);
+	}
+
+	/* If listening socket has a hcon, properly disconnect it */
+	if (iso_pi(parent)->conn && iso_pi(parent)->conn->hcon) {
+		iso_sock_disconn(parent);
+		return;
+	}
+
+	parent->sk_state  = BT_CLOSED;
+	sock_set_flag(parent, SOCK_ZAPPED);
+}
+```
+
+### File: net/bluetooth/l2cap_sock.c
+```c
+static void l2cap_sock_destruct(struct sock *sk)
+{
+	struct l2cap_rx_busy *rx_busy, *next;
+
+	BT_DBG("sk %p", sk);
+
+	if (l2cap_pi(sk)->chan) {
+		l2cap_pi(sk)->chan->data = NULL;
+		l2cap_chan_put(l2cap_pi(sk)->chan);
+	}
+
+	list_for_each_entry_safe(rx_busy, next, &l2cap_pi(sk)->rx_busy, list) {
+		kfree_skb(rx_busy->skb);
+		list_del(&rx_busy->list);
+		kfree(rx_busy);
+	}
+
+	skb_queue_purge(&sk->sk_receive_queue);
+	skb_queue_purge(&sk->sk_write_queue);
+	skb_queue_purge(&sk->sk_error_queue);
+}
+
+static void l2cap_skb_msg_name(struct sk_buff *skb, void *msg_name,
+			       int *msg_namelen)
+{
+	DECLARE_SOCKADDR(struct sockaddr_l2 *, la, msg_name);
+
+	memset(la, 0, sizeof(struct sockaddr_l2));
+	la->l2_family = AF_BLUETOOTH;
+	la->l2_psm = bt_cb(skb)->l2cap.psm;
+	bacpy(&la->l2_bdaddr, &bt_cb(skb)->l2cap.bdaddr);
+
+	*msg_namelen = sizeof(struct sockaddr_l2);
+}
+```
+
+### File: net/bluetooth/sco.c
+```c
+static void sco_sock_destruct(struct sock *sk)
+{
+	BT_DBG("sk %p", sk);
+
+	sco_conn_put(sco_pi(sk)->conn);
+
+	skb_queue_purge(&sk->sk_receive_queue);
+	skb_queue_purge(&sk->sk_write_queue);
+	skb_queue_purge(&sk->sk_error_queue);
+}
+
+static void sco_sock_cleanup_listen(struct sock *parent)
+{
+	struct sock *sk;
+
+	BT_DBG("parent %p", parent);
+
+	/* Close not yet accepted channels */
+	while ((sk = bt_accept_dequeue(parent, NULL))) {
+		sco_sock_close(sk);
+		sco_sock_kill(sk);
+	}
+
+	parent->sk_state  = BT_CLOSED;
+	sock_set_flag(parent, SOCK_ZAPPED);
+}
+```

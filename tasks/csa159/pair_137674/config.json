@@ -1,0 +1,19 @@
+{
+  "project_id": "seccomp_libseccomp",
+  "before_commit": "3e5a13d65ad16c60c659e0c471673def2c774d2a",
+  "after_commit": "c5bf78de480b32b324e0f511c88ce533ed280b37",
+  "repo_path": "/workspace/repo/seccomp/libseccomp",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/seccomp_libseccomp/80a987d6f8d0152def07fa90ace6417d56eea741/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/seccomp_libseccomp/80a987d6f8d0152def07fa90ace6417d56eea741/compile_commands.json",
+  "changed_files": [
+    "src/db.c"
+  ],
+  "commit_message": "db: fix 64-bit argument comparisons\n\nOur approach to doing 64-bit comparisons using 32-bit operators was\njust plain wrong, leading to a number of potential problems with\nfilters that used the LT, GT, LE, or GE operators.  This patch fixes\nthis problem and a few other related issues that came to light in\nthe course of fixing the core problem.\n\nA special thanks to Jann Horn for bringing this problem to our\nattention.\n\nSigned-off-by: Paul Moore <paul@paul-moore.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

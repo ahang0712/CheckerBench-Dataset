@@ -1,0 +1,22 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "c28d2bff70444a85b3b86aaf241ece9408c7858c",
+  "after_commit": "21e4271e65094172aadd5beb8caea95dd0fbf6d7",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/05f7e89ab9731565d8a62e3b5d1ec206485eeb0b/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/05f7e89ab9731565d8a62e3b5d1ec206485eeb0b/compile_commands.json",
+  "changed_files": [
+    "net/bluetooth/hci_sock.c",
+    "net/bluetooth/iso.c",
+    "net/bluetooth/l2cap_sock.c",
+    "net/bluetooth/sco.c"
+  ],
+  "commit_message": "Bluetooth: purge error queues in socket destructors\n\nWhen TX timestamping is enabled via SO_TIMESTAMPING, SKBs may be queued\ninto sk_error_queue and will stay there until consumed. If userspace never\ngets to read the timestamps, or if the controller is removed unexpectedly,\nthese SKBs will leak.\n\nFix by adding skb_queue_purge() calls for sk_error_queue in affected\nbluetooth destructors. RFCOMM does not currently use sk_error_queue.\n\nFixes: 134f4b39df7b (\"Bluetooth: add support for skb TX SND/COMPLETION timestamping\")\nReported-by: syzbot+7ff4013eabad1407b70a@syzkaller.appspotmail.com\nCloses: https://syzbot.org/bug?extid=7ff4013eabad1407b70a\nCc: stable@vger.kernel.org\nSigned-off-by: Heitor Alves de Siqueira <halves@igalia.com>\nSigned-off-by: Luiz Augusto von Dentz <luiz.von.dentz@intel.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,19 @@
+{
+  "project_id": "openSUSE_libsolv",
+  "before_commit": "926244b99d3261b3f60bd974612999a9c781a7ab",
+  "after_commit": "0077ef29eb46d2e1df2f230fc95a1d9748d49dec",
+  "repo_path": "/workspace/repo/openSUSE/libsolv",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/openSUSE_libsolv/7046fb004987c7f1b3722628d9a4ca1c67577188/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/openSUSE_libsolv/7046fb004987c7f1b3722628d9a4ca1c67577188/compile_commands.json",
+  "changed_files": [
+    "ext/testcase.c"
+  ],
+  "commit_message": "testcase_read: error out if repos are added or the system is changed too late\n\nWe must not add new solvables after the considered map was created, the solver\nwas created, or jobs were added. We may not changed the system after jobs have\nbeen added.\n\n(Jobs may point inside the whatproviedes array, so we must not invalidate this\narea.)",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

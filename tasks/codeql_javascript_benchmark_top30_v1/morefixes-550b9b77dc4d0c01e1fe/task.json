@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-550b9b77dc4d0c01e1fe",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-550b9b77dc4d0c01e1fe",
+    "project_id": "morefixes__dojo__dojo",
+    "language": "javascript",
+    "backend": "codeql"
+  },
+  "changed_javascript_files": [
+    "testsDOH/_base/i18nExhaustive.js"
+  ],
+  "patch_units": {
+    "before": [
+      "testsDOH/_base/i18nExhaustive.js"
+    ],
+    "after": [
+      "testsDOH/_base/i18nExhaustive.js"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/833b69f27dbfc804a88dd98f18cc029058563c2c3bf1cbbad024bad33d8b9746/database",
+      "cache_key": "833b69f27dbfc804a88dd98f18cc029058563c2c3bf1cbbad024bad33d8b9746",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/af6f70e1b09fee835f83e8d2867a3a9f9195217357c11a669cee845b6c41fe3e/database",
+      "cache_key": "af6f70e1b09fee835f83e8d2867a3a9f9195217357c11a669cee845b6c41fe3e",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/37a5bded0d4842950edd642c15f2172bbacdb1a8639a7c77447ec25fcca4a9ca/database",
+      "cache_key": "37a5bded0d4842950edd642c15f2172bbacdb1a8639a7c77447ec25fcca4a9ca",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-550b9b77dc4d0c01e1fe/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-550b9b77dc4d0c01e1fe/ (do not mount into agent)"
+  }
+}

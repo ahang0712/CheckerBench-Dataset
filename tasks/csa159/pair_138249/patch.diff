@@ -1,0 +1,18 @@
+diff --git a/src/decode_r2007.c b/src/decode_r2007.c
+index 9e821d3f..5a7449d8 100644
+--- a/src/decode_r2007.c
++++ b/src/decode_r2007.c
+@@ -1010,6 +1010,13 @@ read_pages_map (Bit_Chain *dat, int64_t size_comp, int64_t size_uncomp,
+           pages_destroy (pages);
+           return NULL;
+         }
++      if (ptr + 16 > ptr_end)
++        {
++          LOG_ERROR ("Page out of bounds")
++          free (data);
++          pages_destroy (pages);
++          return NULL;
++        }
+ 
+       page->size = bfr_read_uint64 (ptr);
+       page->id = bfr_read_int64 (ptr);

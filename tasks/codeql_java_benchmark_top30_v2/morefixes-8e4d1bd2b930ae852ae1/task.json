@@ -1,0 +1,46 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-8e4d1bd2b930ae852ae1",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-8e4d1bd2b930ae852ae1",
+    "project_id": "morefixes__oblac__jodd-http",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "src/main/java/jodd/http/HttpRequest.java",
+    "src/test/java/jodd/http/CRLFInjectionTest.java"
+  ],
+  "patch_units": {
+    "before": [
+      "src/main/java/jodd/http/HttpRequest.java"
+    ],
+    "after": [
+      "src/main/java/jodd/http/HttpRequest.java",
+      "src/test/java/jodd/http/CRLFInjectionTest.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/c4d92a33bb882a2c96e683e3388aec78bd62f1835668dddb725b7ea7f904c3c1/database",
+      "cache_key": "c4d92a33bb882a2c96e683e3388aec78bd62f1835668dddb725b7ea7f904c3c1",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/61f771342c9350a816d32ff02f791c86f8a0241ffd4c512a78d09eae4c6f5278/database",
+      "cache_key": "61f771342c9350a816d32ff02f791c86f8a0241ffd4c512a78d09eae4c6f5278",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/adcf9b162016582633a5aeada60ab7bd08e9484e3d2a5051b7eb0df567f8e8b2/database",
+      "cache_key": "adcf9b162016582633a5aeada60ab7bd08e9484e3d2a5051b7eb0df567f8e8b2",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-8e4d1bd2b930ae852ae1/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-8e4d1bd2b930ae852ae1/ (do not mount into agent)"
+  }
+}

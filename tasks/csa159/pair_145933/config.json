@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "8c28c4993f117e03130a51160229bde7ad388240",
+  "after_commit": "09c4a610153286cef54d4f0c85398f4e32fc227e",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/40384c840ea1944d7c5a392e8975ed088ecf0b37/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/40384c840ea1944d7c5a392e8975ed088ecf0b37/compile_commands.json",
+  "changed_files": [
+    "drivers/rtc/rtc-tps6594.c"
+  ],
+  "commit_message": "rtc: tps6594: Fix integer overflow on 32bit systems\n\nThe problem is this multiply in tps6594_rtc_set_offset()\n\n\ttmp = offset * TICKS_PER_HOUR;\n\nThe \"tmp\" variable is an s64 but \"offset\" is a long in the\n(-277774)-277774 range.  On 32bit systems a long can hold numbers up to\napproximately two billion.  The number of TICKS_PER_HOUR is really large,\n(32768 * 3600) or roughly a hundred million.  When you start multiplying\nby a hundred million it doesn't take long to overflow the two billion\nmark.\n\nProbably the safest way to fix this is to change the type of\nTICKS_PER_HOUR to long long because it's such a large number.\n\nFixes: 9f67c1e63976 (\"rtc: tps6594: Add driver for TPS6594 RTC\")\nSigned-off-by: Dan Carpenter <dan.carpenter@linaro.org>\nLink: https://lore.kernel.org/r/1074175e-5ecb-4e3d-b721-347d794caa90@stanley.mountain\nSigned-off-by: Alexandre Belloni <alexandre.belloni@bootlin.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

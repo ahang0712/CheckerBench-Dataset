@@ -1,0 +1,30 @@
+### File: drivers/usb/typec/ucsi/ucsi_ccg.c
+```c
+static int ucsi_ccg_sync_control(struct ucsi *ucsi, u64 command)
+{
+	struct ucsi_ccg *uc = ucsi_get_drvdata(ucsi);
+	struct ucsi_connector *con;
+	int con_index;
+	int ret;
+
+	mutex_lock(&uc->lock);
+	pm_runtime_get_sync(uc->dev);
+
+	uc->last_cmd_sent = command;
+
+	if (UCSI_COMMAND(uc->last_cmd_sent) == UCSI_SET_NEW_CAM &&
+	    uc->has_multiple_dp) {
+		con_index = (uc->last_cmd_sent >> 16) &
+			UCSI_CMD_CONNECTOR_MASK;
+		con = &uc->ucsi->connector[con_index - 1];
+		ucsi_ccg_update_set_new_cam_cmd(uc, con, &command);
+	}
+
+	ret = ucsi_sync_control_common(ucsi, command);
+
+	pm_runtime_put_sync(uc->dev);
+	mutex_unlock(&uc->lock);
+
+	return ret;
+}
+```

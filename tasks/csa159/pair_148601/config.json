@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "6bcb7727d9e612011b70d64a34401688b986d6ab",
+  "after_commit": "2e2a720766886190a6d35c116794693aabd332b6",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/7d0a66e4bb9081d75c82ec4957c50034cb0ea449/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/7d0a66e4bb9081d75c82ec4957c50034cb0ea449/compile_commands.json",
+  "changed_files": [
+    "net/netfilter/nf_conncount.c"
+  ],
+  "commit_message": "netfilter: nf_conncount: fix leaked ct in error paths\n\nThere are some situations where ct might be leaked as error paths are\nskipping the refcounted check and return immediately. In order to solve\nit make sure that the check is always called.\n\nFixes: be102eb6a0e7 (\"netfilter: nf_conncount: rework API to use sk_buff directly\")\nSigned-off-by: Fernando Fernandez Mancera <fmancera@suse.de>\nSigned-off-by: Florian Westphal <fw@strlen.de>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

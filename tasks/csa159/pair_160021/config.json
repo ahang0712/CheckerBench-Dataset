@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "8c531e0a8c2d82509ad97c6d3a1e6217c7ed136d",
+  "after_commit": "a1059896f2bfdcebcdc7153c3be2307ea319501f",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/0af2f6be1b4281385b618cb86ad946eded089ac8/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/0af2f6be1b4281385b618cb86ad946eded089ac8/compile_commands.json",
+  "changed_files": [
+    "drivers/usb/cdns3/cdns3-gadget.c"
+  ],
+  "commit_message": "usb: cdns3: Fix deadlock when using NCM gadget\n\nThe cdns3 driver has the same NCM deadlock as fixed in cdnsp by commit\n58f2fcb3a845 (\"usb: cdnsp: Fix deadlock issue during using NCM gadget\").\n\nUnder PREEMPT_RT the deadlock can be readily triggered by heavy network\ntraffic, for example using \"iperf --bidir\" over NCM ethernet link.\n\nThe deadlock occurs because the threaded interrupt handler gets\npreempted by a softirq, but both are protected by the same spinlock.\nPrevent deadlock by disabling softirq during threaded irq handler.\n\nCc: stable <stable@kernel.org>\nFixes: 7733f6c32e36 (\"usb: cdns3: Add Cadence USB3 DRD Driver\")\nSigned-off-by: Ralph Siemsen <ralph.siemsen@linaro.org>\nAcked-by: Peter Chen <peter.chen@kernel.org>\nReviewed-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>\nLink: https://lore.kernel.org/r/20250318-rfs-cdns3-deadlock-v2-1-bfd9cfcee732@linaro.org\nSigned-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,27 @@
+diff --git a/fs/nilfs2/segment.c b/fs/nilfs2/segment.c
+index 587251830897..58a598b548fa 100644
+--- a/fs/nilfs2/segment.c
++++ b/fs/nilfs2/segment.c
+@@ -734,7 +734,6 @@ static size_t nilfs_lookup_dirty_data_buffers(struct inode *inode,
+ 		if (!head)
+ 			head = create_empty_buffers(folio,
+ 					i_blocksize(inode), 0);
+-		folio_unlock(folio);
+ 
+ 		bh = head;
+ 		do {
+@@ -744,11 +743,14 @@ static size_t nilfs_lookup_dirty_data_buffers(struct inode *inode,
+ 			list_add_tail(&bh->b_assoc_buffers, listp);
+ 			ndirties++;
+ 			if (unlikely(ndirties >= nlimit)) {
++				folio_unlock(folio);
+ 				folio_batch_release(&fbatch);
+ 				cond_resched();
+ 				return ndirties;
+ 			}
+ 		} while (bh = bh->b_this_page, bh != head);
++
++		folio_unlock(folio);
+ 	}
+ 	folio_batch_release(&fbatch);
+ 	cond_resched();

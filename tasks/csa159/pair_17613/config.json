@@ -1,0 +1,19 @@
+{
+  "project_id": "FFmpeg_FFmpeg",
+  "before_commit": "d31940f04e864542819fb6b998d796e14305bd3c",
+  "after_commit": "9ccc633068c6fe76989f487c8932bd11886ad65b",
+  "repo_path": "/workspace/repo/FFmpeg/FFmpeg",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/FFmpeg_FFmpeg/ff6de6b180fd7c931410f81fb404ab3dbf30d40b/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/FFmpeg_FFmpeg/ff6de6b180fd7c931410f81fb404ab3dbf30d40b/compile_commands.json",
+  "changed_files": [
+    "libavcodec/hevcdec.c"
+  ],
+  "commit_message": "avcodec/hevcdec: Avoid only partly skiping duplicate first slices\n\nFixes: NULL pointer dereference and out of array access\nFixes: 13871/clusterfuzz-testcase-minimized-ffmpeg_AV_CODEC_ID_HEVC_fuzzer-5746167087890432\nFixes: 13845/clusterfuzz-testcase-minimized-ffmpeg_AV_CODEC_ID_HEVC_fuzzer-5650370728034304\n\nThis also fixes the return code for explode mode\n\nFound-by: continuous fuzzing process https://github.com/google/oss-fuzz/tree/master/projects/ffmpeg\nReviewed-by: James Almer <jamrial@gmail.com>\nSigned-off-by: Michael Niedermayer <michael@niedermayer.cc>\n(cherry picked from commit 54655623a82632e7624714d7b2a3e039dc5faa7e)\nSigned-off-by: Michael Niedermayer <michael@niedermayer.cc>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

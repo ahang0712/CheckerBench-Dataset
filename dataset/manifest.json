@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "task_count": 300,
+  "backend_counts": {
+    "csa": 159,
+    "codeql": 141
+  },
+  "language_counts": {
+    "c": 159,
+    "go": 30,
+    "java": 30,
+    "javascript": 30,
+    "python": 51
+  },
+  "csa_project_count": 32,
+  "selection_rule": "All tasks from the fixed 300-task evaluation roster. CSA is treated as a single group.",
+  "selected_roster_sha256": "ccc8ec0a88a1972fe649caf034454fb67183116ff7a3b5745286d3e4ab740a92"
+}

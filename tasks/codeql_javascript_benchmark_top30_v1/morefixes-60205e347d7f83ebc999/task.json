@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-60205e347d7f83ebc999",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-60205e347d7f83ebc999",
+    "project_id": "morefixes__ofirdagan__cross-domain-local-storage",
+    "language": "javascript",
+    "backend": "codeql"
+  },
+  "changed_javascript_files": [
+    "app/scripts/xdLocalStorage.js"
+  ],
+  "patch_units": {
+    "before": [
+      "app/scripts/xdLocalStorage.js"
+    ],
+    "after": [
+      "app/scripts/xdLocalStorage.js"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/cf840b1e255b739a9b69017945682c56224cbba585d48ecb4fd7eca2cb45541a/database",
+      "cache_key": "cf840b1e255b739a9b69017945682c56224cbba585d48ecb4fd7eca2cb45541a",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/0fcf7987ebc8e5a34b8f71ffbace56542897d07c327a34084e6849548697e031/database",
+      "cache_key": "0fcf7987ebc8e5a34b8f71ffbace56542897d07c327a34084e6849548697e031",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/35f3aaf533ac69a234aa363dea2b80fc12682fa1cf3e6d9621bdc06dfad96da6/database",
+      "cache_key": "35f3aaf533ac69a234aa363dea2b80fc12682fa1cf3e6d9621bdc06dfad96da6",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-60205e347d7f83ebc999/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-60205e347d7f83ebc999/ (do not mount into agent)"
+  }
+}

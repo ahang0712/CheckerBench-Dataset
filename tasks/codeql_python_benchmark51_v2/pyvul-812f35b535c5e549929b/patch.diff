@@ -1,0 +1,38 @@
+diff --git a/nvflare/lighter/provision.py b/nvflare/lighter/provision.py
+index a00009039..34a420a2b 100644
+--- a/nvflare/lighter/provision.py
++++ b/nvflare/lighter/provision.py
+@@ -21,10 +21,9 @@ import shutil
+ import sys
+ import webbrowser
+ 
+-import yaml
+-
+ from nvflare.fuel.utils.class_utils import instantiate_class
+ from nvflare.lighter.spec import Participant, Project, Provisioner
++from nvflare.lighter.utils import load_yaml
+ 
+ 
+ def main():
+@@ -77,7 +76,7 @@ def main():
+     project_full_path = os.path.join(current_path, project_file)
+     print(f"Project yaml file: {project_full_path}.")
+ 
+-    project_dict = yaml.load(open(project_full_path, "r"), Loader=yaml.Loader)
++    project_dict = load_yaml(project_full_path)
+     api_version = project_dict.get("api_version")
+     if api_version not in [3]:
+         raise ValueError(f"API version expected 3 but found {api_version}")
+diff --git a/nvflare/lighter/utils.py b/nvflare/lighter/utils.py
+index 561bd3e0e..05f10b595 100644
+--- a/nvflare/lighter/utils.py
++++ b/nvflare/lighter/utils.py
+@@ -46,7 +46,7 @@ def sign_all(content_folder, signing_pri_key):
+ 
+ 
+ def load_yaml(file_name):
+-    return yaml.load(open(file_name, "r"), Loader=yaml.Loader)
++    return yaml.safe_load(open(file_name, "r"))
+ 
+ 
+ def sh_replace(src, mapping_dict):

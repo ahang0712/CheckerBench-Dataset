@@ -1,0 +1,54 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-e3f3ac87786e2080b81f",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-e3f3ac87786e2080b81f",
+    "project_id": "morefixes__prometheus__client_golang",
+    "language": "go",
+    "backend": "codeql"
+  },
+  "changed_go_files": [
+    "prometheus/promhttp/instrument_client.go",
+    "prometheus/promhttp/instrument_server.go",
+    "prometheus/promhttp/instrument_server_test.go",
+    "prometheus/promhttp/option.go",
+    "prometheus/promhttp/option_test.go"
+  ],
+  "patch_units": {
+    "before": [
+      "prometheus/promhttp/instrument_client.go",
+      "prometheus/promhttp/instrument_server.go",
+      "prometheus/promhttp/instrument_server_test.go"
+    ],
+    "after": [
+      "prometheus/promhttp/instrument_client.go",
+      "prometheus/promhttp/instrument_server.go",
+      "prometheus/promhttp/instrument_server_test.go",
+      "prometheus/promhttp/option.go",
+      "prometheus/promhttp/option_test.go"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/63448da1f5ec39fc27afd6502ee2b22f9a2bc002451fd5d18e43468311240d1c/database",
+      "cache_key": "63448da1f5ec39fc27afd6502ee2b22f9a2bc002451fd5d18e43468311240d1c",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/ce1973d2f6f53068ab6fb64194f81e95b5c3fd0cb7796075b2b53684d30f43a7/database",
+      "cache_key": "ce1973d2f6f53068ab6fb64194f81e95b5c3fd0cb7796075b2b53684d30f43a7",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/91696e403e1910dcdf4e0304b5d2b8eda2a99376793facb46762dedf8193448e/database",
+      "cache_key": "91696e403e1910dcdf4e0304b5d2b8eda2a99376793facb46762dedf8193448e",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-e3f3ac87786e2080b81f/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-e3f3ac87786e2080b81f/ (do not mount into agent)"
+  }
+}

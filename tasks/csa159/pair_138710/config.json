@@ -1,0 +1,19 @@
+{
+  "project_id": "ImageMagick_ImageMagick",
+  "before_commit": "677d7b743fcbd7132ac11dade52a19493f58f647",
+  "after_commit": "cea1693e2ded51b4cc91c70c54096cbed1691c00",
+  "repo_path": "/workspace/repo/ImageMagick/ImageMagick",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/ImageMagick_ImageMagick/2df29d4377b5882c0b3d63776964c74992bcff69/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/ImageMagick_ImageMagick/2df29d4377b5882c0b3d63776964c74992bcff69/compile_commands.json",
+  "changed_files": [
+    "coders/bmp.c"
+  ],
+  "commit_message": "Added extra check to resolve issue on 32-bit systems (https://github.com/ImageMagick/ImageMagick/security/advisories/GHSA-9pp9-cfwx-54rm)",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,1823 @@
+# Patch-overlapping Python context after the fix
+
+## `src/snowflake/connector/_sql_util.py` — `function:remove_starting_comments` (lines 23-31)
+
+```python
+def remove_starting_comments(sql: str) -> str:
+    """Remove all comments from the start of a SQL statement."""
+    commentless_sql = sql
+    while True:
+        start_comment = COMMENT_START_SQL_RE.match(commentless_sql)
+        if start_comment is None:
+            break
+        commentless_sql = commentless_sql[start_comment.end() :]
+    return commentless_sql
+```
+
+## `src/snowflake/connector/_sql_util.py` — `function:get_file_transfer_type` (lines 34-44)
+
+```python
+def get_file_transfer_type(sql: str) -> FileTransferType | None:
+    """Decide whether a SQL is a file transfer and return its type.
+
+    None is returned if the SQL isn't a file transfer so that this function can be
+    used in an if-statement.
+    """
+    commentless_sql = remove_starting_comments(sql)
+    if PUT_SQL_RE.match(commentless_sql):
+        return FileTransferType.PUT
+    elif GET_SQL_RE.match(commentless_sql):
+        return FileTransferType.GET
+```
+
+## `src/snowflake/connector/_sql_util.py` — `function:is_put_statement` (lines 47-48)
+
+```python
+def is_put_statement(sql: str) -> bool:
+    return get_file_transfer_type(sql) == FileTransferType.PUT
+```
+
+## `src/snowflake/connector/_sql_util.py` — `function:is_get_statement` (lines 51-52)
+
+```python
+def is_get_statement(sql: str) -> bool:
+    return get_file_transfer_type(sql) == FileTransferType.GET
+```
+
+## `src/snowflake/connector/_sql_util.py` — `module:<module>@5` (lines 5-5)
+
+```python
+from __future__ import annotations
+```
+
+## `src/snowflake/connector/_sql_util.py` — `module:<module>@7` (lines 7-7)
+
+```python
+import re
+```
+
+## `src/snowflake/connector/_sql_util.py` — `module:<module>@9` (lines 9-9)
+
+```python
+from .constants import FileTransferType
+```
+
+## `src/snowflake/connector/_sql_util.py` — `module:<module>@11` (lines 11-17)
+
+```python
+COMMENT_START_SQL_RE = re.compile(
+    r"""
+                                  ^\s*(?:
+                                      /\*[\w\W]*?\*/
+                                  )""",
+    re.VERBOSE,
+)
+```
+
+## `src/snowflake/connector/_sql_util.py` — `module:<module>@19` (lines 19-19)
+
+```python
+PUT_SQL_RE = re.compile(r"^\s*put", flags=re.IGNORECASE)
+```
+
+## `src/snowflake/connector/_sql_util.py` — `module:<module>@20` (lines 20-20)
+
+```python
+GET_SQL_RE = re.compile(r"^\s*get", flags=re.IGNORECASE)
+```
+
+## `src/snowflake/connector/cursor.py` — `class:SnowflakeCursor` (lines 159-1301)
+
+```python
+class SnowflakeCursor:
+    """Implementation of Cursor object that is returned from Connection.cursor() method.
+
+    Attributes:
+        description: A list of namedtuples about metadata for all columns.
+        rowcount: The number of records updated or selected. If not clear, -1 is returned.
+        rownumber: The current 0-based index of the cursor in the result set or None if the index cannot be
+            determined.
+        sfqid: Snowflake query id in UUID form. Include this in the problem report to the customer support.
+        sqlstate: Snowflake SQL State code.
+        timestamp_output_format: Snowflake timestamp_output_format for timestamps.
+        timestamp_ltz_output_format: Snowflake output format for LTZ timestamps.
+        timestamp_tz_output_format: Snowflake output format for TZ timestamps.
+        timestamp_ntz_output_format: Snowflake output format for NTZ timestamps.
+        date_output_format: Snowflake output format for dates.
+        time_output_format: Snowflake output format for times.
+        timezone: Snowflake timezone.
+        binary_output_format: Snowflake output format for binary fields.
+        arraysize: The default number of rows fetched by fetchmany.
+        connection: The connection object by which the cursor was created.
+        errorhandle: The class that handles error handling.
+        is_file_transfer: Whether, or not the current command is a put, or get.
+
+    TODO:
+        Most of these attributes have no reason to be properties, we could just store them in public variables.
+        Calling a function is expensive in Python and most of these getters are unnecessary.
+    """
+
+    INSERT_SQL_RE = re.compile(r"^insert\s+into", flags=re.IGNORECASE)
+    COMMENT_SQL_RE = re.compile(r"/\*.*\*/")
+    INSERT_SQL_VALUES_RE = re.compile(
+        r".*VALUES\s*(\(.*\)).*", re.IGNORECASE | re.MULTILINE | re.DOTALL
+    )
+    ALTER_SESSION_RE = re.compile(
+        r"alter\s+session\s+set\s+(.*)=\'?([^\']+)\'?\s*;",
+        flags=re.IGNORECASE | re.MULTILINE | re.DOTALL,
+    )
+
+    @staticmethod
+    def get_file_transfer_type(sql: str) -> FileTransferType | None:
+        """Decide whether a SQL is a file transfer and return its type.
+
+        None is returned if the SQL isn't a file transfer so that this function can be
+        used in an if-statement.
+        """
+        return get_file_transfer_type(sql)
+
+    def __init__(
+        self,
+        connection: SnowflakeConnection,
+        use_dict_result: bool = False,
+    ) -> None:
+        """Inits a SnowflakeCursor with a connection.
+
+        Args:
+            connection: The connection that created this cursor.
+            use_dict_result: Decides whether to use dict result or not.
+        """
+        self._connection: SnowflakeConnection = connection
+
+        self._errorhandler: Callable[
+            [SnowflakeConnection, SnowflakeCursor, type[Error], dict[str, str]],
+            None,
+        ] = Error.default_errorhandler
+        self.messages: list[
+            tuple[type[Error] | type[Exception], dict[str, str | bool]]
+        ] = []
+        self._timebomb: Timer | None = None  # must be here for abort_exit method
+        self._description: list[ResultMetadata] | None = None
+        self._column_idx_to_name = None
+        self._sfqid = None
+        self._sqlstate = None
+        self._total_rowcount = -1
+        self._sequence_counter = -1
+        self._request_id = None
+        self._is_file_transfer = False
+
+        self._timestamp_output_format = None
+        self._timestamp_ltz_output_format = None
+        self._timestamp_ntz_output_format = None
+        self._timestamp_tz_output_format = None
+        self._date_output_format = None
+        self._time_output_format = None
+        self._timezone = None
+        self._binary_output_format = None
+        self._result: Iterator[tuple] | Iterator[dict] | None = None
+        self._result_set: ResultSet | None = None
+        self._result_state: ResultState = ResultState.DEFAULT
+        self._use_dict_result = use_dict_result
+        self.query: str | None = None
+        # TODO: self._query_result_format could be defined as an enum
+        self._query_result_format: str | None = None
+
+        self._arraysize = 1  # PEP-0249: defaults to 1
+
+        self._lock_canceling = Lock()
+
+        self._first_chunk_time = None
+
+        self._log_max_query_length = connection.log_max_query_length
+        self._inner_cursor: SnowflakeCursor | None = None
+        self._prefetch_hook = None
+        self._rownumber: int | None = None
+
+        self.reset()
+
+    def __del__(self) -> None:  # pragma: no cover
+        try:
+            self.close()
+        except compat.BASE_EXCEPTION_CLASS as e:
+            if logger.getEffectiveLevel() <= logging.INFO:
+                logger.info(e)
+
+    @property
+    def description(self) -> list[ResultMetadata]:
+        return self._description
+
+    @property
+    def rowcount(self):
+        return self._total_rowcount if self._total_rowcount >= 0 else None
+
+    @property
+    def rownumber(self):
+        return self._rownumber if self._rownumber >= 0 else None
+
+    @property
+    def sfqid(self):
+        return self._sfqid
+
+    @property
+    def sqlstate(self):
+        return self._sqlstate
+
+    @property
+    def timestamp_output_format(self):
+        return self._timestamp_output_format
+
+    @property
+    def timestamp_ltz_output_format(self):
+        return (
+            self._timestamp_ltz_output_format
+            if self._timestamp_ltz_output_format
+            else self._timestamp_output_format
+        )
+
+    @property
+    def timestamp_tz_output_format(self):
+        return (
+            self._timestamp_tz_output_format
+            if self._timestamp_tz_output_format
+            else self._timestamp_output_format
+        )
+
+    @property
+    def timestamp_ntz_output_format(self):
+        return (
+            self._timestamp_ntz_output_format
+            if self._timestamp_ntz_output_format
+            else self._timestamp_output_format
+        )
+
+    @property
+    def date_output_format(self):
+        return self._date_output_format
+
+    @property
+    def time_output_format(self):
+        return self._time_output_format
+
+    @property
+    def timezone(self):
+        return self._timezone
+
+    @property
+    def binary_output_format(self):
+        return self._binary_output_format
+
+    @property
+    def arraysize(self):
+        return self._arraysize
+
+    @arraysize.setter
+    def arraysize(self, value):
+        self._arraysize = int(value)
+
+    @property
+    def connection(self):
+        return self._connection
+
+    @property
+    def errorhandler(self):
+        return self._errorhandler
+
+    @errorhandler.setter
+    def errorhandler(self, value):
+        logger.debug("setting errorhandler: %s", value)
+        if value is None:
+            raise ProgrammingError("Invalid errorhandler is specified")
+        self._errorhandler = value
+
+    @property
+    def is_file_transfer(self):
+        """Whether the command is PUT or GET."""
+        return hasattr(self, "_is_file_transfer") and self._is_file_transfer
+
+    @property
+    def lastrowid(self) -> None:
+        """Snowflake does not support lastrowid in which case None should be returned as per PEP249."""
+        return None
+
+    def callproc(self, procname: str, args: T = ()) -> T:
+        """Call a stored procedure.
+
+        Args:
+            procname: The stored procedure to be called.
+            args: Parameters to be passed into the stored procedure.
+
+        Returns:
+            The input parameters.
+        """
+        marker_format = "%s" if self._connection.is_pyformat else "?"
+        command = (
+            f"CALL {procname}({', '.join([marker_format for _ in range(len(args))])})"
+        )
+        self.execute(command, args)
+        return args
+
+    def close(self) -> bool | None:
+        """Closes the cursor object.
+
+        Returns whether the cursor was closed during this call.
+        """
+        try:
+            if self.is_closed():
+                return False
+
+            with self._lock_canceling:
+                self.reset(closing=True)
+                self._connection = None
+                del self.messages[:]
+                return True
+        except Exception:
+            pass
+
+    def is_closed(self):
+        return self._connection is None or self._connection.is_closed()
+
+    def _execute_helper(
+        self,
+        query: str,
+        timeout: int = 0,
+        statement_params: dict[str, str] | None = None,
+        binding_params: tuple | dict[str, dict[str, str]] = None,
+        binding_stage: str | None = None,
+        is_internal: bool = False,
+        describe_only: bool = False,
+        _no_results: bool = False,
+        _is_put_get=None,
+        _no_retry: bool = False,
+    ):
+        del self.messages[:]
+
+        if statement_params is not None and not isinstance(statement_params, dict):
+            Error.errorhandler_wrapper(
+                self.connection,
+                self,
+                ProgrammingError,
+                {
+                    "msg": "The data type of statement params is invalid. It must be dict.",
+                    "errno": ER_INVALID_VALUE,
+                },
+            )
+
+        # check if current installation include arrow extension or not,
+        # if not, we set statement level query result format to be JSON
+        if not CAN_USE_ARROW_RESULT_FORMAT:
+            logger.debug("Cannot use arrow result format, fallback to json format")
+            if statement_params is None:
+                statement_params = {
+                    PARAMETER_PYTHON_CONNECTOR_QUERY_RESULT_FORMAT: "JSON"
+                }
+            else:
+                result_format_val = statement_params.get(
+                    PARAMETER_PYTHON_CONNECTOR_QUERY_RESULT_FORMAT
+                )
+                if str(result_format_val).upper() == "ARROW":
+                    self.check_can_use_arrow_resultset()
+                elif result_format_val is None:
+                    statement_params[
+                        PARAMETER_PYTHON_CONNECTOR_QUERY_RESULT_FORMAT
+                    ] = "JSON"
+
+        self._sequence_counter = self._connection._next_sequence_counter()
+        self._request_id = uuid.uuid4()
+
+        logger.debug(f"Request id: {self._request_id}")
+
+        logger.debug("running query [%s]", self._format_query_for_log(query))
+        if _is_put_get is not None:
+            # if told the query is PUT or GET, use the information
+            self._is_file_transfer = _is_put_get
+        else:
+            # or detect it.
+            self._is_file_transfer = get_file_transfer_type(query) is not None
+        logger.debug("is_file_transfer: %s", self._is_file_transfer is not None)
+
+        real_timeout = (
+            timeout if timeout and timeout > 0 else self._connection.network_timeout
+        )
+
+        if real_timeout is not None:
+            self._timebomb = Timer(real_timeout, self.__cancel_query, [query])
+            self._timebomb.start()
+            logger.debug("started timebomb in %ss", real_timeout)
+        else:
+            self._timebomb = None
+
+        original_sigint = signal.getsignal(signal.SIGINT)
+
+        def interrupt_handler(*_):  # pragma: no cover
+            try:
+                signal.signal(signal.SIGINT, exit_handler)
+            except (ValueError, TypeError):
+                # ignore failures
+                pass
+            try:
+                if self._timebomb is not None:
+                    self._timebomb.cancel()
+                    logger.debug("cancelled timebomb in finally")
+                    self._timebomb = None
+                self.__cancel_query(query)
+            finally:
+                if original_sigint:
+                    try:
+                        signal.signal(signal.SIGINT, original_sigint)
+                    except (ValueError, TypeError):
+                        # ignore failures
+                        pass
+            raise KeyboardInterrupt
+
+        try:
+            if not original_sigint == exit_handler:
+                signal.signal(signal.SIGINT, interrupt_handler)
+        except ValueError:  # pragma: no cover
+            logger.debug(
+                "Failed to set SIGINT handler. " "Not in main thread. Ignored..."
+            )
+        ret = {"data": {}}
+        try:
+            ret = self._connection.cmd_query(
+                query,
+                self._sequence_counter,
+                self._request_id,
+                binding_params=binding_params,
+                binding_stage=binding_stage,
+                is_file_transfer=bool(self._is_file_transfer),
+                statement_params=statement_params,
+                is_internal=is_internal,
+                describe_only=describe_only,
+                _no_results=_no_results,
+                _no_retry=_no_retry,
+            )
+        finally:
+            try:
+                if original_sigint:
+                    signal.signal(signal.SIGINT, original_sigint)
+            except (ValueError, TypeError):  # pragma: no cover
+                logger.debug(
+                    "Failed to reset SIGINT handler. Not in main " "thread. Ignored..."
+                )
+            if self._timebomb is not None:
+                self._timebomb.cancel()
+                logger.debug("cancelled timebomb in finally")
+
+        if "data" in ret and "parameters" in ret["data"]:
+            parameters = ret["data"]["parameters"]
+            # Set session parameters for cursor object
+            for kv in parameters:
+                if "TIMESTAMP_OUTPUT_FORMAT" in kv["name"]:
+                    self._timestamp_output_format = kv["value"]
+                if "TIMESTAMP_NTZ_OUTPUT_FORMAT" in kv["name"]:
+                    self._timestamp_ntz_output_format = kv["value"]
+                if "TIMESTAMP_LTZ_OUTPUT_FORMAT" in kv["name"]:
+                    self._timestamp_ltz_output_format = kv["value"]
+                if "TIMESTAMP_TZ_OUTPUT_FORMAT" in kv["name"]:
+                    self._timestamp_tz_output_format = kv["value"]
+                if "DATE_OUTPUT_FORMAT" in kv["name"]:
+                    self._date_output_format = kv["value"]
+                if "TIME_OUTPUT_FORMAT" in kv["name"]:
+                    self._time_output_format = kv["value"]
+                if "TIMEZONE" in kv["name"]:
+                    self._timezone = kv["value"]
+                if "BINARY_OUTPUT_FORMAT" in kv["name"]:
+                    self._binary_output_format = kv["value"]
+            # Set session parameters for connection object
+            self._connection._update_parameters(
+                {p["name"]: p["value"] for p in parameters}
+            )
+
+        self.query = query
+        self._sequence_counter = -1
+        return ret
+
+    def execute(
+        self,
+        command: str,
+        params: Sequence[Any] | dict[Any, Any] | None = None,
+        _bind_stage: str | None = None,
+        timeout: int | None = None,
+        _exec_async: bool = False,
+        _no_retry: bool = False,
+        _do_reset: bool = True,
+        _put_callback: SnowflakeProgressPercentage = None,
+        _put_azure_callback: SnowflakeProgressPercentage = None,
+        _put_callback_output_stream: IO[str] = sys.stdout,
+        _get_callback: SnowflakeProgressPercentage = None,
+        _get_azure_callback: SnowflakeProgressPercentage = None,
+        _get_callback_output_stream: IO[str] = sys.stdout,
+        _show_progress_bar: bool = True,
+        _statement_params: dict[str, str] | None = None,
+        _is_internal: bool = False,
+        _describe_only: bool = False,
+        _no_results: bool = False,
+        _is_put_get: bool | None = None,
+        _raise_put_get_error: bool = True,
+        _force_put_overwrite: bool = False,
+        file_stream: IO[bytes] | None = None,
+    ) -> SnowflakeCursor | None:
+        """Executes a command/query.
+
+        Args:
+            command: The SQL command to be executed.
+            params: Parameters to be bound into the SQL statement.
+            _bind_stage: Path in temporary stage where binding parameters are uploaded as CSV files.
+            timeout: Number of seconds after which to abort the query.
+            _exec_async: Whether to execute this query asynchronously.
+            _no_retry: Whether or not to retry on known errors.
+            _do_reset: Whether or not the result set needs to be reset before executing query.
+            _put_callback: Function to which GET command should call back to.
+            _put_azure_callback: Function to which an Azure GET command should call back to.
+            _put_callback_output_stream: The output stream a PUT command's callback should report on.
+            _get_callback: Function to which GET command should call back to.
+            _get_azure_callback: Function to which an Azure GET command should call back to.
+            _get_callback_output_stream: The output stream a GET command's callback should report on.
+            _show_progress_bar: Whether or not to show progress bar.
+            _statement_params: Extra information that should be sent to Snowflake with query.
+            _is_internal: This flag indicates whether the query is issued internally by the connector.
+            _describe_only: If true, the query will not be executed but return the schema/description of this query.
+            _no_results: This flag tells the back-end to not return the result, just fire the query and return the
+                response returned by Snowflake's server.
+            _use_ijson: This flag doesn't do anything as ijson support has ended.
+            _is_put_get: Force decision of this SQL query being a PUT, or GET command. This is detected otherwise.
+            _raise_put_get_error: Whether to raise PUT and GET errors.
+            _force_put_overwrite: If the SQL query is a PUT, then this flag can force overwriting of an already
+                existing file on stage.
+            file_stream: File-like object to be uploaded with PUT
+
+        Returns:
+            The cursor itself, or None if some error happened, or the response returned
+            by Snowflake if the _no_results flag is on.
+        """
+        if _exec_async:
+            _no_results = True
+        logger.debug("executing SQL/command")
+        if self.is_closed():
+            Error.errorhandler_wrapper(
+                self.connection,
+                self,
+                InterfaceError,
+                {"msg": "Cursor is closed in execute.", "errno": ER_CURSOR_IS_CLOSED},
+            )
+
+        if _do_reset:
+            self.reset()
+        command = command.strip(" \t\n\r") if command else None
+        if not command:
+            logger.warning("execute: no query is given to execute")
+            return
+
+        kwargs = {
+            "timeout": timeout,
+            "statement_params": _statement_params,
+            "is_internal": _is_internal,
+            "describe_only": _describe_only,
+            "_no_results": _no_results,
+            "_is_put_get": _is_put_get,
+            "_no_retry": _no_retry,
+        }
+
+        if self._connection.is_pyformat:
+            # pyformat/format paramstyle
+            # client side binding
+            processed_params = self._connection._process_params_pyformat(params, self)
+            # SNOW-513061 collect telemetry for empty sequence usage before we make the breaking change announcement
+            if params is not None and len(params) == 0:
+                self._log_telemetry_job_data(
+                    TelemetryField.EMPTY_SEQ_INTERPOLATION,
+                    TelemetryData.TRUE
+                    if self.connection._interpolate_empty_sequences
+                    else TelemetryData.FALSE,
+                )
+            if logger.getEffectiveLevel() <= logging.DEBUG:
+                logger.debug(
+                    f"binding: [{self._format_query_for_log(command)}] "
+                    f"with input=[{params}], "
+                    f"processed=[{processed_params}]",
+                )
+            if (
+                self.connection._interpolate_empty_sequences
+                and processed_params is not None
+            ) or (
+                not self.connection._interpolate_empty_sequences
+                and len(processed_params) > 0
+            ):
+                query = command % processed_params
+            else:
+                query = command
+        else:
+            # qmark and numeric paramstyle
+            query = command
+            if _bind_stage:
+                kwargs["binding_stage"] = _bind_stage
+            else:
+                if params is not None and not isinstance(params, (list, tuple)):
+                    errorvalue = {
+                        "msg": f"Binding parameters must be a list: {params}",
+                        "errno": ER_FAILED_PROCESSING_PYFORMAT,
+                    }
+                    Error.errorhandler_wrapper(
+                        self.connection, self, ProgrammingError, errorvalue
+                    )
+
+                kwargs["binding_params"] = self._connection._process_params_qmarks(
+                    params, self
+                )
+
+        m = DESC_TABLE_RE.match(query)
+        if m:
+            query1 = f"describe table {m.group(1)}"
+            if logger.getEffectiveLevel() <= logging.WARNING:
+                logger.info(
+                    "query was rewritten: org=%s, new=%s",
+                    " ".join(line.strip() for line in query.split("\n")),
+                    query1,
+                )
+            query = query1
+
+        if logger.getEffectiveLevel() <= logging.INFO:
+            logger.info("query: [%s]", self._format_query_for_log(query))
+        ret = self._execute_helper(query, **kwargs)
+        self._sfqid = (
+            ret["data"]["queryId"]
+            if "data" in ret and "queryId" in ret["data"]
+            else None
+        )
+        self._sqlstate = (
+            ret["data"]["sqlState"]
+            if "data" in ret and "sqlState" in ret["data"]
+            else None
+        )
+        self._first_chunk_time = get_time_millis()
+
+        # if server gives a send time, log the time it took to arrive
+        if "data" in ret and "sendResultTime" in ret["data"]:
+            time_consume_first_result = (
+                self._first_chunk_time - ret["data"]["sendResultTime"]
+            )
+            self._log_telemetry_job_data(
+                TelemetryField.TIME_CONSUME_FIRST_RESULT, time_consume_first_result
+            )
+        logger.debug("sfqid: %s", self.sfqid)
+
+        logger.info("query execution done")
+        if ret["success"]:
+            logger.debug("SUCCESS")
+            data = ret["data"]
+
+            logger.debug("PUT OR GET: %s", self.is_file_transfer)
+            if self.is_file_transfer:
+                # Decide whether to use the old, or new code path
+                sf_file_transfer_agent = SnowflakeFileTransferAgent(
+                    self,
+                    query,
+                    ret,
+                    put_callback=_put_callback,
+                    put_azure_callback=_put_azure_callback,
+                    put_callback_output_stream=_put_callback_output_stream,
+                    get_callback=_get_callback,
+                    get_azure_callback=_get_azure_callback,
+                    get_callback_output_stream=_get_callback_output_stream,
+                    show_progress_bar=_show_progress_bar,
+                    raise_put_get_error=_raise_put_get_error,
+                    force_put_overwrite=_force_put_overwrite
+                    or data.get("overwrite", False),
+                    source_from_stream=file_stream,
+                    multipart_threshold=data.get("threshold"),
+                    use_s3_regional_url=self._connection.enable_stage_s3_privatelink_for_us_east_1,
+                )
+                sf_file_transfer_agent.execute()
+                data = sf_file_transfer_agent.result()
+                self._total_rowcount = len(data["rowset"]) if "rowset" in data else -1
+            m = self.ALTER_SESSION_RE.match(query)
+            if m:
+                # session parameters
+                param = m.group(1).upper()
+                value = m.group(2)
+                self._connection.converter.set_parameter(param, value)
+
+            if _exec_async:
+                self.connection._async_sfqids[self._sfqid] = None
+            if _no_results:
+                self._total_rowcount = (
+                    ret["data"]["total"]
+                    if "data" in ret and "total" in ret["data"]
+                    else -1
+                )
+                return data
+            self._init_result_and_meta(data)
+        else:
+            self._total_rowcount = (
+                ret["data"]["total"] if "data" in ret and "total" in ret["data"] else -1
+            )
+            logger.debug(ret)
+            err = ret["message"]
+            code = ret.get("code", -1)
+            if "data" in ret:
+                err += ret["data"].get("errorMessage", "")
+            errvalue = {
+                "msg": err,
+                "errno": int(code),
+                "sqlstate": self._sqlstate,
+                "sfqid": self._sfqid,
+            }
+            is_integrity_error = (
+                code == "100072"
+            )  # NULL result in a non-nullable column
+            error_class = IntegrityError if is_integrity_error else ProgrammingError
+            Error.errorhandler_wrapper(self.connection, self, error_class, errvalue)
+        return self
+
+    def execute_async(self, *args, **kwargs):
+        """Convenience function to execute a query without waiting for results (asynchronously).
+
+        This function takes the same arguments as execute, please refer to that function
+        for documentation.
+        """
+        kwargs["_exec_async"] = True
+        return self.execute(*args, **kwargs)
+
+    def describe(self, *args, **kwargs) -> list[ResultMetadata]:
+        """Obtain the schema of the result without executing the query.
+
+        This function takes the same arguments as execute, please refer to that function
+        for documentation.
+
+        Returns:
+            The schema of the result.
+        """
+        kwargs["_describe_only"] = kwargs["_is_internal"] = True
+        self.execute(*args, **kwargs)
+        return self._description
+
+    def _format_query_for_log(self, query):
+        return self._connection._format_query_for_log(query)
+
+    def _is_dml(self, data):
+        return (
+            "statementTypeId" in data
+            and int(data["statementTypeId"]) in STATEMENT_TYPE_ID_DML_SET
+        )
+
+    def _init_result_and_meta(self, data):
+        is_dml = self._is_dml(data)
+        self._query_result_format = data.get("queryResultFormat", "json")
+        logger.debug("Query result format: %s", self._query_result_format)
+
+        if self._total_rowcount == -1 and not is_dml and data.get("total") is not None:
+            self._total_rowcount = data["total"]
+
+        self._description: list[ResultMetadata] = [
+            ResultMetadata.from_column(col) for col in data["rowtype"]
+        ]
+
+        result_chunks = create_batches_from_response(
+            self, self._query_result_format, data, self._description
+        )
+
+        if not (is_dml or self.is_file_transfer):
+            logger.info(
+                "Number of results in first chunk: %s", result_chunks[0].rowcount
+            )
+
+        self._result_set = ResultSet(
+            self,
+            result_chunks,
+            self._connection.client_prefetch_threads,
+        )
+        self._rownumber = -1
+        self._result_state = ResultState.VALID
+
+        # don't update the row count when the result is returned from `describe` method
+        if is_dml and "rowset" in data and len(data["rowset"]) > 0:
+            updated_rows = 0
+            for idx, desc in enumerate(self._description):
+                if desc[0] in (
+                    "number of rows updated",
+                    "number of multi-joined rows updated",
+                    "number of rows deleted",
+                ) or desc[0].startswith("number of rows inserted"):
+                    updated_rows += int(data["rowset"][0][idx])
+            if self._total_rowcount == -1:
+                self._total_rowcount = updated_rows
+            else:
+                self._total_rowcount += updated_rows
+
+    def check_can_use_arrow_resultset(self):
+        global CAN_USE_ARROW_RESULT_FORMAT
+
+        if not CAN_USE_ARROW_RESULT_FORMAT:
+            if self._connection.application == "SnowSQL":
+                msg = "Currently SnowSQL doesn't support the result set in Apache Arrow format."
+                errno = ER_NO_PYARROW_SNOWSQL
+            else:
+                msg = "The result set in Apache Arrow format is not supported for the platform."
+                errno = ER_NO_ARROW_RESULT
+
+            Error.errorhandler_wrapper(
+                self.connection,
+                self,
+                ProgrammingError,
+                {
+                    "msg": msg,
+                    "errno": errno,
+                },
+            )
+
+    def check_can_use_pandas(self):
+        if not installed_pandas:
+            msg = (
+                "Optional dependency: 'pandas' is not installed, please see the following link for install "
+                "instructions: https://docs.snowflake.com/en/user-guide/python-connector-pandas.html#installation"
+            )
+            errno = ER_NO_PYARROW
+
+            Error.errorhandler_wrapper(
+                self.connection,
+                self,
+                ProgrammingError,
+                {
+                    "msg": msg,
+                    "errno": errno,
+                },
+            )
+
+    def query_result(self, qid):
+        url = f"/queries/{qid}/result"
+        ret = self._connection.rest.request(url=url, method="get")
+        self._sfqid = (
+            ret["data"]["queryId"]
+            if "data" in ret and "queryId" in ret["data"]
+            else None
+        )
+        self._sqlstate = (
+            ret["data"]["sqlState"]
+            if "data" in ret and "sqlState" in ret["data"]
+            else None
+        )
+        logger.debug("sfqid=%s", self._sfqid)
+
+        if ret.get("success"):
+            data = ret.get("data")
+            self._init_result_and_meta(data)
+        else:
+            logger.info("failed")
+            logger.debug(ret)
+            err = ret["message"]
+            code = ret.get("code", -1)
+            if "data" in ret:
+                err += ret["data"].get("errorMessage", "")
+            errvalue = {
+                "msg": err,
+                "errno": int(code),
+                "sqlstate": self._sqlstate,
+                "sfqid": self._sfqid,
+            }
+            Error.errorhandler_wrapper(
+                self.connection, self, ProgrammingError, errvalue
+            )
+        return self
+
+    def fetch_arrow_batches(self) -> Iterator[Table]:
+        self.check_can_use_arrow_resultset()
+        if self._query_result_format != "arrow":
+            raise NotSupportedError
+        self._log_telemetry_job_data(
+            TelemetryField.ARROW_FETCH_BATCHES, TelemetryData.TRUE
+        )
+        return self._result_set._fetch_arrow_batches()
+
+    def fetch_arrow_all(self) -> Table | None:
+        self.check_can_use_arrow_resultset()
+        if self._query_result_format != "arrow":
+            raise NotSupportedError
+        self._log_telemetry_job_data(TelemetryField.ARROW_FETCH_ALL, TelemetryData.TRUE)
+        return self._result_set._fetch_arrow_all()
+
+    def fetch_pandas_batches(self, **kwargs) -> Iterator[pandas.DataFrame]:
+        """Fetches a single Arrow Table."""
+        self.check_can_use_pandas()
+        if self._prefetch_hook is not None:
+            self._prefetch_hook()
+        if self._query_result_format != "arrow":
+            raise NotSupportedError
+        self._log_telemetry_job_data(
+            TelemetryField.PANDAS_FETCH_BATCHES, TelemetryData.TRUE
+        )
+        return self._result_set._fetch_pandas_batches(**kwargs)
+
+    def fetch_pandas_all(self, **kwargs) -> pandas.DataFrame:
+        """Fetch Pandas dataframes in batches, where 'batch' refers to Snowflake Chunk."""
+        self.check_can_use_pandas()
+        if self._prefetch_hook is not None:
+            self._prefetch_hook()
+        if self._query_result_format != "arrow":
+            raise NotSupportedError
+        self._log_telemetry_job_data(
+            TelemetryField.PANDAS_FETCH_ALL, TelemetryData.TRUE
+        )
+        return self._result_set._fetch_pandas_all(**kwargs)
+
+    def abort_query(self, qid):
+        url = f"/queries/{qid}/abort-request"
+        ret = self._connection.rest.request(url=url, method="post")
+        return ret.get("success")
+
+    def executemany(
+        self,
+        command: str,
+        seqparams: Sequence[Any] | dict[str, Any],
+        **kwargs: dict[str, Any],
+    ) -> SnowflakeCursor:
+        """Executes a command/query with the given set of parameters sequentially."""
+        logger.debug("executing many SQLs/commands")
+        command = command.strip(" \t\n\r") if command else None
+
+        if not seqparams:
+            return self
+
+        if self.INSERT_SQL_RE.match(command):
+            if self._connection.is_pyformat:
+                logger.debug("rewriting INSERT query")
+                command_wo_comments = re.sub(self.COMMENT_SQL_RE, "", command)
+                m = self.INSERT_SQL_VALUES_RE.match(command_wo_comments)
+                if not m:
+                    Error.errorhandler_wrapper(
+                        self.connection,
+                        self,
+                        InterfaceError,
+                        {
+                            "msg": "Failed to rewrite multi-row insert",
+                            "errno": ER_FAILED_TO_REWRITE_MULTI_ROW_INSERT,
+                        },
+                    )
+
+                fmt = m.group(1)
+                values = []
+                for param in seqparams:
+                    logger.debug(f"parameter: {param}")
+                    values.append(
+                        fmt % self._connection._process_params_pyformat(param, self)
+                    )
+                command = command.replace(fmt, ",".join(values), 1)
+                self.execute(command, **kwargs)
+                return self
+            else:
+                logger.debug("bulk insert")
+                # sanity check
+                row_size = len(seqparams[0])
+                for row in seqparams:
+                    if len(row) != row_size:
+                        error_value = {
+                            "msg": f"Bulk data size don't match. expected: {row_size}, "
+                            f"got: {len(row)}, command: {command}",
+                            "errno": ER_INVALID_VALUE,
+                        }
+                        Error.errorhandler_wrapper(
+                            self.connection, self, InterfaceError, error_value
+                        )
+                        return self
+                bind_size = len(seqparams) * row_size
+                bind_stage = None
+                if (
+                    bind_size
+                    > self.connection._session_parameters[
+                        "CLIENT_STAGE_ARRAY_BINDING_THRESHOLD"
+                    ]
+                    > 0
+                ):
+                    # bind stage optimization
+                    try:
+                        rows = self.connection._write_params_to_byte_rows(seqparams)
+                        bind_uploader = BindUploadAgent(self, rows)
+                        bind_uploader.upload()
+                        bind_stage = bind_uploader.stage_path
+                    except BindUploadError:
+                        logger.debug(
+                            "Failed to upload binds to stage, sending binds to "
+                            "Snowflake instead."
+                        )
+                binding_param = (
+                    None if bind_stage else list(map(list, zip(*seqparams)))
+                )  # transpose
+                self.execute(
+                    command, params=binding_param, _bind_stage=bind_stage, **kwargs
+                )
+                return self
+
+        self.reset()
+        for param in seqparams:
+            self.execute(command, params=param, _do_reset=False, **kwargs)
+        return self
+
+    def _result_iterator(
+        self,
+    ) -> Generator[dict, None, None] | Generator[tuple, None, None]:
+        """Yields the elements from _result and raises an exception when appropriate."""
+        try:
+            for _next in self._result:
+                if isinstance(_next, Exception):
+                    Error.errorhandler_wrapper_from_ready_exception(
+                        self._connection,
+                        self,
+                        _next,
+                    )
+                self._rownumber += 1
+                yield _next
+        except TypeError as err:
+            if self._result_state == ResultState.DEFAULT:
+                raise err
+            else:
+                yield None
+
+    def fetchone(self) -> dict | tuple | None:
+        """Fetches one row."""
+        if self._prefetch_hook is not None:
+            self._prefetch_hook()
+        if self._result is None and self._result_set is not None:
+            self._result = iter(self._result_set)
+            self._result_state = ResultState.VALID
+        try:
+            return next(self._result_iterator())
+        except StopIteration:
+            return None
+
+    def fetchmany(self, size=None):
+        """Fetches the number of specified rows."""
+        if size is None:
+            size = self.arraysize
+
+        if size < 0:
+            errorvalue = {
+                "msg": (
+                    "The number of rows is not zero or " "positive number: {}"
+                ).format(size),
+                "errno": ER_NOT_POSITIVE_SIZE,
+            }
+            Error.errorhandler_wrapper(
+                self.connection, self, ProgrammingError, errorvalue
+            )
+        ret = []
+        while size > 0:
+            row = self.fetchone()
+            if row is None:
+                break
+            ret.append(row)
+            if size is not None:
+                size -= 1
+
+        return ret
+
+    def fetchall(self) -> list[tuple] | list[dict]:
+        """Fetches all of the results."""
+        ret = []
+        while True:
+            row = self.fetchone()
+            if row is None:
+                break
+            ret.append(row)
+        return ret
+
+    def nextset(self):
+        """Not supported."""
+        logger.debug("nop")
+        return None
+
+    def setinputsizes(self, _):
+        """Not supported."""
+        logger.debug("nop")
+
+    def setoutputsize(self, _, column=None):
+        """Not supported."""
+        del column
+        logger.debug("nop")
+
+    def scroll(self, value, mode="relative"):
+        Error.errorhandler_wrapper(
+            self.connection,
+            self,
+            NotSupportedError,
+            {
+                "msg": "scroll is not supported.",
+                "errno": ER_UNSUPPORTED_METHOD,
+                "sqlstate": SQLSTATE_FEATURE_NOT_SUPPORTED,
+            },
+        )
+
+    def reset(self, closing=False):
+        """Resets the result set."""
+        # SNOW-647539: Do not erase the rowcount
+        # information when closing the cursor
+        if not closing:
+            self._total_rowcount = -1
+        if self._result_state != ResultState.DEFAULT:
+            self._result_state = ResultState.RESET
+        if self._result is not None:
+            self._result = None
+        if self._inner_cursor is not None:
+            self._inner_cursor.reset(closing=closing)
+            self._result = None
+            self._inner_cursor = None
+        self._prefetch_hook = None
+        if not self.connection._reuse_results:
+            self._result_set = None
+
+    def __iter__(self) -> Iterator[dict] | Iterator[tuple]:
+        """Iteration over the result set."""
+        # set _result if _result_set is not None
+        if self._result is None and self._result_set is not None:
+            self._result = iter(self._result_set)
+            self._result_state = ResultState.VALID
+        return self._result_iterator()
+
+    def __cancel_query(self, query):
+        if self._sequence_counter >= 0 and not self.is_closed():
+            logger.debug("canceled. %s, request_id: %s", query, self._request_id)
+            with self._lock_canceling:
+                self._connection._cancel_query(query, self._request_id)
+
+    def _log_telemetry_job_data(
+        self, telemetry_field: TelemetryField, value: Any
+    ) -> None:
+        """Builds an instance of TelemetryData with the given field and logs it."""
+        ts = get_time_millis()
+        try:
+            self._connection._log_telemetry(
+                TelemetryData.from_telemetry_data_dict(
+                    from_dict={
+                        TelemetryField.KEY_TYPE.value: telemetry_field.value,
+                        TelemetryField.KEY_SFQID.value: self._sfqid,
+                        TelemetryField.KEY_VALUE.value: value,
+                    },
+                    timestamp=ts,
+                    connection=self._connection,
+                )
+            )
+        except AttributeError:
+            logger.warning(
+                "Cursor failed to log to telemetry. Connection object may be None.",
+                exc_info=True,
+            )
+
+    def __enter__(self):
+        """Context manager."""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager with commit or rollback."""
+        self.close()
+
+    def get_results_from_sfqid(self, sfqid: str):
+        """Gets the results from previously ran query."""
+
+        def wait_until_ready():
+            """Makes sure query has finished executing and once it has retrieves results."""
+            no_data_counter = 0
+            retry_pattern_pos = 0
+            while True:
+                status = self.connection.get_query_status(sfqid)
+                if not self.connection.is_still_running(status):
+                    break
+                if status == QueryStatus.NO_DATA:  # pragma: no cover
+                    no_data_counter += 1
+                    if no_data_counter > ASYNC_NO_DATA_MAX_RETRY:
+                        raise DatabaseError(
+                            "Cannot retrieve data on the status of this query. No information returned "
+                            "from server for query '{}'"
+                        )
+                time.sleep(
+                    0.5 * ASYNC_RETRY_PATTERN[retry_pattern_pos]
+                )  # Same wait as JDBC
+                # If we can advance in ASYNC_RETRY_PATTERN then do so
+                if retry_pattern_pos < (len(ASYNC_RETRY_PATTERN) - 1):
+                    retry_pattern_pos += 1
+            if status != QueryStatus.SUCCESS:
+                raise DatabaseError(
+                    "Status of query '{}' is {}, results are unavailable".format(
+                        sfqid, status.name
+                    )
+                )
+            self._inner_cursor.execute(f"select * from table(result_scan('{sfqid}'))")
+            self._result = self._inner_cursor._result
+            self._query_result_format = self._inner_cursor._query_result_format
+            self._total_rowcount = self._inner_cursor._total_rowcount
+            self._description = self._inner_cursor._description
+            self._result_set = self._inner_cursor._result_set
+            self._result_state = ResultState.VALID
+            self._rownumber = 0
+            # Unset this function, so that we don't block anymore
+            self._prefetch_hook = None
+
+        self.connection.get_query_status_throw_if_error(
+            sfqid
+        )  # Trigger an exception if query failed
+        klass = self.__class__
+        self._inner_cursor = klass(self.connection)
+        self._sfqid = sfqid
+        self._prefetch_hook = wait_until_ready
+
+    def get_result_batches(self) -> list[ResultBatch] | None:
+        """Get the previously executed query's ``ResultBatch`` s if available.
+
+        If they are unavailable, in case nothing has been executed yet None will
+        be returned.
+
+        For a detailed description of ``ResultBatch`` s please see the docstring of:
+        ``snowflake.connector.result_batches.ResultBatch``
+        """
+        if self._result_set is None:
+            return None
+        self._log_telemetry_job_data(
+            TelemetryField.GET_PARTITIONS_USED, TelemetryData.TRUE
+        )
+        return self._result_set.batches
+```
+
+## `src/snowflake/connector/cursor.py` — `function:SnowflakeCursor.get_file_transfer_type` (lines 197-204)
+
+```python
+    def get_file_transfer_type(sql: str) -> FileTransferType | None:
+        """Decide whether a SQL is a file transfer and return its type.
+
+        None is returned if the SQL isn't a file transfer so that this function can be
+        used in an if-statement.
+        """
+        return get_file_transfer_type(sql)
+```
+
+## `src/snowflake/connector/cursor.py` — `function:SnowflakeCursor._execute_helper` (lines 406-560)
+
+```python
+    def _execute_helper(
+        self,
+        query: str,
+        timeout: int = 0,
+        statement_params: dict[str, str] | None = None,
+        binding_params: tuple | dict[str, dict[str, str]] = None,
+        binding_stage: str | None = None,
+        is_internal: bool = False,
+        describe_only: bool = False,
+        _no_results: bool = False,
+        _is_put_get=None,
+        _no_retry: bool = False,
+    ):
+        del self.messages[:]
+
+        if statement_params is not None and not isinstance(statement_params, dict):
+            Error.errorhandler_wrapper(
+                self.connection,
+                self,
+                ProgrammingError,
+                {
+                    "msg": "The data type of statement params is invalid. It must be dict.",
+                    "errno": ER_INVALID_VALUE,
+                },
+            )
+
+        # check if current installation include arrow extension or not,
+        # if not, we set statement level query result format to be JSON
+        if not CAN_USE_ARROW_RESULT_FORMAT:
+            logger.debug("Cannot use arrow result format, fallback to json format")
+            if statement_params is None:
+                statement_params = {
+                    PARAMETER_PYTHON_CONNECTOR_QUERY_RESULT_FORMAT: "JSON"
+                }
+            else:
+                result_format_val = statement_params.get(
+                    PARAMETER_PYTHON_CONNECTOR_QUERY_RESULT_FORMAT
+                )
+                if str(result_format_val).upper() == "ARROW":
+                    self.check_can_use_arrow_resultset()
+                elif result_format_val is None:
+                    statement_params[
+                        PARAMETER_PYTHON_CONNECTOR_QUERY_RESULT_FORMAT
+                    ] = "JSON"
+
+        self._sequence_counter = self._connection._next_sequence_counter()
+        self._request_id = uuid.uuid4()
+
+        logger.debug(f"Request id: {self._request_id}")
+
+        logger.debug("running query [%s]", self._format_query_for_log(query))
+        if _is_put_get is not None:
+            # if told the query is PUT or GET, use the information
+            self._is_file_transfer = _is_put_get
+        else:
+            # or detect it.
+            self._is_file_transfer = get_file_transfer_type(query) is not None
+        logger.debug("is_file_transfer: %s", self._is_file_transfer is not None)
+
+        real_timeout = (
+            timeout if timeout and timeout > 0 else self._connection.network_timeout
+        )
+
+        if real_timeout is not None:
+            self._timebomb = Timer(real_timeout, self.__cancel_query, [query])
+            self._timebomb.start()
+            logger.debug("started timebomb in %ss", real_timeout)
+        else:
+            self._timebomb = None
+
+        original_sigint = signal.getsignal(signal.SIGINT)
+
+        def interrupt_handler(*_):  # pragma: no cover
+            try:
+                signal.signal(signal.SIGINT, exit_handler)
+            except (ValueError, TypeError):
+                # ignore failures
+                pass
+            try:
+                if self._timebomb is not None:
+                    self._timebomb.cancel()
+                    logger.debug("cancelled timebomb in finally")
+                    self._timebomb = None
+                self.__cancel_query(query)
+            finally:
+                if original_sigint:
+                    try:
+                        signal.signal(signal.SIGINT, original_sigint)
+                    except (ValueError, TypeError):
+                        # ignore failures
+                        pass
+            raise KeyboardInterrupt
+
+        try:
+            if not original_sigint == exit_handler:
+                signal.signal(signal.SIGINT, interrupt_handler)
+        except ValueError:  # pragma: no cover
+            logger.debug(
+                "Failed to set SIGINT handler. " "Not in main thread. Ignored..."
+            )
+        ret = {"data": {}}
+        try:
+            ret = self._connection.cmd_query(
+                query,
+                self._sequence_counter,
+                self._request_id,
+                binding_params=binding_params,
+                binding_stage=binding_stage,
+                is_file_transfer=bool(self._is_file_transfer),
+                statement_params=statement_params,
+                is_internal=is_internal,
+                describe_only=describe_only,
+                _no_results=_no_results,
+                _no_retry=_no_retry,
+            )
+        finally:
+            try:
+                if original_sigint:
+                    signal.signal(signal.SIGINT, original_sigint)
+            except (ValueError, TypeError):  # pragma: no cover
+                logger.debug(
+                    "Failed to reset SIGINT handler. Not in main " "thread. Ignored..."
+                )
+            if self._timebomb is not None:
+                self._timebomb.cancel()
+                logger.debug("cancelled timebomb in finally")
+
+        if "data" in ret and "parameters" in ret["data"]:
+            parameters = ret["data"]["parameters"]
+            # Set session parameters for cursor object
+            for kv in parameters:
+                if "TIMESTAMP_OUTPUT_FORMAT" in kv["name"]:
+                    self._timestamp_output_format = kv["value"]
+                if "TIMESTAMP_NTZ_OUTPUT_FORMAT" in kv["name"]:
+                    self._timestamp_ntz_output_format = kv["value"]
+                if "TIMESTAMP_LTZ_OUTPUT_FORMAT" in kv["name"]:
+                    self._timestamp_ltz_output_format = kv["value"]
+                if "TIMESTAMP_TZ_OUTPUT_FORMAT" in kv["name"]:
+                    self._timestamp_tz_output_format = kv["value"]
+                if "DATE_OUTPUT_FORMAT" in kv["name"]:
+                    self._date_output_format = kv["value"]
+                if "TIME_OUTPUT_FORMAT" in kv["name"]:
+                    self._time_output_format = kv["value"]
+                if "TIMEZONE" in kv["name"]:
+                    self._timezone = kv["value"]
+                if "BINARY_OUTPUT_FORMAT" in kv["name"]:
+                    self._binary_output_format = kv["value"]
+            # Set session parameters for connection object
+            self._connection._update_parameters(
+                {p["name"]: p["value"] for p in parameters}
+            )
+
+        self.query = query
+        self._sequence_counter = -1
+        return ret
+```
+
+## `src/snowflake/connector/cursor.py` — `module:<module>@35` (lines 35-35)
+
+```python
+from ._sql_util import get_file_transfer_type
+```
+
+## `src/snowflake/connector/gcs_storage_client.py` — `class:SnowflakeGCSRestClient` (lines 48-395)
+
+```python
+class SnowflakeGCSRestClient(SnowflakeStorageClient):
+    def __init__(
+        self,
+        meta: SnowflakeFileMeta,
+        credentials: StorageCredential,
+        stage_info: dict[str, Any],
+        cnx: SnowflakeConnection,
+        command: str,
+        use_s3_regional_url=False,
+    ) -> None:
+        """Creates a client object with given stage credentials.
+
+        Args:
+            stage_info: Access credentials and info of a stage.
+
+        Returns:
+            The client to communicate with GCS.
+        """
+        super().__init__(
+            meta, stage_info, -1, credentials=credentials, chunked_transfer=False
+        )
+        self.stage_info = stage_info
+        self._command = command
+        self.meta = meta
+        self._cursor = cnx.cursor()
+        # presigned_url in meta is for downloading
+        self.presigned_url: str = meta.presigned_url or stage_info.get("presignedUrl")
+        self.security_token = credentials.creds.get("GCS_ACCESS_TOKEN")
+
+        if self.security_token:
+            logger.debug(f"len(GCS_ACCESS_TOKEN): {len(self.security_token)}")
+        else:
+            logger.debug("No access token received from GS, requesting presigned url")
+            self._update_presigned_url()
+
+    def _has_expired_token(self, response: requests.Response) -> bool:
+        return self.security_token and response.status_code == 401
+
+    def _has_expired_presigned_url(self, response: requests.Response) -> bool:
+        # Presigned urls can be generated for any xml-api operation
+        # offered by GCS. Hence the error codes expected are similar
+        # to xml api.
+        # https://cloud.google.com/storage/docs/xml-api/reference-status
+
+        presigned_url_expired = (
+            not self.security_token
+        ) and response.status_code == 400
+        if presigned_url_expired and self.last_err_is_presigned_url:
+            logger.debug("Presigned url expiration error two times in a row.")
+            response.raise_for_status()
+        self.last_err_is_presigned_url = presigned_url_expired
+        return presigned_url_expired
+
+    def _upload_chunk(self, chunk_id: int, chunk: bytes) -> None:
+        meta = self.meta
+
+        content_encoding = ""
+        if meta.dst_compression_type is not None:
+            content_encoding = meta.dst_compression_type.name.lower()
+
+        # We set the contentEncoding to blank for GZIP files. We don't
+        # want GCS to think our gzip files are gzips because it makes
+        # them download uncompressed, and none of the other providers do
+        # that. There's essentially no way for us to prevent that
+        # behavior. Bad Google.
+        if content_encoding and content_encoding == "gzip":
+            content_encoding = ""
+
+        gcs_headers = {
+            HTTP_HEADER_CONTENT_ENCODING: content_encoding,
+            GCS_METADATA_SFC_DIGEST: meta.sha256_digest,
+        }
+
+        if self.encryption_metadata:
+            gcs_headers.update(
+                {
+                    GCS_METADATA_ENCRYPTIONDATAPROP: json.dumps(
+                        {
+                            "EncryptionMode": "FullBlob",
+                            "WrappedContentKey": {
+                                "KeyId": "symmKey1",
+                                "EncryptedKey": self.encryption_metadata.key,
+                                "Algorithm": "AES_CBC_256",
+                            },
+                            "EncryptionAgent": {
+                                "Protocol": "1.0",
+                                "EncryptionAlgorithm": "AES_CBC_256",
+                            },
+                            "ContentEncryptionIV": self.encryption_metadata.iv,
+                            "KeyWrappingMetadata": {"EncryptionLibrary": "Java 5.3.0"},
+                        }
+                    ),
+                    GCS_METADATA_MATDESC_KEY: self.encryption_metadata.matdesc,
+                }
+            )
+
+        def generate_url_and_rest_args() -> tuple[
+            str, dict[str, dict[str | Any, str | None] | bytes]
+        ]:
+            if not self.presigned_url:
+                upload_url = self.generate_file_url(
+                    self.stage_info["location"], meta.dst_file_name.lstrip("/")
+                )
+                access_token = self.security_token
+            else:
+                upload_url = self.presigned_url
+                access_token: str | None = None
+            if access_token:
+                gcs_headers.update({"Authorization": f"Bearer {access_token}"})
+            rest_args = {"headers": gcs_headers, "data": chunk}
+            return upload_url, rest_args
+
+        response = self._send_request_with_retry(
+            "PUT", generate_url_and_rest_args, chunk_id
+        )
+        response.raise_for_status()
+        meta.gcs_file_header_digest = gcs_headers[GCS_METADATA_SFC_DIGEST]
+        meta.gcs_file_header_content_length = meta.upload_size
+        meta.gcs_file_header_encryption_metadata = json.loads(
+            gcs_headers.get(GCS_METADATA_ENCRYPTIONDATAPROP, "null")
+        )
+
+    def download_chunk(self, chunk_id: int) -> None:
+        meta = self.meta
+
+        def generate_url_and_rest_args() -> tuple[
+            str, dict[str, dict[str, str] | bool]
+        ]:
+            gcs_headers = {}
+            if not self.presigned_url:
+                download_url = self.generate_file_url(
+                    self.stage_info["location"], meta.src_file_name.lstrip("/")
+                )
+                access_token = self.security_token
+                gcs_headers["Authorization"] = f"Bearer {access_token}"
+            else:
+                download_url = self.presigned_url
+            rest_args = {"headers": gcs_headers, "stream": True}
+            return download_url, rest_args
+
+        response = self._send_request_with_retry(
+            "GET", generate_url_and_rest_args, chunk_id
+        )
+        response.raise_for_status()
+
+        self.write_downloaded_chunk(chunk_id, response.content)
+
+        encryption_metadata = None
+
+        if response.headers.get(GCS_METADATA_ENCRYPTIONDATAPROP, None):
+            encryptiondata = json.loads(
+                response.headers[GCS_METADATA_ENCRYPTIONDATAPROP]
+            )
+
+            if encryptiondata:
+                encryption_metadata = EncryptionMetadata(
+                    key=encryptiondata["WrappedContentKey"]["EncryptedKey"],
+                    iv=encryptiondata["ContentEncryptionIV"],
+                    matdesc=response.headers[GCS_METADATA_MATDESC_KEY]
+                    if GCS_METADATA_MATDESC_KEY in response.headers
+                    else None,
+                )
+
+        meta.gcs_file_header_digest = response.headers.get(GCS_METADATA_SFC_DIGEST)
+        meta.gcs_file_header_content_length = len(response.content)
+        meta.gcs_file_header_encryption_metadata = encryption_metadata
+
+    def finish_download(self) -> None:
+        super().finish_download()
+        # Sadly, we can only determine the src file size after we've
+        # downloaded it, unlike the other cloud providers where the
+        # metadata can be read beforehand.
+        self.meta.src_file_size = os.path.getsize(self.intermediate_dst_path)
+
+    def _update_presigned_url(self) -> None:
+        """Updates the file metas with presigned urls if any.
+
+        Currently only the file metas generated for PUT/GET on a GCP account need the presigned urls.
+        """
+        logger.debug("Updating presigned url")
+
+        # Rewrite the command such that a new PUT call is made for each file
+        # represented by the regex (if present) separately. This is the only
+        # way to get the presigned url for that file.
+        file_path_to_be_replaced = self._get_local_file_path_from_put_command()
+
+        if not file_path_to_be_replaced:
+            # This prevents GET statements to proceed
+            return
+
+        # At this point the connector has already figured out and
+        # validated that the local file exists and has also decided
+        # upon the destination file name and the compression type.
+        # The only thing that's left to do is to get the presigned
+        # url for the destination file. If the command originally
+        # referred to a single file, then the presigned url got in
+        # that case is simply ignore, since the file name is not what
+        # we want.
+
+        # GS only looks at the file name at the end of local file
+        # path to figure out the remote object name. Hence the prefix
+        # for local path is not necessary in the reconstructed command.
+        file_path_to_replace_with = self.meta.dst_file_name
+        command_with_single_file = self._command
+        command_with_single_file = command_with_single_file.replace(
+            file_path_to_be_replaced, file_path_to_replace_with
+        )
+
+        logger.debug("getting presigned url for %s", file_path_to_replace_with)
+        ret = self._cursor._execute_helper(command_with_single_file)
+
+        stage_info = ret.get("data", dict()).get("stageInfo", dict())
+        self.meta.presigned_url = stage_info.get("presignedUrl")
+        self.presigned_url = stage_info.get("presignedUrl")
+
+    def _get_local_file_path_from_put_command(self) -> str | None:
+        """Get the local file path from PUT command (Logic adopted from JDBC, written by Polita).
+
+        Args:
+            command: Command to be parsed and get the local file path out of.
+
+        Returns:
+            The local file path.
+        """
+        command = self._command
+        if FILE_PROTOCOL not in self._command or not is_put_statement(command):
+            return None
+
+        file_path_begin_index = command.find(FILE_PROTOCOL)
+        is_file_path_quoted = command[file_path_begin_index - 1] == "'"
+        file_path_begin_index += len(FILE_PROTOCOL)
+
+        file_path = ""
+
+        if is_file_path_quoted:
+            file_path_end_index = command.find("'", file_path_begin_index)
+
+            if file_path_end_index > file_path_begin_index:
+                file_path = command[file_path_begin_index:file_path_end_index]
+        else:
+            index_list = []
+            for delimiter in [" ", "\n", ";"]:
+                index = command.find(delimiter, file_path_begin_index)
+                if index != -1:
+                    index_list += [index]
+
+            file_path_end_index = min(index_list) if index_list else -1
+
+            if file_path_end_index > file_path_begin_index:
+                file_path = command[file_path_begin_index:file_path_end_index]
+            elif file_path_end_index == -1:
+                file_path = command[file_path_begin_index:]
+
+        return file_path
+
+    def get_file_header(self, filename: str) -> FileHeader | None:
+        """Gets the remote file's metadata.
+
+        Args:
+            filename: Not applicable to GCS.
+
+        Returns:
+            The file header, with expected properties populated or None, based on how the request goes with the
+            storage provider.
+
+        Notes:
+            Sometimes this method is called to verify that the file has indeed been uploaded. In cases of presigned
+            url, we have no way of verifying that, except with the http status code of 200 which we have already
+            confirmed and set the meta.result_status = UPLOADED/DOWNLOADED.
+        """
+        meta = self.meta
+        if (
+            meta.result_status == ResultStatus.UPLOADED
+            or meta.result_status == ResultStatus.DOWNLOADED
+        ):
+            return FileHeader(
+                digest=meta.gcs_file_header_digest,
+                content_length=meta.gcs_file_header_content_length,
+                encryption_metadata=meta.gcs_file_header_encryption_metadata,
+            )
+        elif self.presigned_url:
+            meta.result_status = ResultStatus.NOT_FOUND_FILE
+        else:
+
+            def generate_url_and_authenticated_headers():
+                url = self.generate_file_url(
+                    self.stage_info["location"], filename.lstrip("/")
+                )
+                gcs_headers = {"Authorization": f"Bearer {self.security_token}"}
+                rest_args = {"headers": gcs_headers}
+                return url, rest_args
+
+            retry_id = "HEAD"
+            self.retry_count[retry_id] = 0
+            response = self._send_request_with_retry(
+                "HEAD", generate_url_and_authenticated_headers, retry_id
+            )
+            if response.status_code == 404:
+                meta.result_status = ResultStatus.NOT_FOUND_FILE
+                return None
+            elif response.status_code == 200:
+                digest = response.headers.get(GCS_METADATA_SFC_DIGEST, None)
+                content_length = int(response.headers.get("content-length", "0"))
+
+                encryption_metadata = EncryptionMetadata("", "", "")
+                if response.headers.get(GCS_METADATA_ENCRYPTIONDATAPROP, None):
+                    encryption_data = json.loads(
+                        response.headers[GCS_METADATA_ENCRYPTIONDATAPROP]
+                    )
+
+                    if encryption_data:
+                        encryption_metadata = EncryptionMetadata(
+                            key=encryption_data["WrappedContentKey"]["EncryptedKey"],
+                            iv=encryption_data["ContentEncryptionIV"],
+                            matdesc=response.headers[GCS_METADATA_MATDESC_KEY]
+                            if GCS_METADATA_MATDESC_KEY in response.headers
+                            else None,
+                        )
+                meta.result_status = ResultStatus.UPLOADED
+                return FileHeader(
+                    digest=digest,
+                    content_length=content_length,
+                    encryption_metadata=encryption_metadata,
+                )
+            response.raise_for_status()
+            return None
+
+    @staticmethod
+    def extract_bucket_name_and_path(stage_location: str) -> GcsLocation:
+        container_name = stage_location
+        path = ""
+
+        # split stage location as bucket name and path
+        if "/" in stage_location:
+            container_name = stage_location[0 : stage_location.index("/")]
+            path = stage_location[stage_location.index("/") + 1 :]
+            if path and not path.endswith("/"):
+                path += "/"
+
+        return GcsLocation(bucket_name=container_name, path=path)
+
+    @staticmethod
+    def generate_file_url(stage_location: str, filename: str) -> str:
+        gcs_location = SnowflakeGCSRestClient.extract_bucket_name_and_path(
+            stage_location
+        )
+        full_file_path = f"{gcs_location.path}{filename}"
+        return f"https://storage.googleapis.com/{gcs_location.bucket_name}/{quote(full_file_path)}"
+```
+
+## `src/snowflake/connector/gcs_storage_client.py` — `function:SnowflakeGCSRestClient._get_local_file_path_from_put_command` (lines 263-301)
+
+```python
+    def _get_local_file_path_from_put_command(self) -> str | None:
+        """Get the local file path from PUT command (Logic adopted from JDBC, written by Polita).
+
+        Args:
+            command: Command to be parsed and get the local file path out of.
+
+        Returns:
+            The local file path.
+        """
+        command = self._command
+        if FILE_PROTOCOL not in self._command or not is_put_statement(command):
+            return None
+
+        file_path_begin_index = command.find(FILE_PROTOCOL)
+        is_file_path_quoted = command[file_path_begin_index - 1] == "'"
+        file_path_begin_index += len(FILE_PROTOCOL)
+
+        file_path = ""
+
+        if is_file_path_quoted:
+            file_path_end_index = command.find("'", file_path_begin_index)
+
+            if file_path_end_index > file_path_begin_index:
+                file_path = command[file_path_begin_index:file_path_end_index]
+        else:
+            index_list = []
+            for delimiter in [" ", "\n", ";"]:
+                index = command.find(delimiter, file_path_begin_index)
+                if index != -1:
+                    index_list += [index]
+
+            file_path_end_index = min(index_list) if index_list else -1
+
+            if file_path_end_index > file_path_begin_index:
+                file_path = command[file_path_begin_index:file_path_end_index]
+            elif file_path_end_index == -1:
+                file_path = command[file_path_begin_index:]
+
+        return file_path
+```
+
+## `src/snowflake/connector/gcs_storage_client.py` — `module:<module>@13` (lines 13-13)
+
+```python
+from ._sql_util import is_put_statement
+```
+
+## `test/unit/test_cursor.py` — `function:test_get_filetransfer_type` (lines 27-51)
+
+```python
+def test_get_filetransfer_type(sql, _type):
+    assert SnowflakeCursor.get_file_transfer_type(sql) == _type
+```

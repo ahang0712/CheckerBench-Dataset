@@ -1,0 +1,26 @@
+diff --git a/drivers/firmware/dmi-sysfs.c b/drivers/firmware/dmi-sysfs.c
+index 9b6ce172175c..ed5aff0a4204 100644
+--- a/drivers/firmware/dmi-sysfs.c
++++ b/drivers/firmware/dmi-sysfs.c
+@@ -603,16 +603,16 @@ static void __init dmi_sysfs_register_handle(const struct dmi_header *dh,
+ 	*ret = kobject_init_and_add(&entry->kobj, &dmi_sysfs_entry_ktype, NULL,
+ 				    "%d-%d", dh->type, entry->instance);
+ 
+-	if (*ret) {
+-		kobject_put(&entry->kobj);
+-		return;
+-	}
+-
+ 	/* Thread on the global list for cleanup */
+ 	spin_lock(&entry_list_lock);
+ 	list_add_tail(&entry->list, &entry_list);
+ 	spin_unlock(&entry_list_lock);
+ 
++	if (*ret) {
++		kobject_put(&entry->kobj);
++		return;
++	}
++
+ 	/* Handle specializations by type */
+ 	switch (dh->type) {
+ 	case DMI_ENTRY_SYSTEM_EVENT_LOG:

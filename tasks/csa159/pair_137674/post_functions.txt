@@ -1,0 +1,319 @@
+### File: src/db.c
+```c
+static unsigned int __db_chain_arg_priority(const struct db_arg_chain_tree *a)
+{
+	return (a->arg << 1) + (a->arg_h_flg ? 1 : 0);
+}
+
+static unsigned int __db_chain_op_priority(enum scmp_compare op)
+{
+	/* the distinction between LT/LT and GT/GE is mostly to make the
+	 * ordering as repeatable as possible regardless of the order in which
+	 * the rules are added */
+	switch (op) {
+	case SCMP_CMP_MASKED_EQ:
+	case SCMP_CMP_EQ:
+	case SCMP_CMP_NE:
+		return 3;
+	case SCMP_CMP_LE:
+	case SCMP_CMP_LT:
+		return 2;
+	case SCMP_CMP_GE:
+	case SCMP_CMP_GT:
+		return 1;
+	default:
+		return 0;
+	}
+}
+
+static bool _db_chain_lt(const struct db_arg_chain_tree *a,
+			 const struct db_arg_chain_tree *b)
+{
+	unsigned int a_arg, b_arg;
+	unsigned int a_op, b_op;
+
+	a_arg = __db_chain_arg_priority(a);
+	b_arg = __db_chain_arg_priority(b);
+	if (a_arg < b_arg)
+		return true;
+	else if (a_arg > b_arg)
+		return false;
+
+	a_op = __db_chain_op_priority(a->op_orig);
+	b_op = __db_chain_op_priority(b->op_orig);
+	if (a_op < b_op)
+		return true;
+	else if (a_op > b_op)
+		return false;
+
+	/* NOTE: at this point the arg and op priorities are equal */
+
+	switch (a->op_orig) {
+	case SCMP_CMP_LE:
+	case SCMP_CMP_LT:
+		/* in order to ensure proper ordering for LT/LE comparisons we
+		 * need to invert the argument value so smaller values come
+		 * first */
+		if (a->datum > b->datum)
+			return true;
+		break;
+	default:
+		if (a->datum < b->datum)
+			return true;
+		break;
+	}
+
+	return false;
+}
+
+static bool _db_chain_eq(const struct db_arg_chain_tree *a,
+			 const struct db_arg_chain_tree *b)
+{
+	unsigned int a_arg, b_arg;
+
+	a_arg = __db_chain_arg_priority(a);
+	b_arg = __db_chain_arg_priority(b);
+
+	return ((a_arg == b_arg) && (a->op == b->op) &&
+		(a->datum == b->datum) && (a->mask == b->mask));
+}
+
+static bool _db_chain_leaf(const struct db_arg_chain_tree *iter)
+{
+	return (iter->nxt_t == NULL && iter->nxt_f == NULL);
+}
+
+static bool _db_chain_zombie(const struct db_arg_chain_tree *iter)
+{
+	return (_db_chain_leaf(iter) &&
+		!(iter->act_t_flg) && !(iter->act_f_flg));
+}
+
+static struct db_arg_chain_tree *_db_node_get(struct db_arg_chain_tree *node)
+{
+	if (node != NULL)
+		node->refcnt++;
+	return node;
+}
+
+static unsigned int _db_level_clean(struct db_arg_chain_tree *node)
+{
+	int cnt = 0;
+	unsigned int links;
+	struct db_arg_chain_tree *n = node;
+	struct db_arg_chain_tree *start;
+
+	while (n->lvl_prv)
+		n = n->lvl_prv;
+	start = n;
+
+	while (n != NULL) {
+		links = 0;
+		if (n->lvl_prv)
+			links++;
+		if (n->lvl_nxt)
+			links++;
+
+		if (n->refcnt > links)
+			return cnt;
+
+		n = n->lvl_nxt;
+	}
+
+	n = start;
+	while (n != NULL)
+		cnt += _db_node_put(&n);
+
+	return cnt;
+}
+
+static unsigned int _db_node_put(struct db_arg_chain_tree **node)
+{
+	unsigned int cnt = 0;
+	struct db_arg_chain_tree *n = *node;
+	struct db_arg_chain_tree *lvl_p, *lvl_n, *nxt_t, *nxt_f;
+
+	if (n == NULL)
+		return 0;
+
+	if (--(n->refcnt) == 0) {
+		lvl_p = n->lvl_prv;
+		lvl_n = n->lvl_nxt;
+		nxt_t = n->nxt_t;
+		nxt_f = n->nxt_f;
+
+		/* split the current level */
+		/* NOTE: we still hold a ref for both lvl_p and lvl_n */
+		if (lvl_p)
+			lvl_p->lvl_nxt = NULL;
+		if (lvl_n)
+			lvl_n->lvl_prv = NULL;
+
+		/* drop refcnts on the current level */
+		if (lvl_p)
+			cnt += _db_node_put(&lvl_p);
+		if (lvl_n)
+			cnt += _db_node_put(&lvl_n);
+
+		/* re-link current level if it still exists */
+		if (lvl_p)
+			lvl_p->lvl_nxt = _db_node_get(lvl_n);
+		if (lvl_n)
+			lvl_n->lvl_prv = _db_node_get(lvl_p);
+
+		/* update caller's pointer */
+		if (lvl_p)
+			*node = lvl_p;
+		else if (lvl_n)
+			*node = lvl_n;
+		else
+			*node = NULL;
+
+		/* drop the next level(s) */
+		cnt += _db_tree_put(&nxt_t);
+		cnt += _db_tree_put(&nxt_f);
+
+		/* cleanup and accounting */
+		free(n);
+		cnt++;
+	}
+
+	return cnt;
+}
+
+static int _db_tree_prune(struct db_arg_chain_tree **existing,
+			  struct db_arg_chain_tree *new,
+			  struct db_iter_state *state)
+{
+	int cnt = 0;
+	struct db_iter_state state_nxt;
+	struct db_iter_state state_new = *state;
+	struct db_arg_chain_tree *x_iter_next;
+	struct db_arg_chain_tree *x_iter = *existing;
+	struct db_arg_chain_tree *n_iter = new;
+
+	/* check if either tree is finished */
+	if (n_iter == NULL || x_iter == NULL)
+		goto prune_return;
+
+	/* bail out if we have a broken match */
+	if ((state->flags & _DB_IST_M_MATCHSET) == _DB_IST_MATCH_ONCE)
+		goto prune_return;
+
+	/* get to the start of the existing level */
+	while (x_iter->lvl_prv)
+		x_iter = x_iter->lvl_prv;
+
+	/* NOTE: a few comments on the code below ...
+	 * 1) we need to take a reference before we go down a level in case
+	 *    we end up dropping the sub-tree (see the _db_node_get() calls)
+	 * 2) since the new tree really only has one branch, we can only ever
+	 *    match on one branch in the existing tree, if we "hit" then we
+	 *    can bail on the other branches */
+
+	do {
+		/* store this now in case we remove x_iter */
+		x_iter_next = x_iter->lvl_nxt;
+
+		/* compare the two nodes */
+		if (_db_chain_eq(x_iter, n_iter)) {
+			/* we have a match */
+			state_new.flags |= _DB_IST_M_MATCHSET;
+
+			/* check if either tree is finished */
+			if (_db_chain_leaf(n_iter))
+				state_new.flags |= _DB_IST_N_FINISHED;
+			if (_db_chain_leaf(x_iter))
+				state_new.flags |= _DB_IST_X_FINISHED;
+
+			/* don't remove nodes if we have more actions/levels */
+			if ((x_iter->act_t_flg || x_iter->nxt_t) &&
+			    !(n_iter->act_t_flg || n_iter->nxt_t))
+				goto prune_return;
+			if ((x_iter->act_f_flg || x_iter->nxt_f) &&
+			    !(n_iter->act_f_flg || n_iter->nxt_f))
+				goto prune_return;
+
+			/* if finished, compare actions */
+			if ((state_new.flags & _DB_IST_N_FINISHED) &&
+			    (state_new.flags & _DB_IST_X_FINISHED)) {
+				if (n_iter->act_t_flg != x_iter->act_t_flg)
+					goto prune_return;
+				if (n_iter->act_t != x_iter->act_t)
+					goto prune_return;
+
+				if (n_iter->act_f_flg != x_iter->act_f_flg)
+					goto prune_return;
+				if (n_iter->act_f != x_iter->act_f)
+					goto prune_return;
+			}
+
+			/* check next level */
+			if (n_iter->nxt_t) {
+				_db_node_get(x_iter);
+				state_nxt = *state;
+				state_nxt.flags |= _DB_IST_M_MATCHSET;
+				cnt += _db_tree_prune(&x_iter->nxt_t,
+						      n_iter->nxt_t,
+						      &state_nxt);
+				cnt += _db_node_put(&x_iter);
+				if (state_nxt.flags & _DB_IST_MATCH) {
+					state_new.flags |= state_nxt.flags;
+					/* don't return yet, we need to check
+					 * the current node */
+				}
+				if (x_iter == NULL)
+					goto prune_next_node;
+			}
+			if (n_iter->nxt_f) {
+				_db_node_get(x_iter);
+				state_nxt = *state;
+				state_nxt.flags |= _DB_IST_M_MATCHSET;
+				cnt += _db_tree_prune(&x_iter->nxt_f,
+						      n_iter->nxt_f,
+						      &state_nxt);
+				cnt += _db_node_put(&x_iter);
+				if (state_nxt.flags & _DB_IST_MATCH) {
+					state_new.flags |= state_nxt.flags;
+					/* don't return yet, we need to check
+					 * the current node */
+				}
+				if (x_iter == NULL)
+					goto prune_next_node;
+			}
+
+			/* remove the node? */
+			if (!_db_tree_act_check(x_iter, state_new.action) &&
+			    (state_new.flags & _DB_IST_MATCH) &&
+			    (state_new.flags & _DB_IST_N_FINISHED) &&
+			    (state_new.flags & _DB_IST_X_PREFIX)) {
+				/* yes - the new tree is "shorter" */
+				cnt += _db_tree_remove(&state->sx->chains,
+						       x_iter);
+				if (state->sx->chains == NULL)
+					goto prune_return;
+			} else if (!_db_tree_act_check(x_iter, state_new.action)
+				   && (state_new.flags & _DB_IST_MATCH) &&
+				   (state_new.flags & _DB_IST_X_FINISHED) &&
+				   (state_new.flags & _DB_IST_N_PREFIX)) {
+				/* no - the new tree is "longer" */
+				goto prune_return;
+			}
+		} else if (_db_chain_lt(x_iter, n_iter)) {
+			/* bail if we have a prefix on the new tree */
+			if (state->flags & _DB_IST_N_PREFIX)
+				goto prune_return;
+
+			/* check the next level in the existing tree */
+			if (x_iter->nxt_t) {
+				_db_node_get(x_iter);
+				state_nxt = *state;
+				state_nxt.flags &= ~_DB_IST_MATCH;
+				state_nxt.flags |= _DB_IST_X_PREFIX;
+				cnt += _db_tree_prune(&x_iter->nxt_t, n_iter,
+						      &state_nxt);
+				cnt += _db_node_put(&x_iter);
+				if (state_nxt.flags & _DB_IS
+
+// ... (18701 more chars)
+```

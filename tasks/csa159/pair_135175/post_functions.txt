@@ -1,0 +1,250 @@
+### File: src/libical/icalparser.c
+```c
+icalcomponent *icalparser_add_line(icalparser *parser, char *line)
+{
+    char *str;
+    char *end;
+    int vcount = 0;
+    icalproperty *prop;
+    icalproperty_kind prop_kind;
+    icalvalue *value;
+    icalvalue_kind value_kind = ICAL_NO_VALUE;
+
+    icalerror_check_arg_rz((parser != 0), "parser");
+
+    if (line == 0) {
+        parser->state = ICALPARSER_ERROR;
+        return 0;
+    }
+
+    if (line_is_blank(line) == 1) {
+        return 0;
+    }
+
+    /* Begin by getting the property name at the start of the line. The
+       property name may end up being "BEGIN" or "END" in which case it
+       is not really a property, but the marker for the start or end of
+       a component */
+
+    end = 0;
+    str = parser_get_prop_name(line, &end);
+
+    if (str == 0 || *str == '\0') {
+        /* Could not get a property name */
+        icalcomponent *tail = pvl_data(pvl_tail(parser->components));
+
+        if (tail) {
+            insert_error(
+                tail, line,
+                "Got a data line, but could not find a property name or component begin tag",
+                ICAL_XLICERRORTYPE_COMPONENTPARSEERROR);
+        }
+        tail = 0;
+        parser->state = ICALPARSER_ERROR;
+        icalmemory_free_buffer(str);
+        str = NULL;
+        return 0;
+    }
+
+    /**********************************************************************
+     * Handle begin and end of components
+     **********************************************************************/
+    /* If the property name is BEGIN or END, we are actually
+       starting or ending a new component */
+
+    if (strcasecmp(str, "BEGIN") == 0) {
+        icalcomponent *c;
+        icalcomponent_kind comp_kind;
+
+        parser->level++;
+        icalmemory_free_buffer(str);
+        str = parser_get_next_value(end, &end, value_kind);
+
+        comp_kind = icalenum_string_to_component_kind(str);
+
+        c = icalcomponent_new(comp_kind);
+
+        if (c == 0) {
+            c = icalcomponent_new(ICAL_XLICINVALID_COMPONENT);
+            insert_error(c, str, "Parse error in component name",
+                         ICAL_XLICERRORTYPE_COMPONENTPARSEERROR);
+        }
+
+        pvl_push(parser->components, c);
+
+        parser->state = ICALPARSER_BEGIN_COMP;
+
+        icalmemory_free_buffer(str);
+        str = NULL;
+        return 0;
+
+    } else if (strcasecmp(str, "END") == 0) {
+        icalcomponent *tail;
+
+        parser->level--;
+        icalmemory_free_buffer(str);
+        str = parser_get_next_value(end, &end, value_kind);
+
+        /* Pop last component off of list and add it to the second-to-last */
+        parser->root_component = pvl_pop(parser->components);
+
+        tail = pvl_data(pvl_tail(parser->components));
+
+        if (tail != 0) {
+            icalcomponent_add_component(tail, parser->root_component);
+        }
+
+        tail = 0;
+        icalmemory_free_buffer(str);
+        str = NULL;
+
+        /* Return the component if we are back to the 0th level */
+        if (parser->level == 0) {
+            icalcomponent *rtrn;
+
+            if (pvl_count(parser->components) != 0) {
+                /* There are still components on the stack -- this means
+                   that one of them did not have a proper "END" */
+                pvl_push(parser->components, parser->root_component);
+                (void)icalparser_clean(parser); /* may reset parser->root_component */
+            }
+
+            assert(pvl_count(parser->components) == 0);
+
+            parser->state = ICALPARSER_SUCCESS;
+            rtrn = parser->root_component;
+            parser->root_component = 0;
+            return rtrn;
+
+        } else {
+            parser->state = ICALPARSER_END_COMP;
+            return 0;
+        }
+    }
+
+    /* There is no point in continuing if we have not seen a
+       component yet */
+
+    if (pvl_data(pvl_tail(parser->components)) == 0) {
+        parser->state = ICALPARSER_ERROR;
+        icalmemory_free_buffer(str);
+        str = NULL;
+        return 0;
+    }
+
+    /**********************************************************************
+     * Handle property names
+     **********************************************************************/
+
+    /* At this point, the property name really is a property name,
+       (Not a component name) so make a new property and add it to
+       the component */
+
+    prop_kind = icalproperty_string_to_kind(str);
+
+    prop = icalproperty_new(prop_kind);
+
+    if (prop != 0) {
+        icalcomponent *tail = pvl_data(pvl_tail(parser->components));
+
+        if (prop_kind == ICAL_X_PROPERTY) {
+            icalproperty_set_x_name(prop, str);
+        }
+
+        icalcomponent_add_property(tail, prop);
+
+        /* Set the value kind for the default for this type of
+           property. This may be re-set by a VALUE parameter */
+        value_kind = icalproperty_kind_to_value_kind(icalproperty_isa(prop));
+
+    } else {
+        icalcomponent *tail = pvl_data(pvl_tail(parser->components));
+
+        insert_error(tail, str, "Parse error in property name",
+                     ICAL_XLICERRORTYPE_PROPERTYPARSEERROR);
+
+        tail = 0;
+        parser->state = ICALPARSER_ERROR;
+        icalmemory_free_buffer(str);
+        str = NULL;
+        return 0;
+    }
+
+    icalmemory_free_buffer(str);
+    str = NULL;
+
+    /**********************************************************************
+     * Handle parameter values
+     **********************************************************************/
+
+    /* Now, add any parameters to the last property */
+
+    while (1) {
+        if (*(end - 1) == ':') {
+            /* if the last separator was a ":" and the value is a
+               URL, icalparser_get_next_parameter will find the
+               ':' in the URL, so better break now. */
+            break;
+        }
+
+        icalmemory_free_buffer(str);
+        str = parser_get_next_parameter(end, &end);
+        strstriplt(str);
+        if (str != 0) {
+            char *name_heap = 0;
+            char *pvalue_heap = 0;
+            char name_stack[TMP_BUF_SIZE];
+            char pvalue_stack[TMP_BUF_SIZE];
+            char *name = name_stack;
+            char *pvalue = pvalue_stack;
+
+            icalparameter *param = 0;
+            icalparameter_kind kind;
+            icalcomponent *tail = pvl_data(pvl_tail(parser->components));
+
+            if (!parser_get_param_name_stack(str, name_stack, sizeof(name_stack),
+                                             pvalue_stack, sizeof(pvalue_stack))) {
+                name_heap = parser_get_param_name_heap(str, &pvalue_heap);
+
+                name = name_heap;
+                pvalue = pvalue_heap;
+
+                if (name_heap == 0) {
+                    /* 'tail' defined above */
+                    insert_error(tail, str, "Cant parse parameter name",
+                                 ICAL_XLICERRORTYPE_PARAMETERNAMEPARSEERROR);
+                    tail = 0;
+                    break;
+                }
+            }
+
+            kind = icalparameter_string_to_kind(name);
+
+            if (kind == ICAL_X_PARAMETER) {
+                param = icalparameter_new(ICAL_X_PARAMETER);
+                if (param != 0) {
+                    icalparameter_set_xname(param, name);
+                    icalparameter_set_xvalue(param, pvalue);
+                }
+            } else if (kind == ICAL_IANA_PARAMETER) {
+                ical_unknown_token_handling tokHandlingSetting =
+                    ical_get_unknown_token_handling_setting();
+                if (tokHandlingSetting == ICAL_DISCARD_TOKEN) {
+                    if (name_heap) {
+                        icalmemory_free_buffer(name_heap);
+                        name_heap = 0;
+                    }
+                    if (pvalue_heap) {
+                        icalmemory_free_buffer(pvalue_heap);
+                        pvalue_heap = 0;
+                    }
+                    continue;
+                }
+
+                param = icalparameter_new(ICAL_IANA_PARAMETER);
+
+                if (param != 0) {
+                    icalparamete
+
+// ... (12351 more chars)
+```

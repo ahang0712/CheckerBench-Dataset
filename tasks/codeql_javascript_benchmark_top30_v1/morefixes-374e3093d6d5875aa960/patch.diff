@@ -1,0 +1,86 @@
+diff --git a/js/libs/ui-shared/src/context/ErrorPage.tsx b/js/libs/ui-shared/src/context/ErrorPage.tsx
+index 5035e7ec8c..248bf94480 100644
+--- a/js/libs/ui-shared/src/context/ErrorPage.tsx
++++ b/js/libs/ui-shared/src/context/ErrorPage.tsx
+@@ -7,18 +7,17 @@ import {
+   TextContent,
+ } from "@patternfly/react-core";
+ import { useTranslation } from "react-i18next";
+-import { getNetworkErrorDescription } from "../utils/errors";
++import { getNetworkErrorMessage } from "../utils/errors";
+ 
+ type ErrorPageProps = {
+   error?: unknown;
+ };
+ 
+ export const ErrorPage = (props: ErrorPageProps) => {
+-  const { t } = useTranslation();
++  const { t, i18n } = useTranslation();
+   const error = props.error;
+-  const errorMessage =
+-    getErrorMessage(error) ||
+-    getNetworkErrorDescription(error)?.replace(/\+/g, " ");
++  const errorMessage = getErrorMessage(error);
++  const networkErrorMessage = getNetworkErrorMessage(error);
+   console.error(error);
+ 
+   function onRetry() {
+@@ -29,7 +28,7 @@ export const ErrorPage = (props: ErrorPageProps) => {
+     <Page>
+       <Modal
+         variant={ModalVariant.small}
+-        title={errorMessage ? "" : t("somethingWentWrong")}
++        title={t("somethingWentWrong")}
+         titleIconVariant="danger"
+         showClose={false}
+         isOpen
+@@ -42,6 +41,8 @@ export const ErrorPage = (props: ErrorPageProps) => {
+         <TextContent>
+           {errorMessage ? (
+             <Text>{t(errorMessage)}</Text>
++          ) : networkErrorMessage && i18n.exists(networkErrorMessage) ? (
++            <Text>{t(networkErrorMessage)}</Text>
+           ) : (
+             <Text>{t("somethingWentWrongDescription")}</Text>
+           )}
+@@ -52,10 +53,6 @@ export const ErrorPage = (props: ErrorPageProps) => {
+ };
+ 
+ function getErrorMessage(error: unknown): string | null {
+-  if (typeof error === "string") {
+-    return error;
+-  }
+-
+   if (error instanceof Error) {
+     return error.message;
+   }
+diff --git a/js/libs/ui-shared/src/context/KeycloakContext.tsx b/js/libs/ui-shared/src/context/KeycloakContext.tsx
+index 060015e0f4..5746c6aefb 100644
+--- a/js/libs/ui-shared/src/context/KeycloakContext.tsx
++++ b/js/libs/ui-shared/src/context/KeycloakContext.tsx
+@@ -67,7 +67,7 @@ export const KeycloakProvider = <T extends BaseEnvironment>({
+ 
+     const init = () =>
+       keycloak.init({
+-        onLoad: "check-sso",
++        onLoad: "login-required",
+         pkceMethod: "S256",
+         responseMode: "query",
+         scope: environment.scope,
+@@ -80,14 +80,8 @@ export const KeycloakProvider = <T extends BaseEnvironment>({
+     calledOnce.current = true;
+   }, [keycloak]);
+ 
+-  const searchParams = new URLSearchParams(window.location.search);
+-
+-  if (error || searchParams.get("error_description")) {
+-    return (
+-      <ErrorPage
+-        error={error ? error : searchParams.get("error_description")}
+-      />
+-    );
++  if (error) {
++    return <ErrorPage error={error} />;
+   }
+ 
+   if (!init) {

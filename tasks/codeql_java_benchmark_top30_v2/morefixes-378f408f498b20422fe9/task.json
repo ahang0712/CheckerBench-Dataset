@@ -1,0 +1,46 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-378f408f498b20422fe9",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-378f408f498b20422fe9",
+    "project_id": "morefixes__codehaus-plexus__plexus-utils",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "src/main/java/org/codehaus/plexus/util/Expand.java",
+    "src/test/java/org/codehaus/plexus/util/ExpandTest.java"
+  ],
+  "patch_units": {
+    "before": [
+      "src/main/java/org/codehaus/plexus/util/Expand.java"
+    ],
+    "after": [
+      "src/main/java/org/codehaus/plexus/util/Expand.java",
+      "src/test/java/org/codehaus/plexus/util/ExpandTest.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/ade57626a5859aac21434632a3966cf2c18276830fdcc0b393f373ae73ad951f/database",
+      "cache_key": "ade57626a5859aac21434632a3966cf2c18276830fdcc0b393f373ae73ad951f",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/29c1e6abb0d15e29ce61d331b5eb4de825d91613225a6a54edc3e44649c01411/database",
+      "cache_key": "29c1e6abb0d15e29ce61d331b5eb4de825d91613225a6a54edc3e44649c01411",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/bb22e14ab2e5522ae05cbbe240b43186849ebd6e07df6f263d0856205f43bae5/database",
+      "cache_key": "bb22e14ab2e5522ae05cbbe240b43186849ebd6e07df6f263d0856205f43bae5",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-378f408f498b20422fe9/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-378f408f498b20422fe9/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,13 @@
+diff --git a/net/atm/clip.c b/net/atm/clip.c
+index 9c9c6c3d9886..a30c5a270545 100644
+--- a/net/atm/clip.c
++++ b/net/atm/clip.c
+@@ -429,6 +429,8 @@ static int clip_mkip(struct atm_vcc *vcc, int timeout)
+ 
+ 	if (!vcc->push)
+ 		return -EBADFD;
++	if (vcc->user_back)
++		return -EINVAL;
+ 	clip_vcc = kmalloc(sizeof(struct clip_vcc), GFP_KERNEL);
+ 	if (!clip_vcc)
+ 		return -ENOMEM;

@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-c52f0447bb0aa65cf9a4",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-c52f0447bb0aa65cf9a4",
+    "project_id": "pyvul__huggingface__transformers",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "src/transformers/utils/hub.py"
+  ],
+  "patch_units": {
+    "before": [
+      "function:download_url"
+    ],
+    "after": [
+      "function:download_url"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/81cf494d65a4193983b2e8ae4deeb3826fb74dd695cda772cae37072631bb968/database",
+      "cache_key": "81cf494d65a4193983b2e8ae4deeb3826fb74dd695cda772cae37072631bb968",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/ce3a3e419c116565aeabc5c1e6797392b9dd51353579091d3bc0307d5e30b70b/database",
+      "cache_key": "ce3a3e419c116565aeabc5c1e6797392b9dd51353579091d3bc0307d5e30b70b",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/0f697ed6bf748d0fb4d12d6aaef902c635a128d02d15997015bd35c0903dff85/database",
+      "cache_key": "0f697ed6bf748d0fb4d12d6aaef902c635a128d02d15997015bd35c0903dff85",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-c52f0447bb0aa65cf9a4/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-c52f0447bb0aa65cf9a4/ (do not mount into agent)"
+  }
+}

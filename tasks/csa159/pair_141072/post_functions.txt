@@ -1,0 +1,74 @@
+### File: drivers/infiniband/hw/qedr/verbs.c
+```c
+static struct qedr_mr *__qedr_alloc_mr(struct ib_pd *ibpd,
+				       int max_page_list_len)
+{
+	struct qedr_pd *pd = get_qedr_pd(ibpd);
+	struct qedr_dev *dev = get_qedr_dev(ibpd->device);
+	struct qedr_mr *mr;
+	int rc = -ENOMEM;
+
+	DP_DEBUG(dev, QEDR_MSG_MR,
+		 "qedr_alloc_frmr pd = %d max_page_list_len= %d\n", pd->pd_id,
+		 max_page_list_len);
+
+	mr = kzalloc(sizeof(*mr), GFP_KERNEL);
+	if (!mr)
+		return ERR_PTR(rc);
+
+	mr->dev = dev;
+	mr->type = QEDR_MR_FRMR;
+
+	rc = init_mr_info(dev, &mr->info, max_page_list_len, 1);
+	if (rc)
+		goto err0;
+
+	rc = dev->ops->rdma_alloc_tid(dev->rdma_ctx, &mr->hw_mr.itid);
+	if (rc) {
+		if (rc == -EINVAL)
+			DP_ERR(dev, "Out of MR resources\n");
+		else
+			DP_ERR(dev, "roce alloc tid returned error %d\n", rc);
+
+		goto err1;
+	}
+
+	/* Index only, 18 bit long, lkey = itid << 8 | key */
+	mr->hw_mr.tid_type = QED_RDMA_TID_FMR;
+	mr->hw_mr.key = 0;
+	mr->hw_mr.pd = pd->pd_id;
+	mr->hw_mr.local_read = 1;
+	mr->hw_mr.local_write = 0;
+	mr->hw_mr.remote_read = 0;
+	mr->hw_mr.remote_write = 0;
+	mr->hw_mr.remote_atomic = 0;
+	mr->hw_mr.mw_bind = false;
+	mr->hw_mr.pbl_ptr = 0;
+	mr->hw_mr.pbl_two_level = mr->info.pbl_info.two_layered;
+	mr->hw_mr.pbl_page_size_log = ilog2(mr->info.pbl_info.pbl_size);
+	mr->hw_mr.length = 0;
+	mr->hw_mr.vaddr = 0;
+	mr->hw_mr.phy_mr = true;
+	mr->hw_mr.dma_mr = false;
+
+	rc = dev->ops->rdma_register_tid(dev->rdma_ctx, &mr->hw_mr);
+	if (rc) {
+		DP_ERR(dev, "roce register tid returned an error %d\n", rc);
+		goto err2;
+	}
+
+	mr->ibmr.lkey = mr->hw_mr.itid << 8 | mr->hw_mr.key;
+	mr->ibmr.rkey = mr->ibmr.lkey;
+
+	DP_DEBUG(dev, QEDR_MSG_MR, "alloc frmr: %x\n", mr->ibmr.lkey);
+	return mr;
+
+err2:
+	dev->ops->rdma_free_tid(dev->rdma_ctx, mr->hw_mr.itid);
+err1:
+	qedr_free_pbl(dev, &mr->info.pbl_info, mr->info.pbl_table);
+err0:
+	kfree(mr);
+	return ERR_PTR(rc);
+}
+```

@@ -1,0 +1,57 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-3994e3622b21c396ef8a",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-3994e3622b21c396ef8a",
+    "project_id": "pyvul__rasahq__rasa",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "rasa/model.py",
+    "rasa/nlu/persistor.py",
+    "rasa/utils/io.py"
+  ],
+  "patch_units": {
+    "before": [
+      "function:unpack_model",
+      "class:Persistor",
+      "function:Persistor._decompress",
+      "module:<module>@5",
+      "module:<module>@6",
+      "function:unarchive",
+      "module:<module>@6"
+    ],
+    "after": [
+      "function:unpack_model",
+      "class:Persistor",
+      "function:Persistor._decompress",
+      "module:<module>@5",
+      "function:unarchive",
+      "module:<module>@6"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/c55507b377561f903462ad5cec29b5fc43df8b9f6e8a1eb5bc87da87c5348d2f/database",
+      "cache_key": "c55507b377561f903462ad5cec29b5fc43df8b9f6e8a1eb5bc87da87c5348d2f",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/9d2daedadeb33c7c140f4863247d20ea58e9e5a26e7947a1305e447ef40f18d3/database",
+      "cache_key": "9d2daedadeb33c7c140f4863247d20ea58e9e5a26e7947a1305e447ef40f18d3",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/b7688a4b944f994a4f8cdc0dc46c7126c07a3197c53b14714e52625daac53337/database",
+      "cache_key": "b7688a4b944f994a4f8cdc0dc46c7126c07a3197c53b14714e52625daac53337",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-3994e3622b21c396ef8a/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-3994e3622b21c396ef8a/ (do not mount into agent)"
+  }
+}

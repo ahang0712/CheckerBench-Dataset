@@ -1,0 +1,37 @@
+### File: drivers/net/wireless/ath/ath11k/ahb.c
+```c
+static int ath11k_ahb_fw_resource_deinit(struct ath11k_base *ab)
+{
+	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
+	struct iommu_domain *iommu;
+	size_t unmapped_size;
+
+	/* Chipsets not requiring MSA would have not initialized
+	 * MSA resources, return success in such cases.
+	 */
+	if (!ab->hw_params.fixed_fw_mem)
+		return 0;
+
+	if (ab_ahb->fw.use_tz)
+		return 0;
+
+	iommu = ab_ahb->fw.iommu_domain;
+
+	unmapped_size = iommu_unmap(iommu, ab_ahb->fw.msa_paddr, ab_ahb->fw.msa_size);
+	if (unmapped_size != ab_ahb->fw.msa_size)
+		ath11k_err(ab, "failed to unmap firmware: %zu\n",
+			   unmapped_size);
+
+	unmapped_size = iommu_unmap(iommu, ab_ahb->fw.ce_paddr, ab_ahb->fw.ce_size);
+	if (unmapped_size != ab_ahb->fw.ce_size)
+		ath11k_err(ab, "failed to unmap firmware CE memory: %zu\n",
+			   unmapped_size);
+
+	iommu_detach_device(iommu, ab_ahb->fw.dev);
+	iommu_domain_free(iommu);
+
+	platform_device_unregister(to_platform_device(ab_ahb->fw.dev));
+
+	return 0;
+}
+```

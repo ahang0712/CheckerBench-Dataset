@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "d2e4f1b1cba8742db66aaf77374cab7c0c7c8656",
+  "after_commit": "a2a9339e1c9deb7e1e079e12e27a0265aea8421a",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/7e364e56293bb98cae1b55fd835f5991c4e96e7d/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/7e364e56293bb98cae1b55fd835f5991c4e96e7d/compile_commands.json",
+  "changed_files": [
+    "net/bluetooth/l2cap_core.c"
+  ],
+  "commit_message": "Bluetooth: L2CAP: Fix use-after-free in l2cap_disconnect_{req,rsp}\n\nSimilar to commit d0be8347c623 (\"Bluetooth: L2CAP: Fix use-after-free\ncaused by l2cap_chan_put\"), just use l2cap_chan_hold_unless_zero to\nprevent referencing a channel that is about to be destroyed.\n\nCc: stable@kernel.org\nSigned-off-by: Luiz Augusto von Dentz <luiz.von.dentz@intel.com>\nSigned-off-by: Min Li <lm0963hack@gmail.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

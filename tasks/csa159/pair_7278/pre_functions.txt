@@ -1,0 +1,304 @@
+### File: libarchive/archive_write_disk_posix.c
+```c
+static int
+create_filesystem_object(struct archive_write_disk *a)
+{
+	/* Create the entry. */
+	const char *linkname;
+	mode_t final_mode, mode;
+	int r;
+
+	/* We identify hard/symlinks according to the link names. */
+	/* Since link(2) and symlink(2) don't handle modes, we're done here. */
+	linkname = archive_entry_hardlink(a->entry);
+	if (linkname != NULL) {
+#if !HAVE_LINK
+		return (EPERM);
+#else
+		r = link(linkname, a->name) ? errno : 0;
+		/*
+		 * New cpio and pax formats allow hardlink entries
+		 * to carry data, so we may have to open the file
+		 * for hardlink entries.
+		 *
+		 * If the hardlink was successfully created and
+		 * the archive doesn't have carry data for it,
+		 * consider it to be non-authoritative for meta data.
+		 * This is consistent with GNU tar and BSD pax.
+		 * If the hardlink does carry data, let the last
+		 * archive entry decide ownership.
+		 */
+		if (r == 0 && a->filesize <= 0) {
+			a->todo = 0;
+			a->deferred = 0;
+		} else if (r == 0 && a->filesize > 0) {
+			a->fd = open(a->name,
+				     O_WRONLY | O_TRUNC | O_BINARY | O_CLOEXEC);
+			__archive_ensure_cloexec_flag(a->fd);
+			if (a->fd < 0)
+				r = errno;
+		}
+		return (r);
+#endif
+	}
+	linkname = archive_entry_symlink(a->entry);
+	if (linkname != NULL) {
+#if HAVE_SYMLINK
+		return symlink(linkname, a->name) ? errno : 0;
+#else
+		return (EPERM);
+#endif
+	}
+
+	/*
+	 * The remaining system calls all set permissions, so let's
+	 * try to take advantage of that to avoid an extra chmod()
+	 * call.  (Recall that umask is set to zero right now!)
+	 */
+
+	/* Mode we want for the final restored object (w/o file type bits). */
+	final_mode = a->mode & 07777;
+	/*
+	 * The mode that will actually be restored in this step.  Note
+	 * that SUID, SGID, etc, require additional work to ensure
+	 * security, so we never restore them at this point.
+	 */
+	mode = final_mode & 0777 & ~a->user_umask;
+
+	switch (a->mode & AE_IFMT) {
+	default:
+		/* POSIX requires that we fall through here. */
+		/* FALLTHROUGH */
+	case AE_IFREG:
+		a->fd = open(a->name,
+		    O_WRONLY | O_CREAT | O_EXCL | O_BINARY | O_CLOEXEC, mode);
+		__archive_ensure_cloexec_flag(a->fd);
+		r = (a->fd < 0);
+		break;
+	case AE_IFCHR:
+#ifdef HAVE_MKNOD
+		/* Note: we use AE_IFCHR for the case label, and
+		 * S_IFCHR for the mknod() call.  This is correct.  */
+		r = mknod(a->name, mode | S_IFCHR,
+		    archive_entry_rdev(a->entry));
+		break;
+#else
+		/* TODO: Find a better way to warn about our inability
+		 * to restore a char device node. */
+		return (EINVAL);
+#endif /* HAVE_MKNOD */
+	case AE_IFBLK:
+#ifdef HAVE_MKNOD
+		r = mknod(a->name, mode | S_IFBLK,
+		    archive_entry_rdev(a->entry));
+		break;
+#else
+		/* TODO: Find a better way to warn about our inability
+		 * to restore a block device node. */
+		return (EINVAL);
+#endif /* HAVE_MKNOD */
+	case AE_IFDIR:
+		mode = (mode | MINIMUM_DIR_MODE) & MAXIMUM_DIR_MODE;
+		r = mkdir(a->name, mode);
+		if (r == 0) {
+			/* Defer setting dir times. */
+			a->deferred |= (a->todo & TODO_TIMES);
+			a->todo &= ~TODO_TIMES;
+			/* Never use an immediate chmod(). */
+			/* We can't avoid the chmod() entirely if EXTRACT_PERM
+			 * because of SysV SGID inheritance. */
+			if ((mode != final_mode)
+			    || (a->flags & ARCHIVE_EXTRACT_PERM))
+				a->deferred |= (a->todo & TODO_MODE);
+			a->todo &= ~TODO_MODE;
+		}
+		break;
+	case AE_IFIFO:
+#ifdef HAVE_MKFIFO
+		r = mkfifo(a->name, mode);
+		break;
+#else
+		/* TODO: Find a better way to warn about our inability
+		 * to restore a fifo. */
+		return (EINVAL);
+#endif /* HAVE_MKFIFO */
+	}
+
+	/* All the system calls above set errno on failure. */
+	if (r)
+		return (errno);
+
+	/* If we managed to set the final mode, we've avoided a chmod(). */
+	if (mode == final_mode)
+		a->todo &= ~TODO_MODE;
+	return (0);
+}
+
+static int
+check_symlinks(struct archive_write_disk *a)
+{
+#if !defined(HAVE_LSTAT)
+	/* Platform doesn't have lstat, so we can't look for symlinks. */
+	(void)a; /* UNUSED */
+	return (ARCHIVE_OK);
+#else
+	char *pn;
+	char c;
+	int r;
+	struct stat st;
+
+	/*
+	 * Guard against symlink tricks.  Reject any archive entry whose
+	 * destination would be altered by a symlink.
+	 */
+	/* Whatever we checked last time doesn't need to be re-checked. */
+	pn = a->name;
+	if (archive_strlen(&(a->path_safe)) > 0) {
+		char *p = a->path_safe.s;
+		while ((*pn != '\0') && (*p == *pn))
+			++p, ++pn;
+	}
+	/* Skip the root directory if the path is absolute. */
+	if(pn == a->name && pn[0] == '/')
+		++pn;
+	c = pn[0];
+	/* Keep going until we've checked the entire name. */
+	while (pn[0] != '\0' && (pn[0] != '/' || pn[1] != '\0')) {
+		/* Skip the next path element. */
+		while (*pn != '\0' && *pn != '/')
+			++pn;
+		c = pn[0];
+		pn[0] = '\0';
+		/* Check that we haven't hit a symlink. */
+		r = lstat(a->name, &st);
+		if (r != 0) {
+			/* We've hit a dir that doesn't exist; stop now. */
+			if (errno == ENOENT) {
+				break;
+			} else {
+				/* Note: This effectively disables deep directory
+				 * support when security checks are enabled.
+				 * Otherwise, very long pathnames that trigger
+				 * an error here could evade the sandbox.
+				 * TODO: We could do better, but it would probably
+				 * require merging the symlink checks with the
+				 * deep-directory editing. */
+				return (ARCHIVE_FAILED);
+			}
+		} else if (S_ISLNK(st.st_mode)) {
+			if (c == '\0') {
+				/*
+				 * Last element is symlink; remove it
+				 * so we can overwrite it with the
+				 * item being extracted.
+				 */
+				if (unlink(a->name)) {
+					archive_set_error(&a->archive, errno,
+					    "Could not remove symlink %s",
+					    a->name);
+					pn[0] = c;
+					return (ARCHIVE_FAILED);
+				}
+				a->pst = NULL;
+				/*
+				 * Even if we did remove it, a warning
+				 * is in order.  The warning is silly,
+				 * though, if we're just replacing one
+				 * symlink with another symlink.
+				 */
+				if (!S_ISLNK(a->mode)) {
+					archive_set_error(&a->archive, 0,
+					    "Removing symlink %s",
+					    a->name);
+				}
+				/* Symlink gone.  No more problem! */
+				pn[0] = c;
+				return (0);
+			} else if (a->flags & ARCHIVE_EXTRACT_UNLINK) {
+				/* User asked us to remove problems. */
+				if (unlink(a->name) != 0) {
+					archive_set_error(&a->archive, 0,
+					    "Cannot remove intervening symlink %s",
+					    a->name);
+					pn[0] = c;
+					return (ARCHIVE_FAILED);
+				}
+				a->pst = NULL;
+			} else {
+				archive_set_error(&a->archive, 0,
+				    "Cannot extract through symlink %s",
+				    a->name);
+				pn[0] = c;
+				return (ARCHIVE_FAILED);
+			}
+		}
+		pn[0] = c;
+		if (pn[0] != '\0')
+			pn++; /* Advance to the next segment. */
+	}
+	pn[0] = c;
+	/* We've checked and/or cleaned the whole path, so remember it. */
+	archive_strcpy(&a->path_safe, a->name);
+	return (ARCHIVE_OK);
+#endif
+}
+
+static int
+cleanup_pathname(struct archive_write_disk *a)
+{
+	char *dest, *src;
+	char separator = '\0';
+
+	dest = src = a->name;
+	if (*src == '\0') {
+		archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
+		    "Invalid empty pathname");
+		return (ARCHIVE_FAILED);
+	}
+
+#if defined(__CYGWIN__)
+	cleanup_pathname_win(a);
+#endif
+	/* Skip leading '/'. */
+	if (*src == '/') {
+		if (a->flags & ARCHIVE_EXTRACT_SECURE_NOABSOLUTEPATHS) {
+			archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
+			                  "Path is absolute");
+			return (ARCHIVE_FAILED);
+		}
+
+		separator = *src++;
+	}
+
+	/* Scan the pathname one element at a time. */
+	for (;;) {
+		/* src points to first char after '/' */
+		if (src[0] == '\0') {
+			break;
+		} else if (src[0] == '/') {
+			/* Found '//', ignore second one. */
+			src++;
+			continue;
+		} else if (src[0] == '.') {
+			if (src[1] == '\0') {
+				/* Ignore trailing '.' */
+				break;
+			} else if (src[1] == '/') {
+				/* Skip './'. */
+				src += 2;
+				continue;
+			} else if (src[1] == '.') {
+				if (src[2] == '/' || src[2] == '\0') {
+					/* Conditionally warn about '..' */
+					if (a->flags & ARCHIVE_EXTRACT_SECURE_NODOTDOT) {
+						archive_set_error(&a->archive,
+						    ARCHIVE_ERRNO_MISC,
+						    "Path contains '..'");
+						return (ARCHIVE_FAILED);
+					}
+				}
+				/*
+				 * Note: Under
+
+// ... (1073 more chars)
+```

@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "3b1088a09ec9438523c251d8435e78988824bc0d",
+  "after_commit": "5a78ac33e3cb8822da64dd1af196e83664b332b0",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/298e50ad8eb8fa12ea68bb2da45bb8ef4edcd0ec/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/298e50ad8eb8fa12ea68bb2da45bb8ef4edcd0ec/compile_commands.json",
+  "changed_files": [
+    "drivers/net/wireless/ath/ath11k/ahb.c"
+  ],
+  "commit_message": "wifi: ath11k: fix deinitialization of firmware resources\n\nCurrently, in ath11k_ahb_fw_resources_init(), iommu domain\nmapping is done only for the chipsets having fixed firmware\nmemory. Also, for such chipsets, mapping is done only if it\ndoes not have TrustZone support.\n\nDuring deinitialization, only if TrustZone support is not there,\niommu is unmapped back. However, for non fixed firmware memory\nchipsets, TrustZone support is not there and this makes the\ncondition check to true and it tries to unmap the memory which\nwas not mapped during initialization.\n\nThis leads to the following trace -\n\n[   83.198790] Unable to handle kernel NULL pointer dereference at virtual address 0000000000000008\n[   83.259537] Modules linked in: ath11k_ahb ath11k qmi_helpers\n.. snip ..\n[   83.280286] pstate: 20000005 (nzCv daif -PAN -UAO -TCO -DIT -SSBS BTYPE=--)\n[   83.287228] pc : __iommu_unmap+0x30/0x140\n[   83.293907] lr : iommu_unmap+0x5c/0xa4\n[   83.298072] sp : ffff80000b3abad0\n.. snip ..\n[   83.369175] Call trace:\n[   83.376282]  __iommu_unmap+0x30/0x140\n[   83.378541]  iommu_unmap+0x5c/0xa4\n[   83.382360]  ath11k_ahb_fw_resource_deinit.part.12+0x2c/0xac [ath11k_ahb]\n[   83.385666]  ath11k_ahb_free_resources+0x140/0x17c [ath11k_ahb]\n[   83.392521]  ath11k_ahb_shutdown+0x34/0x40 [ath11k_ahb]\n[   83.398248]  platform_shutdown+0x20/0x2c\n[   83.403455]  device_shutdown+0x16c/0x1c4\n[   83.407621]  kernel_restart_prepare+0x34/0x3c\n[   83.411529]  kernel_restart+0x14/0x74\n[   83.415781]  __do_sys_reboot+0x1c4/0x22c\n[   83.419427]  __arm64_sys_reboot+0x1c/0x24\n[   83.423420]  invoke_syscall+0x44/0xfc\n[   83.427326]  el0_svc_common.constprop.3+0xac/0xe8\n[   83.430974]  do_el0_svc+0xa0/0xa8\n[   83.435659]  el0_svc+0x1c/0x44\n[   83.438957]  el0t_64_sync_handler+0x60/0x144\n[   83.441910]  el0t_64_sync+0x15c/0x160\n[   83.446343] Code: aa0103f4 f9400001 f90027a1 d2800001 (f94006a0)\n[   83.449903] ---[ end trace 0000000000000000 ]---\n\nThis can be reproduced by probing an AHB chipset which is not\nhaving a fixed memory region. During reboot (or rmmod) trace\ncan be seen.\n\nFix this issue by adding a condition check on firmware fixed memory\nhw_param as done in the counter initialization function.\n\nTested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1\n\nFixes: f9eec4947add (\"ath11k: Add support for targets without trustzone\")\nSigned-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>\nSigned-off-by: Kalle Valo <quic_kvalo@quicinc.com>\nLink: https://lore.kernel.org/r/20230309095308.24937-1-quic_adisi@quicinc.com",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,50 @@
+### File: drivers/hid/hid-mcp2221.c
+```c
+static int mcp_smbus_write(struct mcp2221 *mcp, u16 addr,
+				u8 command, u8 *buf, u8 len, int type,
+				u8 last_status)
+{
+	int data_len, ret;
+
+	mcp->txbuf[0] = type;
+	mcp->txbuf[1] = len + 1; /* 1 is due to command byte itself */
+	mcp->txbuf[2] = 0;
+	mcp->txbuf[3] = (u8)(addr << 1);
+	mcp->txbuf[4] = command;
+
+	switch (len) {
+	case 0:
+		data_len = 5;
+		break;
+	case 1:
+		mcp->txbuf[5] = buf[0];
+		data_len = 6;
+		break;
+	case 2:
+		mcp->txbuf[5] = buf[0];
+		mcp->txbuf[6] = buf[1];
+		data_len = 7;
+		break;
+	default:
+		if (len > I2C_SMBUS_BLOCK_MAX)
+			return -EINVAL;
+
+		memcpy(&mcp->txbuf[5], buf, len);
+		data_len = len + 5;
+	}
+
+	ret = mcp_send_data_req_status(mcp, mcp->txbuf, data_len);
+	if (ret)
+		return ret;
+
+	if (last_status) {
+		usleep_range(980, 1000);
+
+		ret = mcp_chk_last_cmd_status(mcp);
+		if (ret)
+			return ret;
+	}
+
+	return ret;
+}
+```

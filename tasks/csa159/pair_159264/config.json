@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "73f7e05609ece4030f2745c4c0c01e0be6889590",
+  "after_commit": "6f6dbb819dfc1a35bcb8b709b5c83a3ea8beff75",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/e783362eb54cd99b2cac8b3a9aeac942e6f6ac07/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/e783362eb54cd99b2cac8b3a9aeac942e6f6ac07/compile_commands.json",
+  "changed_files": [
+    "drivers/infiniband/hw/irdma/ctrl.c"
+  ],
+  "commit_message": "RDMA/irdma: Prevent some integer underflows\n\nMy static checker complains that:\n\n    drivers/infiniband/hw/irdma/ctrl.c:3605 irdma_sc_ceq_init()\n    warn: can subtract underflow 'info->dev->hmc_fpm_misc.max_ceqs'?\n\nIt appears that \"info->dev->hmc_fpm_misc.max_ceqs\" comes from the firmware\nin irdma_sc_parse_fpm_query_buf() so, yes, there is a chance that it could\nbe zero.  Even if we trust the firmware, it's easy enough to change the\ncondition just as a hardenning measure.\n\nFixes: 3f49d6842569 (\"RDMA/irdma: Implement HW Admin Queue OPs\")\nLink: https://lore.kernel.org/r/20220307125928.GE16710@kili\nSigned-off-by: Dan Carpenter <dan.carpenter@oracle.com>\nAcked-by: Shiraz Saleem <shiraz.saleem@intel.com>\nSigned-off-by: Jason Gunthorpe <jgg@nvidia.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

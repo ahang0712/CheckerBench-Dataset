@@ -1,0 +1,47 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-5cfa41b8575717ecee17",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-5cfa41b8575717ecee17",
+    "project_id": "morefixes__gphper__ginadmin",
+    "language": "go",
+    "backend": "codeql"
+  },
+  "changed_go_files": [
+    "internal/controllers/admin/setting/adminSystemController.go",
+    "pkg/utils/filesystem/filesystem.go"
+  ],
+  "patch_units": {
+    "before": [
+      "internal/controllers/admin/setting/adminSystemController.go",
+      "pkg/utils/filesystem/filesystem.go"
+    ],
+    "after": [
+      "internal/controllers/admin/setting/adminSystemController.go",
+      "pkg/utils/filesystem/filesystem.go"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/ceedc26314cd526e12d7070ebafe9b628ba768dd6a5e261fbeff8d7fc8c953c2/database",
+      "cache_key": "ceedc26314cd526e12d7070ebafe9b628ba768dd6a5e261fbeff8d7fc8c953c2",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/06a58c60bb5c7c838f2af01e0755e1e82efe78b44ba5415ed98e42bd180f9eea/database",
+      "cache_key": "06a58c60bb5c7c838f2af01e0755e1e82efe78b44ba5415ed98e42bd180f9eea",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/8ee0eb6c3b465b58a2aa9b0751eac59cd89bf2ee8c056400597c5bb78055a6b4/database",
+      "cache_key": "8ee0eb6c3b465b58a2aa9b0751eac59cd89bf2ee8c056400597c5bb78055a6b4",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-5cfa41b8575717ecee17/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-5cfa41b8575717ecee17/ (do not mount into agent)"
+  }
+}

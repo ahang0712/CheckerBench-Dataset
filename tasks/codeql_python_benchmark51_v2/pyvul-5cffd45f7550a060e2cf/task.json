@@ -1,0 +1,51 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-5cffd45f7550a060e2cf",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-5cffd45f7550a060e2cf",
+    "project_id": "pyvul__langchain-ai__langchain",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "langchain/tools/jira/prompt.py",
+    "langchain/utilities/jira.py",
+    "tests/integration_tests/utilities/test_jira_api.py"
+  ],
+  "patch_units": {
+    "before": [
+      "module:<module>@24",
+      "class:JiraAPIWrapper",
+      "function:JiraAPIWrapper.other"
+    ],
+    "after": [
+      "module:<module>@24",
+      "class:JiraAPIWrapper",
+      "function:JiraAPIWrapper.other",
+      "function:test_other"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/3ab8cf98f4a2899679e1ccfc6d8b6769f285e59934eff877d428595b1cf09283/database",
+      "cache_key": "3ab8cf98f4a2899679e1ccfc6d8b6769f285e59934eff877d428595b1cf09283",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/570592d3967d4c75356a31e69fc7187b0a0a35a42386694dabb9294afa0bd076/database",
+      "cache_key": "570592d3967d4c75356a31e69fc7187b0a0a35a42386694dabb9294afa0bd076",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/58f505d588f122e64038f644c96726c3ad80ad431e4de1fab548891ace4a6573/database",
+      "cache_key": "58f505d588f122e64038f644c96726c3ad80ad431e4de1fab548891ace4a6573",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-5cffd45f7550a060e2cf/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-5cffd45f7550a060e2cf/ (do not mount into agent)"
+  }
+}

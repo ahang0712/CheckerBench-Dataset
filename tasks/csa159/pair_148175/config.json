@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "21dc07ac9c25f01ab2023e3e8605861d8fd6e00c",
+  "after_commit": "4e8011ffec79717e5fdac43a7e79faf811a384b7",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/8f5ae30d69d7543eee0d70083daf4de8fe15d585/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/8f5ae30d69d7543eee0d70083daf4de8fe15d585/compile_commands.json",
+  "changed_files": [
+    "fs/ntfs3/inode.c"
+  ],
+  "commit_message": "ntfs3: pretend $Extend records as regular files\n\nSince commit af153bb63a33 (\"vfs: catch invalid modes in may_open()\")\nrequires any inode be one of S_IFDIR/S_IFLNK/S_IFREG/S_IFCHR/S_IFBLK/\nS_IFIFO/S_IFSOCK type, use S_IFREG for $Extend records.\n\nReported-by: syzbot <syzbot+895c23f6917da440ed0d@syzkaller.appspotmail.com>\nCloses: https://syzkaller.appspot.com/bug?extid=895c23f6917da440ed0d\nSigned-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>\nSigned-off-by: Konstantin Komarov <almaz.alexandrovich@paragon-software.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

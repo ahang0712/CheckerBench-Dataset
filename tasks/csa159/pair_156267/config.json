@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "0ac87fe54a171d18c5fb5345e3ee8d14e1b06f4b",
+  "after_commit": "139ad1143151a07be93bf741d4ea7c89e59f89ce",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/8a749fd1a8720d4619c91c8b6e7528c0a355c0aa/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/8a749fd1a8720d4619c91c8b6e7528c0a355c0aa/compile_commands.json",
+  "changed_files": [
+    "drivers/phy/freescale/phy-fsl-lynx-28g.c"
+  ],
+  "commit_message": "phy: lynx-28g: serialize concurrent phy_set_mode_ext() calls to shared registers\n\nThe protocol converter configuration registers PCC8, PCCC, PCCD\n(implemented by the driver), as well as others, control protocol\nconverters from multiple lanes (each represented as a different\nstruct phy). So, if there are simultaneous calls to phy_set_mode_ext()\nto lanes sharing the same PCC register (either for the \"old\" or for the\n\"new\" protocol), corruption of the values programmed to hardware is\npossible, because lynx_28g_rmw() has no locking.\n\nAdd a spinlock in the struct lynx_28g_priv shared by all lanes, and take\nthe global spinlock from the phy_ops :: set_mode() implementation. There\nare no other callers which modify PCC registers.\n\nFixes: 8f73b37cf3fb (\"phy: add support for the Layerscape SerDes 28G\")\nSigned-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>\nSigned-off-by: David S. Miller <davem@davemloft.net>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

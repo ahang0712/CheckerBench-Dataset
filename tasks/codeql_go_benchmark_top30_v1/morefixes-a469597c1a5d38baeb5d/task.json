@@ -1,0 +1,62 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-a469597c1a5d38baeb5d",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-a469597c1a5d38baeb5d",
+    "project_id": "morefixes__hyperledger__fabric",
+    "language": "go",
+    "backend": "codeql"
+  },
+  "changed_go_files": [
+    "internal/peer/gossip/mcs.go",
+    "orderer/common/cluster/replication_test.go",
+    "orderer/common/cluster/util.go",
+    "orderer/common/cluster/util_test.go",
+    "protoutil/blockutils.go",
+    "protoutil/blockutils_test.go",
+    "protoutil/commonutils.go"
+  ],
+  "patch_units": {
+    "before": [
+      "internal/peer/gossip/mcs.go",
+      "orderer/common/cluster/replication_test.go",
+      "orderer/common/cluster/util.go",
+      "orderer/common/cluster/util_test.go",
+      "protoutil/blockutils.go",
+      "protoutil/blockutils_test.go",
+      "protoutil/commonutils.go"
+    ],
+    "after": [
+      "internal/peer/gossip/mcs.go",
+      "orderer/common/cluster/replication_test.go",
+      "orderer/common/cluster/util.go",
+      "orderer/common/cluster/util_test.go",
+      "protoutil/blockutils.go",
+      "protoutil/blockutils_test.go",
+      "protoutil/commonutils.go"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/84105975530ca1bcfe7e3b9e2ee2fa7f49bed7e561a816808e6db3c63e3f2498/database",
+      "cache_key": "84105975530ca1bcfe7e3b9e2ee2fa7f49bed7e561a816808e6db3c63e3f2498",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/056daac315147b6d3b2738b83792c5e60b049331a0ce2fef89b6e9f4c02719f4/database",
+      "cache_key": "056daac315147b6d3b2738b83792c5e60b049331a0ce2fef89b6e9f4c02719f4",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/8cb8855a76d412ffba55a5bed1e99ac6e596cb2e1d45995df36559b658ad1caa/database",
+      "cache_key": "8cb8855a76d412ffba55a5bed1e99ac6e596cb2e1d45995df36559b658ad1caa",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-a469597c1a5d38baeb5d/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-a469597c1a5d38baeb5d/ (do not mount into agent)"
+  }
+}

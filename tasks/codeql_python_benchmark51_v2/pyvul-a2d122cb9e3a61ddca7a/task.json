@@ -1,0 +1,49 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-a2d122cb9e3a61ddca7a",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-a2d122cb9e3a61ddca7a",
+    "project_id": "pyvul__ikus060__rdiffweb",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "rdiffweb/controller/tests/test_page_error.py",
+    "rdiffweb/rdw_app.py"
+  ],
+  "patch_units": {
+    "before": [
+      "class:RdiffwebApp",
+      "function:RdiffwebApp.error_page"
+    ],
+    "after": [
+      "class:ErrorPageTest",
+      "function:ErrorPageTest.test_not_found",
+      "class:RdiffwebApp",
+      "function:RdiffwebApp.error_page"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/1bbc0f2eaf459286bf8717e1c2803731fc8f5db7e9045d6a7c32950d5b173bfb/database",
+      "cache_key": "1bbc0f2eaf459286bf8717e1c2803731fc8f5db7e9045d6a7c32950d5b173bfb",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/720cf9e9f37e2c47361fd1b637852c71f850fff353553108d449a11a9503c15e/database",
+      "cache_key": "720cf9e9f37e2c47361fd1b637852c71f850fff353553108d449a11a9503c15e",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/1b8f80f5c99bf916a656f03c56b87928f4c2202ce53851102eff56ffb3a1c99d/database",
+      "cache_key": "1b8f80f5c99bf916a656f03c56b87928f4c2202ce53851102eff56ffb3a1c99d",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-a2d122cb9e3a61ddca7a/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-a2d122cb9e3a61ddca7a/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,28 @@
+### File: libarchive/archive_write.c
+```c
+static ssize_t
+_archive_write_data(struct archive *_a, const void *buff, size_t s)
+{
+	struct archive_write *a = (struct archive_write *)_a;
+	archive_check_magic(&a->archive, ARCHIVE_WRITE_MAGIC,
+	    ARCHIVE_STATE_DATA, "archive_write_data");
+	archive_clear_error(&a->archive);
+	return ((a->format_write_data)(a, buff, s));
+}
+
+static struct archive_write_filter *
+filter_lookup(struct archive *_a, int n)
+{
+	struct archive_write *a = (struct archive_write *)_a;
+	struct archive_write_filter *f = a->filter_first;
+	if (n == -1)
+		return a->filter_last;
+	if (n < 0)
+		return NULL;
+	while (n > 0 && f != NULL) {
+		f = f->next_filter;
+		--n;
+	}
+	return f;
+}
+```

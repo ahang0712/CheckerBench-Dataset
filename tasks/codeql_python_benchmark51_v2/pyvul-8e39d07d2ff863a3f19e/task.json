@@ -1,0 +1,54 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-8e39d07d2ff863a3f19e",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-8e39d07d2ff863a3f19e",
+    "project_id": "pyvul__horazont__xmpp-http-upload",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "xhu.py"
+  ],
+  "patch_units": {
+    "before": [
+      "function:sanitized_join",
+      "function:get_paths",
+      "function:get_info",
+      "function:put_file",
+      "function:head_file",
+      "function:get_file"
+    ],
+    "after": [
+      "function:get_paths",
+      "function:get_info",
+      "function:put_file",
+      "function:head_file",
+      "function:get_file",
+      "module:<module>@32"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/e48d67cb6f945ecc194f637a91ce5d91546bb1e5206ba6454416191ddbb86340/database",
+      "cache_key": "e48d67cb6f945ecc194f637a91ce5d91546bb1e5206ba6454416191ddbb86340",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/ce8e1f9ebc30cd6470368e164816964313855b2829eefd057631fd289739a386/database",
+      "cache_key": "ce8e1f9ebc30cd6470368e164816964313855b2829eefd057631fd289739a386",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/4b2e3749d34589d1825d172fe2b6a490d358a73d19dbdea5dfc095c61103ca1f/database",
+      "cache_key": "4b2e3749d34589d1825d172fe2b6a490d358a73d19dbdea5dfc095c61103ca1f",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-8e39d07d2ff863a3f19e/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-8e39d07d2ff863a3f19e/ (do not mount into agent)"
+  }
+}

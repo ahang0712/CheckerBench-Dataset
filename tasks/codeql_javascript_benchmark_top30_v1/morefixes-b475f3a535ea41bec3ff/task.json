@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-b475f3a535ea41bec3ff",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-b475f3a535ea41bec3ff",
+    "project_id": "morefixes__line__centraldogma",
+    "language": "javascript",
+    "backend": "codeql"
+  },
+  "changed_javascript_files": [
+    "webapp/src/dogma/features/api/apiSlice.ts"
+  ],
+  "patch_units": {
+    "before": [
+      "webapp/src/dogma/features/api/apiSlice.ts"
+    ],
+    "after": [
+      "webapp/src/dogma/features/api/apiSlice.ts"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/a53a7dc261f857478df84afd5e82cefff4e65462fb5bfc88c03fbdb8884e0d03/database",
+      "cache_key": "a53a7dc261f857478df84afd5e82cefff4e65462fb5bfc88c03fbdb8884e0d03",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/7c5e8c1ade1e09d267afaf32afffa1e668ea0440b5cca864c765303a8168ac28/database",
+      "cache_key": "7c5e8c1ade1e09d267afaf32afffa1e668ea0440b5cca864c765303a8168ac28",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/83533754d5cd72991e5a5ac2484cbc3f3403a64f3bbae21cfc84a9892b7a2d3c/database",
+      "cache_key": "83533754d5cd72991e5a5ac2484cbc3f3403a64f3bbae21cfc84a9892b7a2d3c",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-b475f3a535ea41bec3ff/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-b475f3a535ea41bec3ff/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "project_id": "qemu_qemu",
+  "before_commit": "9f6b2f1c6497adcce4dec9b3bd1f1e78877a03dd",
+  "after_commit": "fa365d7cd11185237471823a5a33d36765454e16",
+  "repo_path": "/workspace/repo/qemu/qemu",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/qemu_qemu/82172b751929314a81337aa91deea82e8297af1f/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/qemu_qemu/82172b751929314a81337aa91deea82e8297af1f/compile_commands.json",
+  "changed_files": [
+    "hw/acpi/pcihp.c"
+  ],
+  "commit_message": "pcihp: fix possible array out of bounds\n\nPrevent out-of-bounds array access on\nacpi_pcihp_pci_status.\n\nSigned-off-by: Gonglei <arei.gonglei@huawei.com>\nReviewed-by: Peter Crosthwaite <peter.crosthwaite@xilinx.com>\nReviewed-by: Michael S. Tsirkin <mst@redhat.com>\nSigned-off-by: Michael S. Tsirkin <mst@redhat.com>\nCc: qemu-stable@nongnu.org\nReviewed-by: Marcel Apfelbaum <marcel@redhat.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

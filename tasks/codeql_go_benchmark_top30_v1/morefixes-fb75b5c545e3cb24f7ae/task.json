@@ -1,0 +1,79 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-fb75b5c545e3cb24f7ae",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-fb75b5c545e3cb24f7ae",
+    "project_id": "morefixes__argoproj__argo-events",
+    "language": "go",
+    "backend": "codeql"
+  },
+  "changed_go_files": [
+    "pkg/apis/events/openapi/openapi_generated.go",
+    "pkg/apis/events/v1alpha1/container_template.go",
+    "pkg/apis/events/v1alpha1/generated.pb.go",
+    "pkg/apis/events/v1alpha1/template.go",
+    "pkg/apis/events/v1alpha1/template_test.go",
+    "pkg/apis/events/v1alpha1/zz_generated.deepcopy.go",
+    "pkg/apis/events/v1alpha1/zz_generated.defaults.go",
+    "pkg/reconciler/eventsource/controller.go",
+    "pkg/reconciler/eventsource/resource.go",
+    "pkg/reconciler/sensor/resource.go",
+    "pkg/reconciler/sensor/resource_test.go",
+    "pkg/sensors/triggers/standard-k8s/standard-k8s.go",
+    "pkg/webhook/validator/validator_test.go"
+  ],
+  "patch_units": {
+    "before": [
+      "pkg/apis/events/openapi/openapi_generated.go",
+      "pkg/apis/events/v1alpha1/container_template.go",
+      "pkg/apis/events/v1alpha1/generated.pb.go",
+      "pkg/apis/events/v1alpha1/template.go",
+      "pkg/apis/events/v1alpha1/zz_generated.deepcopy.go",
+      "pkg/apis/events/v1alpha1/zz_generated.defaults.go",
+      "pkg/reconciler/eventsource/controller.go",
+      "pkg/reconciler/eventsource/resource.go",
+      "pkg/reconciler/sensor/resource.go",
+      "pkg/reconciler/sensor/resource_test.go",
+      "pkg/sensors/triggers/standard-k8s/standard-k8s.go",
+      "pkg/webhook/validator/validator_test.go"
+    ],
+    "after": [
+      "pkg/apis/events/openapi/openapi_generated.go",
+      "pkg/apis/events/v1alpha1/container_template.go",
+      "pkg/apis/events/v1alpha1/generated.pb.go",
+      "pkg/apis/events/v1alpha1/template.go",
+      "pkg/apis/events/v1alpha1/template_test.go",
+      "pkg/apis/events/v1alpha1/zz_generated.deepcopy.go",
+      "pkg/apis/events/v1alpha1/zz_generated.defaults.go",
+      "pkg/reconciler/eventsource/controller.go",
+      "pkg/reconciler/eventsource/resource.go",
+      "pkg/reconciler/sensor/resource.go",
+      "pkg/reconciler/sensor/resource_test.go",
+      "pkg/sensors/triggers/standard-k8s/standard-k8s.go",
+      "pkg/webhook/validator/validator_test.go"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/44c0b7a872627e883734bff4b6ea4b9b171306b5a137d555c12405db9f296876/database",
+      "cache_key": "44c0b7a872627e883734bff4b6ea4b9b171306b5a137d555c12405db9f296876",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/b1895ee3050cf487dd34c5be85fcd254fc3d3c61c46530331337421f90be2f24/database",
+      "cache_key": "b1895ee3050cf487dd34c5be85fcd254fc3d3c61c46530331337421f90be2f24",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/9232ce158bf25e546d088f0884c6a0fbf14d9c7f0d0ce64b9a51bc3ec043f81a/database",
+      "cache_key": "9232ce158bf25e546d088f0884c6a0fbf14d9c7f0d0ce64b9a51bc3ec043f81a",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-fb75b5c545e3cb24f7ae/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-fb75b5c545e3cb24f7ae/ (do not mount into agent)"
+  }
+}

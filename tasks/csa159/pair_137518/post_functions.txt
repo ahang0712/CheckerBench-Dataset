@@ -1,0 +1,91 @@
+### File: env.c
+```c
+struct string *
+edgevar(struct edge *e, char *var, bool escape)
+{
+	struct string *val;
+	struct evalstring *str;
+	struct evalstringpart *p;
+	size_t n;
+
+	if (strcmp(var, "in") == 0)
+		return pathlist(e->in, e->inimpidx, ' ', escape);
+	if (strcmp(var, "in_newline") == 0)
+		return pathlist(e->in, e->inimpidx, '\n', escape);
+	if (strcmp(var, "out") == 0)
+		return pathlist(e->out, e->outimpidx, ' ', escape);
+	val = treefind(e->env->bindings, var);
+	if (val)
+		return val;
+	str = treefind(e->rule->bindings, var);
+	if (!str)
+		return envvar(e->env->parent, var);
+	if (str->visited)
+		fatal("cycle in rule variable involving '%s'", var);
+	str->visited = true;
+	n = 0;
+	for (p = str->parts; p; p = p->next) {
+		if (p->var)
+			p->str = edgevar(e, p->var, escape);
+		if (p->str)
+			n += p->str->n;
+	}
+	str->visited = false;
+	return merge(str, n);
+}
+```
+
+### File: scan.c
+```c
+struct evalstring *
+scanstring(struct scanner *s, bool path)
+{
+	struct evalstring *str;
+	struct evalstringpart *parts = NULL, **end = &parts;
+
+	buf.len = 0;
+	for (;;) {
+		switch (s->chr) {
+		case '$':
+			next(s);
+			escape(s, &end);
+			break;
+		case ':':
+		case '|':
+		case ' ':
+			if (path)
+				goto out;
+			/* fallthrough */
+		default:
+			bufadd(&buf, s->chr);
+			next(s);
+			break;
+		case '\r':
+		case '\n':
+		case EOF:
+			goto out;
+		}
+	}
+out:
+	if (buf.len > 0)
+		addstringpart(&end, 0);
+	if (path)
+		space(s);
+	if (!parts)
+		return NULL;
+	str = xmalloc(sizeof(*str));
+	str->parts = parts;
+	str->visited = false;
+
+	return str;
+}
+
+void
+scanchar(struct scanner *s, int c)
+{
+	if (s->chr != c)
+		scanerror(s, "expected '%c'", c);
+	next(s);
+	space(s);
+}
+```

@@ -1,0 +1,19 @@
+{
+  "project_id": "ImageMagick_ImageMagick",
+  "before_commit": "bc0bbec029e2d6e8dcc4294653907b0dd28fe465",
+  "after_commit": "81ac8a0d2eb21739842ed18c48c7646b7eef65b8",
+  "repo_path": "/workspace/repo/ImageMagick/ImageMagick",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/ImageMagick_ImageMagick/8c781e209db7d674a77e1f1edd7a51a446b51f68/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/ImageMagick_ImageMagick/8c781e209db7d674a77e1f1edd7a51a446b51f68/compile_commands.json",
+  "changed_files": [
+    "coders/miff.c"
+  ],
+  "commit_message": "multispectral MIFF images renders all channels in arbitrary order",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

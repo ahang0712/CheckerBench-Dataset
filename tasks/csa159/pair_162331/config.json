@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "e01f5c8d6af231b3b09e23c1fe8a4057cdcc4e42",
+  "after_commit": "e230a4455ac3e9b112f0367d1b8e255e141afae0",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/568035b01cfb107af8d2e4bd2fb9aea22cf5b868/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/568035b01cfb107af8d2e4bd2fb9aea22cf5b868/compile_commands.json",
+  "changed_files": [
+    "drivers/staging/rtl8712/rtl8712_cmd.c"
+  ],
+  "commit_message": "staging: rtl8712: fix use after free bugs\n\n_Read/Write_MACREG callbacks are NULL so the read/write_macreg_hdl()\nfunctions don't do anything except free the \"pcmd\" pointer.  It\nresults in a use after free.  Delete them.\n\nFixes: 2865d42c78a9 (\"staging: r8712u: Add the new driver to the mainline kernel\")\nCc: stable <stable@kernel.org>\nReported-by: Zheng Wang <hackerzheng666@gmail.com>\nSigned-off-by: Dan Carpenter <dan.carpenter@oracle.com>\nLink: https://lore.kernel.org/r/Yw4ASqkYcUhUfoY2@kili\nSigned-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

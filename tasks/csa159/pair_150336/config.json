@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "901ac0ff15edf9503162e2cf6579bd11a30f1ed4",
+  "after_commit": "e5c33cdc6f402eab8abd36ecf436b22c9d3a8aff",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/254f49634ee16a731174d2ae34bc50bd5f45e731/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/254f49634ee16a731174d2ae34bc50bd5f45e731/compile_commands.json",
+  "changed_files": [
+    "sound/drivers/aloop.c"
+  ],
+  "commit_message": "ALSA: aloop: Fix peer runtime UAF during format-change stop\n\nloopback_check_format() may stop the capture side when playback starts\nwith parameters that no longer match a running capture stream. Commit\n826af7fa62e3 (\"ALSA: aloop: Fix racy access at PCM trigger\") moved\nthe peer lookup under cable->lock, but the actual snd_pcm_stop() still\nruns after dropping that lock.\n\nA concurrent close can clear the capture entry from cable->streams[] and\ndetach or free its runtime while the playback trigger path still holds a\nstale peer substream pointer.\n\nKeep a per-cable count of in-flight peer stops before dropping\ncable->lock, and make free_cable() wait for those stops before\ndetaching the runtime. This preserves the existing behavior while\nmaking the peer runtime lifetime explicit.\n\nReported-by: syzbot+8fa95c41eafbc9d2ff6f@syzkaller.appspotmail.com\nCloses: https://syzkaller.appspot.com/bug?extid=8fa95c41eafbc9d2ff6f\nFixes: 597603d615d2 (\"ALSA: introduce the snd-aloop module for the PCM loopback\")\nCc: stable@vger.kernel.org\nSuggested-by: Takashi Iwai <tiwai@suse.com>\nSigned-off-by: Cássio Gabriel <cassiogabrielcontato@gmail.com>\nLink: https://patch.msgid.link/20260424-alsa-aloop-peer-stop-uaf-v2-1-94e68101db8a@gmail.com\nSigned-off-by: Takashi Iwai <tiwai@suse.de>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

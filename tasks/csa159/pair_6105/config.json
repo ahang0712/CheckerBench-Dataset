@@ -1,0 +1,19 @@
+{
+  "project_id": "FreeRDP_FreeRDP",
+  "before_commit": "d1112c279bd1a327e8e4d0b5f371458bf2579659",
+  "after_commit": "17c363a5162fd4dc77b1df54e48d7bd9bf6b3be7",
+  "repo_path": "/workspace/repo/FreeRDP/FreeRDP",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/FreeRDP_FreeRDP/52fbfb7b1268749c2e5947542ffdd9c395b99305/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/FreeRDP_FreeRDP/52fbfb7b1268749c2e5947542ffdd9c395b99305/compile_commands.json",
+  "changed_files": [
+    "libfreerdp/codec/zgfx.c"
+  ],
+  "commit_message": "Fixed CVE-2018-8784\n\nThanks to Eyal Itkin from Check Point Software Technologies.",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

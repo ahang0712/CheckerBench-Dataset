@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "c5794709bc9105935dbedef8b9cf9c06f2b559fa",
+  "after_commit": "6b4f875aac344cdd52a1f34cc70ed2f874a65757",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f/compile_commands.json",
+  "changed_files": [
+    "fs/smb/server/transport_rdma.c"
+  ],
+  "commit_message": "ksmbd: fix signededness bug in smb_direct_prepare_negotiation()\n\nsmb_direct_prepare_negotiation() casts an unsigned __u32 value\nfrom sp->max_recv_size and req->preferred_send_size to a signed\nint before computing min_t(int, ...). A maliciously provided\npreferred_send_size of 0x80000000 will return as smaller than\nmax_recv_size, and then be used to set the maximum allowed\nalowed receive size for the next message.\n\nBy sending a second message with a large value (>1420 bytes)\nthe attacker can then achieve a heap buffer overflow.\n\nThis fix replaces min_t(int, ...) with min_t(u32)\n\nFixes: 0626e6641f6b (\"cifsd: add server handler for central processing and tranport layers\")\nSigned-off-by: Nicholas Carlini <nicholas@carlini.com>\nReviewed-by: Stefan Metzmacher <metze@samba.org>\nAcked-by: Stefan Metzmacher <metze@samba.org>\nAcked-by: Namjae Jeon <linkinjeon@kernel.org>\nSigned-off-by: Steve French <stfrench@microsoft.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,146 @@
+### File: net/bluetooth/l2cap_core.c
+```c
+static inline int l2cap_disconnect_req(struct l2cap_conn *conn,
+				       struct l2cap_cmd_hdr *cmd, u16 cmd_len,
+				       u8 *data)
+{
+	struct l2cap_disconn_req *req = (struct l2cap_disconn_req *) data;
+	struct l2cap_disconn_rsp rsp;
+	u16 dcid, scid;
+	struct l2cap_chan *chan;
+
+	if (cmd_len != sizeof(*req))
+		return -EPROTO;
+
+	scid = __le16_to_cpu(req->scid);
+	dcid = __le16_to_cpu(req->dcid);
+
+	BT_DBG("scid 0x%4.4x dcid 0x%4.4x", scid, dcid);
+
+	mutex_lock(&conn->chan_lock);
+
+	chan = __l2cap_get_chan_by_scid(conn, dcid);
+	if (!chan) {
+		mutex_unlock(&conn->chan_lock);
+		cmd_reject_invalid_cid(conn, cmd->ident, dcid, scid);
+		return 0;
+	}
+
+	l2cap_chan_hold(chan);
+	l2cap_chan_lock(chan);
+
+	rsp.dcid = cpu_to_le16(chan->scid);
+	rsp.scid = cpu_to_le16(chan->dcid);
+	l2cap_send_cmd(conn, cmd->ident, L2CAP_DISCONN_RSP, sizeof(rsp), &rsp);
+
+	chan->ops->set_shutdown(chan);
+
+	l2cap_chan_del(chan, ECONNRESET);
+
+	chan->ops->close(chan);
+
+	l2cap_chan_unlock(chan);
+	l2cap_chan_put(chan);
+
+	mutex_unlock(&conn->chan_lock);
+
+	return 0;
+}
+
+static inline int l2cap_disconnect_rsp(struct l2cap_conn *conn,
+				       struct l2cap_cmd_hdr *cmd, u16 cmd_len,
+				       u8 *data)
+{
+	struct l2cap_disconn_rsp *rsp = (struct l2cap_disconn_rsp *) data;
+	u16 dcid, scid;
+	struct l2cap_chan *chan;
+
+	if (cmd_len != sizeof(*rsp))
+		return -EPROTO;
+
+	scid = __le16_to_cpu(rsp->scid);
+	dcid = __le16_to_cpu(rsp->dcid);
+
+	BT_DBG("dcid 0x%4.4x scid 0x%4.4x", dcid, scid);
+
+	mutex_lock(&conn->chan_lock);
+
+	chan = __l2cap_get_chan_by_scid(conn, scid);
+	if (!chan) {
+		mutex_unlock(&conn->chan_lock);
+		return 0;
+	}
+
+	l2cap_chan_hold(chan);
+	l2cap_chan_lock(chan);
+
+	if (chan->state != BT_DISCONN) {
+		l2cap_chan_unlock(chan);
+		l2cap_chan_put(chan);
+		mutex_unlock(&conn->chan_lock);
+		return 0;
+	}
+
+	l2cap_chan_del(chan, 0);
+
+	chan->ops->close(chan);
+
+	l2cap_chan_unlock(chan);
+	l2cap_chan_put(chan);
+
+	mutex_unlock(&conn->chan_lock);
+
+	return 0;
+}
+
+static inline int l2cap_information_req(struct l2cap_conn *conn,
+					struct l2cap_cmd_hdr *cmd, u16 cmd_len,
+					u8 *data)
+{
+	struct l2cap_info_req *req = (struct l2cap_info_req *) data;
+	u16 type;
+
+	if (cmd_len != sizeof(*req))
+		return -EPROTO;
+
+	type = __le16_to_cpu(req->type);
+
+	BT_DBG("type 0x%4.4x", type);
+
+	if (type == L2CAP_IT_FEAT_MASK) {
+		u8 buf[8];
+		u32 feat_mask = l2cap_feat_mask;
+		struct l2cap_info_rsp *rsp = (struct l2cap_info_rsp *) buf;
+		rsp->type   = cpu_to_le16(L2CAP_IT_FEAT_MASK);
+		rsp->result = cpu_to_le16(L2CAP_IR_SUCCESS);
+		if (!disable_ertm)
+			feat_mask |= L2CAP_FEAT_ERTM | L2CAP_FEAT_STREAMING
+				| L2CAP_FEAT_FCS;
+		if (conn->local_fixed_chan & L2CAP_FC_A2MP)
+			feat_mask |= L2CAP_FEAT_EXT_FLOW
+				| L2CAP_FEAT_EXT_WINDOW;
+
+		put_unaligned_le32(feat_mask, rsp->data);
+		l2cap_send_cmd(conn, cmd->ident, L2CAP_INFO_RSP, sizeof(buf),
+			       buf);
+	} else if (type == L2CAP_IT_FIXED_CHAN) {
+		u8 buf[12];
+		struct l2cap_info_rsp *rsp = (struct l2cap_info_rsp *) buf;
+
+		rsp->type   = cpu_to_le16(L2CAP_IT_FIXED_CHAN);
+		rsp->result = cpu_to_le16(L2CAP_IR_SUCCESS);
+		rsp->data[0] = conn->local_fixed_chan;
+		memset(rsp->data + 1, 0, 7);
+		l2cap_send_cmd(conn, cmd->ident, L2CAP_INFO_RSP, sizeof(buf),
+			       buf);
+	} else {
+		struct l2cap_info_rsp rsp;
+		rsp.type   = cpu_to_le16(type);
+		rsp.result = cpu_to_le16(L2CAP_IR_NOTSUPP);
+		l2cap_send_cmd(conn, cmd->ident, L2CAP_INFO_RSP, sizeof(rsp),
+			       &rsp);
+	}
+
+	return 0;
+}
+```

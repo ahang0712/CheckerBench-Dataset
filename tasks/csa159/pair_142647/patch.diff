@@ -1,0 +1,16 @@
+diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
+index b549576d0b51..5cbba9a8b6ba 100644
+--- a/drivers/net/wireless/ath/ath11k/ahb.c
++++ b/drivers/net/wireless/ath/ath11k/ahb.c
+@@ -1078,6 +1078,12 @@ static int ath11k_ahb_fw_resource_deinit(struct ath11k_base *ab)
+ 	struct iommu_domain *iommu;
+ 	size_t unmapped_size;
+ 
++	/* Chipsets not requiring MSA would have not initialized
++	 * MSA resources, return success in such cases.
++	 */
++	if (!ab->hw_params.fixed_fw_mem)
++		return 0;
++
+ 	if (ab_ahb->fw.use_tz)
+ 		return 0;

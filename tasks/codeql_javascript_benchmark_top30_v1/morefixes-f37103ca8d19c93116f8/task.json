@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-f37103ca8d19c93116f8",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-f37103ca8d19c93116f8",
+    "project_id": "morefixes__jenkinsci__azure-ad-plugin",
+    "language": "javascript",
+    "backend": "codeql"
+  },
+  "changed_javascript_files": [
+    "src/main/frontend/index.ts"
+  ],
+  "patch_units": {
+    "before": [
+      "src/main/frontend/index.ts"
+    ],
+    "after": [
+      "src/main/frontend/index.ts"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/a775a72be3f7021fbbe19ec5318f38fcd2a8751a2c4e8f299a94baf871cdfeb9/database",
+      "cache_key": "a775a72be3f7021fbbe19ec5318f38fcd2a8751a2c4e8f299a94baf871cdfeb9",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/b9c3f40d85a1df7621c48895f81a4b2d38f6b7f392d618e951c7461fac835d44/database",
+      "cache_key": "b9c3f40d85a1df7621c48895f81a4b2d38f6b7f392d618e951c7461fac835d44",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/76434686205efe78aea8cbac9e1ca8e055500c01f3c3959c4b788efffbb058d1/database",
+      "cache_key": "76434686205efe78aea8cbac9e1ca8e055500c01f3c3959c4b788efffbb058d1",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-f37103ca8d19c93116f8/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-f37103ca8d19c93116f8/ (do not mount into agent)"
+  }
+}

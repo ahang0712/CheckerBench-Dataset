@@ -1,0 +1,19 @@
+{
+  "project_id": "qemu_qemu",
+  "before_commit": "6bf7463615752934d7221e5be9820d9da45ab2de",
+  "after_commit": "87ad860c622cc8f8916b5232bd8728c08f938fce",
+  "repo_path": "/workspace/repo/qemu/qemu",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/qemu_qemu/6598f0cdad6acc6674c4f060fa46e537228c2c47/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/qemu_qemu/6598f0cdad6acc6674c4f060fa46e537228c2c47/compile_commands.json",
+  "changed_files": [
+    "hw/block/nvme.c"
+  ],
+  "commit_message": "nvme: fix out-of-bounds access to the CMB\n\nBecause the CMB BAR has a min_access_size of 2, if you read the last\nbyte it will try to memcpy *2* bytes from n->cmbuf, causing an off-by-one\nerror.  This is CVE-2018-16847.\n\nAnother way to fix this might be to register the CMB as a RAM memory\nregion, which would also be more efficient.  However, that might be a\nchange for big-endian machines; I didn't think this through and I don't\nknow how real hardware works.  Add a basic testcase for the CMB in case\nsomebody does this change later on.\n\nCc: Keith Busch <keith.busch@intel.com>\nCc: qemu-block@nongnu.org\nReported-by: Li Qiang <liq3ea@gmail.com>\nReviewed-by: Li Qiang <liq3ea@gmail.com>\nTested-by: Li Qiang <liq3ea@gmail.com>\nSigned-off-by: Paolo Bonzini <pbonzini@redhat.com>\nReviewed-by: Philippe Mathieu-Daudé <philmd@redhat.com>\nTested-by: Philippe Mathieu-Daudé <philmd@redhat.com>\nSigned-off-by: Kevin Wolf <kwolf@redhat.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

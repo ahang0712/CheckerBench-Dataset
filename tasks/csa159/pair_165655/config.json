@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "ef5621758a02fe8178de9d0df414ffb79463ff86",
+  "after_commit": "87507bcb4f5de16bb419e9509d874f4db6c0ad0f",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/32346491ddf24599decca06190ebca03ff9de7f8/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/32346491ddf24599decca06190ebca03ff9de7f8/compile_commands.json",
+  "changed_files": [
+    "net/ipv4/fib_semantics.c"
+  ],
+  "commit_message": "ipv4: Fix a data-race around sysctl_fib_multipath_use_neigh.\n\nWhile reading sysctl_fib_multipath_use_neigh, it can be changed\nconcurrently.  Thus, we need to add READ_ONCE() to its reader.\n\nFixes: a6db4494d218 (\"net: ipv4: Consider failed nexthops in multipath routes\")\nSigned-off-by: Kuniyuki Iwashima <kuniyu@amazon.com>\nSigned-off-by: David S. Miller <davem@davemloft.net>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

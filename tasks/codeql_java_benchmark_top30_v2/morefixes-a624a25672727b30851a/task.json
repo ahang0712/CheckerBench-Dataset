@@ -1,0 +1,47 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-a624a25672727b30851a",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-a624a25672727b30851a",
+    "project_id": "morefixes__airlift__aircompressor",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "src/main/java/io/airlift/compress/v3/snappy/SnappyRawDecompressor.java",
+    "src/test/java/io/airlift/compress/v3/snappy/TestSnappyJava.java"
+  ],
+  "patch_units": {
+    "before": [
+      "src/main/java/io/airlift/compress/v3/snappy/SnappyRawDecompressor.java",
+      "src/test/java/io/airlift/compress/v3/snappy/TestSnappyJava.java"
+    ],
+    "after": [
+      "src/main/java/io/airlift/compress/v3/snappy/SnappyRawDecompressor.java",
+      "src/test/java/io/airlift/compress/v3/snappy/TestSnappyJava.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/cda29cfad6af836ee9864d61f60e806805cd8172a5acb631a65fdc4443404b9d/database",
+      "cache_key": "cda29cfad6af836ee9864d61f60e806805cd8172a5acb631a65fdc4443404b9d",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/0794c76fd8d289f5c0ce42f6b131b64da4fb0e55c7f5ea00f43ceb78a5fbc893/database",
+      "cache_key": "0794c76fd8d289f5c0ce42f6b131b64da4fb0e55c7f5ea00f43ceb78a5fbc893",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/ba0fa9385c7ecc377c7585844e17d264a264a91c74186316520f3e71bea41bf8/database",
+      "cache_key": "ba0fa9385c7ecc377c7585844e17d264a264a91c74186316520f3e71bea41bf8",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-a624a25672727b30851a/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-a624a25672727b30851a/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,224 @@
+diff --git a/workflow/executor/executor.go b/workflow/executor/executor.go
+index 9cfaf5380..98a4bac44 100644
+--- a/workflow/executor/executor.go
++++ b/workflow/executor/executor.go
+@@ -1026,15 +1026,20 @@ func untar(tarPath string, destPath string) error {
+ 			if !strings.HasPrefix(target, filepath.Clean(dest)+string(os.PathSeparator)) {
+ 				return fmt.Errorf("illegal file path: %s", header.Name)
+ 			}
+-			if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil && os.IsExist(err) {
+-				return err
+-			}
+ 			switch header.Typeflag {
+ 			case tar.TypeSymlink:
+-				linkTarget := filepath.Join(filepath.Dir(target), header.Linkname)
++				// Validate symlink target before creating it
++				linkTarget := header.Linkname
++				if !filepath.IsAbs(linkTarget) {
++					linkTarget = filepath.Join(filepath.Dir(target), header.Linkname)
++				}
+ 				if !strings.HasPrefix(filepath.Clean(linkTarget), filepath.Clean(dest)+string(os.PathSeparator)) {
+ 					return fmt.Errorf("illegal symlink target: %s -> %s", header.Name, header.Linkname)
+ 				}
++				// Create parent directory if needed
++				if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
++					return err
++				}
+ 				err := os.Symlink(header.Linkname, target)
+ 				if err != nil {
+ 					return err
+@@ -1044,6 +1049,35 @@ func untar(tarPath string, destPath string) error {
+ 					return err
+ 				}
+ 			case tar.TypeReg:
++				// Before writing the file, check if the parent directory resolves outside dest
++				parentDir := filepath.Dir(target)
++
++				// Resolve the destination directory
++				resolvedDest, err := filepath.EvalSymlinks(dest)
++				if err != nil {
++					return err
++				}
++
++				// Check if parent exists and if so, verify it doesn't resolve outside dest
++				if _, err := os.Lstat(parentDir); err == nil {
++					// Parent exists, resolve it to check for symlink traversal
++					resolvedParent, err := filepath.EvalSymlinks(parentDir)
++					if err != nil {
++						return err
++					}
++					// Check if resolved parent is outside dest
++					if !strings.HasPrefix(resolvedParent+string(os.PathSeparator), resolvedDest+string(os.PathSeparator)) && resolvedParent != resolvedDest {
++						return fmt.Errorf("illegal file path after symlink resolution: %s resolves outside destination", header.Name)
++					}
++				} else if !os.IsNotExist(err) {
++					return err
++				} else {
++					// Parent doesn't exist, create it
++					if err := os.MkdirAll(parentDir, 0o755); err != nil {
++						return err
++					}
++				}
++
+ 				f, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
+ 				if err != nil {
+ 					return err
+diff --git a/workflow/executor/executor_test.go b/workflow/executor/executor_test.go
+index 2dd453b1c..bb7e54571 100644
+--- a/workflow/executor/executor_test.go
++++ b/workflow/executor/executor_test.go
+@@ -1,9 +1,14 @@
+ package executor
+ 
+ import (
++	"archive/tar"
++	"archive/zip"
++	"compress/gzip"
+ 	"fmt"
+ 	"io"
+ 	"os"
++	"os/exec"
++	"path/filepath"
+ 	"runtime"
+ 	"strings"
+ 	"testing"
+@@ -589,3 +594,139 @@ func TestReportOutputs(t *testing.T) {
+ 	})
+ 
+ }
++
++func TestUntarMaliciousSymlink(t *testing.T) {
++	// Create a temporary directory for the test
++	tmpDir := t.TempDir()
++
++	// Create a target directory outside the extraction root
++	outsideDir := filepath.Join(tmpDir, "outside")
++	err := os.Mkdir(outsideDir, 0755)
++	require.NoError(t, err)
++
++	// Create a file in the outside directory to verify it's NOT overwritten initially
++	targetFile := filepath.Join(outsideDir, "pwned")
++	err = os.WriteFile(targetFile, []byte("safe"), 0644)
++	require.NoError(t, err)
++
++	// Create the malicious tarball directly
++	tarPath := filepath.Join(tmpDir, "malicious.tar.gz")
++	f, err := os.Create(tarPath)
++	require.NoError(t, err)
++	gw := gzip.NewWriter(f)
++	tw := tar.NewWriter(gw)
++
++	// 1. Create a symlink "link" -> absolute path of outsideDir
++	absOutside, err := filepath.Abs(outsideDir)
++	require.NoError(t, err)
++
++	err = tw.WriteHeader(&tar.Header{
++		Name:     "link",
++		Typeflag: tar.TypeSymlink,
++		Linkname: absOutside,
++		Mode:     0777,
++	})
++	require.NoError(t, err)
++
++	// 2. Create a file "link/pwned" that writes through the symlink
++	fileContent := []byte("pwned")
++	err = tw.WriteHeader(&tar.Header{
++		Name:     "link/pwned",
++		Typeflag: tar.TypeReg,
++		Mode:     0644,
++		Size:     int64(len(fileContent)),
++	})
++	require.NoError(t, err)
++	_, err = tw.Write(fileContent)
++	require.NoError(t, err)
++
++	require.NoError(t, tw.Close())
++	require.NoError(t, gw.Close())
++	require.NoError(t, f.Close())
++
++	// Debug: List tarball contents
++	cmd := exec.CommandContext(t.Context(), "tar", "-tvzf", tarPath)
++	out, err := cmd.CombinedOutput()
++	require.NoError(t, err)
++	if err == nil {
++		t.Logf("Tarball contents:\n%s", string(out))
++	}
++
++	// Destination directory for extraction
++	destDir := filepath.Join(tmpDir, "dest")
++
++	// Perform untar
++	err = untar(tarPath, destDir)
++	// This should return an error because the symlink is outside the extraction root
++	require.Error(t, err)
++
++	// Check if the file outside was overwritten
++	content, err := os.ReadFile(targetFile)
++	require.NoError(t, err)
++
++	// If content is "pwned", the vulnerability is reproduced.
++	if string(content) == "pwned" {
++		t.Logf("Tar slip symlink vulnerability reproduced: File outside was overwritten with '%s'", string(content))
++	} else {
++		t.Logf("Tar slip symlink vulnerability NOT reproduced: File content is '%s'", string(content))
++	}
++
++	// Assert that it IS "safe" (this should FAIL if vulnerable)
++	assert.Equal(t, "safe", string(content), "File outside should NOT be overwritten")
++}
++
++func TestUnzipMaliciousSymlink(t *testing.T) {
++	// Create a temporary directory for the test
++	tmpDir := t.TempDir()
++
++	// Create a target directory outside the extraction root
++	outsideDir := filepath.Join(tmpDir, "outside")
++	err := os.Mkdir(outsideDir, 0755)
++	require.NoError(t, err)
++
++	// Create a file in the outside directory
++	targetFile := filepath.Join(outsideDir, "pwned")
++	err = os.WriteFile(targetFile, []byte("safe"), 0644)
++	require.NoError(t, err)
++
++	// Create the malicious zip
++	zipPath := filepath.Join(tmpDir, "malicious.zip")
++	f, err := os.Create(zipPath)
++	require.NoError(t, err)
++	zw := zip.NewWriter(f)
++
++	// 1. Create a symlink "link" -> "../outside"
++	header := &zip.FileHeader{
++		Name:   "link",
++		Method: zip.Store,
++	}
++	header.SetMode(0777 | os.ModeSymlink)
++	w, err := zw.CreateHeader(header)
++	require.NoError(t, err)
++	_, err = w.Write([]byte("../outside"))
++	require.NoError(t, err)
++
++	// 2. Create a file "link/pwned"
++	w, err = zw.Create("link/pwned")
++	require.NoError(t, err)
++	_, err = w.Write([]byte("pwned"))
++	require.NoError(t, err)
++
++	require.NoError(t, zw.Close())
++	require.NoError(t, f.Close())
++
++	// Destination directory
++	destDir := filepath.Join(tmpDir, "dest")
++
++	// Perform unzip
++	ctx := logging.TestContext(t.Context())
++	// This should return an error because the symlink is outside the extraction root
++	err = unzip(ctx, zipPath, destDir)
++	require.Error(t, err)
++
++	// Check if the file outside was overwritten
++	content, err := os.ReadFile(targetFile)
++	require.NoError(t, err)
++
++	assert.Equal(t, "safe", string(content), "File outside should NOT be overwritten by unzip")
++}

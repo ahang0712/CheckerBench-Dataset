@@ -1,0 +1,37 @@
+diff --git a/src/main/java/com/parasoft/environmentmanager/jenkins/EnvironmentManagerBuilder.java b/src/main/java/com/parasoft/environmentmanager/jenkins/EnvironmentManagerBuilder.java
+index 2cd4697..4b35d2e 100644
+--- a/src/main/java/com/parasoft/environmentmanager/jenkins/EnvironmentManagerBuilder.java
++++ b/src/main/java/com/parasoft/environmentmanager/jenkins/EnvironmentManagerBuilder.java
+@@ -64,7 +64,7 @@ public class EnvironmentManagerBuilder extends Builder {
+     private String repoHost;
+     private int repoPort;
+     private String repoUsername;
+-    private String repoPassword;
++    private Secret repoPassword;
+     private boolean abortOnFailure;
+     
+     @DataBoundConstructor
+@@ -101,7 +101,7 @@ public class EnvironmentManagerBuilder extends Builder {
+         this.repoHost = repoHost;
+         this.repoPort = repoPort;
+         this.repoUsername = repoUsername;
+-        this.repoPassword = repoPassword;
++        this.repoPassword = Secret.fromString(repoPassword);
+         this.abortOnFailure = abortOnFailure;
+     }
+     
+@@ -168,7 +168,13 @@ public class EnvironmentManagerBuilder extends Builder {
+     }
+     
+     public String getRepoPassword() {
+-        return repoPassword == null ? "admin" : repoPassword;
++        if (repoPassword != null) {
++            String plainText = repoPassword.getPlainText();
++            if (!plainText.isEmpty()) {
++                return plainText;
++            }
++        }
++        return "admin";
+     }
+     
+     public boolean isAbortOnFailure() {

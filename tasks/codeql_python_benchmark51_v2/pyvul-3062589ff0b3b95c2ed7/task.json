@@ -1,0 +1,47 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-3062589ff0b3b95c2ed7",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-3062589ff0b3b95c2ed7",
+    "project_id": "pyvul__ethyca__fides",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "src/fides/api/service/privacy_request/request_runner_service.py"
+  ],
+  "patch_units": {
+    "before": [
+      "function:generate_id_verification_code",
+      "module:<module>@1",
+      "module:<module>@2"
+    ],
+    "after": [
+      "function:generate_id_verification_code",
+      "module:<module>@1"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/291915565ab089440fa07a9c16ad27e6484f7368a306466a2d88660ed05eb343/database",
+      "cache_key": "291915565ab089440fa07a9c16ad27e6484f7368a306466a2d88660ed05eb343",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/d92a2bb5d4325e1848a36ffc9bc6d9851def586947106947d01f951ef76928e5/database",
+      "cache_key": "d92a2bb5d4325e1848a36ffc9bc6d9851def586947106947d01f951ef76928e5",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/f593a9e7147144ea94ddd83cc757db32e281fcd6c70e757a340641032a902d52/database",
+      "cache_key": "f593a9e7147144ea94ddd83cc757db32e281fcd6c70e757a340641032a902d52",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-3062589ff0b3b95c2ed7/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-3062589ff0b3b95c2ed7/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-0608482232bb0119b561",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-0608482232bb0119b561",
+    "project_id": "morefixes__jenkinsci__environment-manager-tools-plugin",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "src/main/java/com/parasoft/environmentmanager/jenkins/EnvironmentManagerBuilder.java"
+  ],
+  "patch_units": {
+    "before": [
+      "src/main/java/com/parasoft/environmentmanager/jenkins/EnvironmentManagerBuilder.java"
+    ],
+    "after": [
+      "src/main/java/com/parasoft/environmentmanager/jenkins/EnvironmentManagerBuilder.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/348add40fc2e9b8843029eb23bd7a5abea5e246c30af3ad46e7a1d06701aaedc/database",
+      "cache_key": "348add40fc2e9b8843029eb23bd7a5abea5e246c30af3ad46e7a1d06701aaedc",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/a27c3c48414095081ae69c5351234c11980089efad971e778fc8a15d42a9e363/database",
+      "cache_key": "a27c3c48414095081ae69c5351234c11980089efad971e778fc8a15d42a9e363",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/b56cf28194f7080920fa1c145c47fb8aa6678356c778e985b3637426036749f7/database",
+      "cache_key": "b56cf28194f7080920fa1c145c47fb8aa6678356c778e985b3637426036749f7",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-0608482232bb0119b561/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-0608482232bb0119b561/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "project_id": "LibreDWG_libredwg",
+  "before_commit": "8f03865f37f5d4ffd616fef802acc980be54d300",
+  "after_commit": "e501cb9926c1e9a07a0d1cc997f3e69e9be801c9",
+  "repo_path": "/workspace/repo/LibreDWG/libredwg",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/LibreDWG_libredwg/26b68f37c6de761e1ca603b5949c1610dc6e873a/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/LibreDWG_libredwg/26b68f37c6de761e1ca603b5949c1610dc6e873a/compile_commands.json",
+  "changed_files": [
+    "src/decode.c"
+  ],
+  "commit_message": "decode: fix another decompression overflow\n\nsome regular overflow.\nFixes GH #1242, #1243, Thanks to HackC0der for some fuzzing",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,75 @@
+### File: drivers/hwmon/coretemp.c
+```c
+static int create_core_data(struct platform_device *pdev, unsigned int cpu,
+			    int pkg_flag)
+{
+	struct temp_data *tdata;
+	struct platform_data *pdata = platform_get_drvdata(pdev);
+	struct cpuinfo_x86 *c = &cpu_data(cpu);
+	u32 eax, edx;
+	int err, index, attr_no;
+
+	if (!housekeeping_cpu(cpu, HK_TYPE_MISC))
+		return 0;
+
+	/*
+	 * Find attr number for sysfs:
+	 * We map the attr number to core id of the CPU
+	 * The attr number is always core id + 2
+	 * The Pkgtemp will always show up as temp1_*, if available
+	 */
+	if (pkg_flag) {
+		attr_no = PKG_SYSFS_ATTR_NO;
+	} else {
+		index = ida_alloc(&pdata->ida, GFP_KERNEL);
+		if (index < 0)
+			return index;
+		pdata->cpu_map[index] = topology_core_id(cpu);
+		attr_no = index + BASE_SYSFS_ATTR_NO;
+	}
+
+	if (attr_no > MAX_CORE_DATA - 1) {
+		err = -ERANGE;
+		goto ida_free;
+	}
+
+	tdata = init_temp_data(cpu, pkg_flag);
+	if (!tdata) {
+		err = -ENOMEM;
+		goto ida_free;
+	}
+
+	/* Test if we can access the status register */
+	err = rdmsr_safe_on_cpu(cpu, tdata->status_reg, &eax, &edx);
+	if (err)
+		goto exit_free;
+
+	/* Make sure tdata->tjmax is a valid indicator for dynamic/static tjmax */
+	get_tjmax(tdata, &pdev->dev);
+
+	/*
+	 * The target temperature is available on older CPUs but not in the
+	 * MSR_IA32_TEMPERATURE_TARGET register. Atoms don't have the register
+	 * at all.
+	 */
+	if (c->x86_model > 0xe && c->x86_model != 0x1c)
+		if (get_ttarget(tdata, &pdev->dev) >= 0)
+			tdata->attr_size++;
+
+	pdata->core_data[attr_no] = tdata;
+
+	/* Create sysfs interfaces */
+	err = create_core_attrs(tdata, pdata->hwmon_dev, attr_no);
+	if (err)
+		goto exit_free;
+
+	return 0;
+exit_free:
+	pdata->core_data[attr_no] = NULL;
+	kfree(tdata);
+ida_free:
+	if (!pkg_flag)
+		ida_free(&pdata->ida, index);
+	return err;
+}
+```

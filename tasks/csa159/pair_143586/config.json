@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "81ff296a8163ed791fd05a3dba1a826c598a3c84",
+  "after_commit": "98f681b0f84cfc3a1d83287b77697679e0398306",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/f7fc624be3dbfb78047a1cab795b93c7235fbf1c/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/f7fc624be3dbfb78047a1cab795b93c7235fbf1c/compile_commands.json",
+  "changed_files": [
+    "sound/soc/sof/ipc3-loader.c"
+  ],
+  "commit_message": "ASoC: SOF: Add some bounds checking to firmware data\n\nSmatch complains about \"head->full_size - head->header_size\" can\nunderflow.  To some extent, we're always going to have to trust the\nfirmware a bit.  However, it's easy enough to add a check for negatives,\nand let's add a upper bounds check as well.\n\nFixes: d2458baa799f (\"ASoC: SOF: ipc3-loader: Implement firmware parsing and loading\")\nSigned-off-by: Dan Carpenter <dan.carpenter@linaro.org>\nLink: https://msgid.link/r/5593d147-058c-4de3-a6f5-540ecb96f6f8@moroto.mountain\nSigned-off-by: Mark Brown <broonie@kernel.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

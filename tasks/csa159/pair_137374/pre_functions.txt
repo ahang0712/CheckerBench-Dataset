@@ -1,0 +1,47 @@
+### File: jerry-core/vm/opcodes.c
+```c
+static ecma_property_t *
+opfunc_find_private_key (ecma_object_t *class_object_p, /**< class environment */
+                         ecma_object_t *obj_p, /**< object */
+                         ecma_string_t *search_key_p, /**< key */
+                         ecma_string_t **out_private_key_p) /**< [out] private key */
+{
+  ecma_string_t *internal_string_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_CLASS_PRIVATE_ELEMENTS);
+  ecma_property_t *prop_p = ecma_find_named_property (class_object_p, internal_string_p);
+
+  if (prop_p == NULL)
+  {
+    return NULL;
+  }
+
+  ecma_value_t *collection_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_value_t, ECMA_PROPERTY_VALUE_PTR (prop_p)->value);
+  ecma_value_t *current_p = collection_p + 1;
+  ecma_value_t *end_p = ecma_compact_collection_end (collection_p);
+
+  while (current_p < end_p)
+  {
+    current_p++; /* skip kind */
+    ecma_string_t *private_key_p = ecma_get_prop_name_from_value (*current_p++);
+    current_p++; /* skip value */
+
+    JERRY_ASSERT (ecma_prop_name_is_symbol (private_key_p));
+
+    ecma_string_t *private_key_desc_p =
+      ecma_get_string_from_value (((ecma_extended_string_t *) private_key_p)->u.symbol_descriptor);
+
+    if (ecma_compare_ecma_strings (private_key_desc_p, search_key_p))
+    {
+      prop_p = ecma_find_named_property (obj_p, private_key_p);
+
+      if (out_private_key_p)
+      {
+        *out_private_key_p = private_key_p;
+      }
+
+      return prop_p;
+    }
+  }
+
+  return NULL;
+}
+```

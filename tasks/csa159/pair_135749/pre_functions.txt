@@ -1,0 +1,284 @@
+### File: src/file.c
+```c
+static void
+file_add_mapi_attrs (File* file, MAPI_Attr** attrs)
+{
+    int i;
+    for (i = 0; attrs[i]; i++)
+    {
+	MAPI_Attr* a = attrs[i];
+
+	if (a->num_values)
+	{
+
+	    switch (a->name)
+	    {
+	    case MAPI_ATTACH_LONG_FILENAME:
+		if (file->name) XFREE(file->name);
+		file->name = strdup( (char*)a->values[0].data.buf );
+		break;
+
+	    case MAPI_ATTACH_DATA_OBJ:
+		file->len = a->values[0].len;
+		if (file->data) XFREE (file->data);
+		file->data = CHECKED_XMALLOC (unsigned char, file->len);
+		memmove (file->data, a->values[0].data.buf, file->len);
+		break;
+
+             case MAPI_ATTACH_MIME_TAG:
+		if (file->mime_type) XFREE (file->mime_type);
+		file->mime_type = CHECKED_XMALLOC (char, a->values[0].len);
+		memmove (file->mime_type, a->values[0].data.buf, a->values[0].len);
+		break;
+
+                case MAPI_ATTACH_CONTENT_ID:
+                    if (file->content_id) XFREE(file->content_id);
+                    file->content_id = CHECKED_XMALLOC (char, a->values[0].len);
+                    memmove (file->content_id, a->values[0].data.buf, a->values[0].len);
+                    break;
+
+	    default:
+		break;
+	    }
+	}
+    }
+}
+```
+
+### File: src/tnef.c
+```c
+static VarLenData**
+get_html_data (MAPI_Attr *a)
+{
+    VarLenData **body = XCALLOC(VarLenData*, a->num_values + 1);
+
+    int j;
+    for (j = 0; j < a->num_values; j++)
+    {
+	body[j] = XMALLOC(VarLenData, 1);
+	body[j]->len = a->values[j].len;
+	body[j]->data = CHECKED_XCALLOC(unsigned char, a->values[j].len);
+	memmove (body[j]->data, a->values[j].data.buf, body[j]->len);
+    }
+    return body;
+}
+
+int
+data_left (FILE* input_file)
+{
+    int retval = 1;
+    
+    if (feof(input_file)) retval = 0;
+    else if (input_file != stdin)
+    {
+	/* check if there is enough data left */
+	struct stat statbuf;
+	size_t pos, data_left;
+	fstat (fileno(input_file), &statbuf);
+	pos = ftell(input_file);
+	data_left = (statbuf.st_size - pos);
+
+	if (data_left > 0 && data_left < MINIMUM_ATTR_LENGTH) 
+	{
+	    if ( CRUFT_SKIP )
+	    {
+		/* look for specific flavor of cruft -- trailing "\r\n" */
+
+		if ( data_left == 2 )
+		{
+		    int c = fgetc( input_file );
+
+		    if ( c < 0 )	/* this should never happen */
+		    {
+			fprintf( stderr, "ERROR: confused beyond all redemption.\n" );
+			exit (1);
+		    }
+
+		    ungetc( c, input_file );
+
+		    if ( c == 0x0d )		/* test for "\r" part of "\r\n" */
+		    {
+			/* "trust" that next char is 0x0a and ignore this cruft */
+
+			if ( VERBOSE_ON )
+			    fprintf( stderr, "WARNING: garbage at end of file (ignored)\n" );
+
+			if ( DEBUG_ON )
+			    debug_print( "!!garbage at end of file (ignored)\n" );
+		    }
+		    else
+		    {
+			fprintf( stderr, "ERROR: garbage at end of file.\n" );
+		    }
+		}
+		else
+		{
+		    fprintf (stderr, "ERROR: garbage at end of file.\n");
+		}
+	    }
+	    else
+	    {
+		fprintf (stderr, "ERROR: garbage at end of file.\n");
+	    }
+
+	    retval = 0;
+	}
+    }
+    return retval;
+}
+
+int
+parse_file (FILE* input_file, char* directory, 
+	    char *body_filename, char *body_pref,
+	    int flags)
+{
+    uint32 d;
+    uint16 key;
+    Attr *attr = NULL;
+    File *file = NULL;
+    int rtf_size = 0, html_size = 0;
+    MessageBody body;
+    memset (&body, '\0', sizeof (MessageBody));
+
+    /* store the program options in our file global variables */
+    g_flags = flags;
+
+    /* check that this is in fact a TNEF file */
+    d = geti32(input_file);
+    if (d != TNEF_SIGNATURE)
+    {
+	fprintf (stdout, "Seems not to be a TNEF file\n");
+	return 1;
+    }
+
+    /* Get the key */
+    key = geti16(input_file);
+    debug_print ("TNEF Key: %hx\n", key);
+
+    /* The rest of the file is a series of 'messages' and 'attachments' */
+    while ( data_left( input_file ) )
+    {
+	attr = read_object( input_file );
+
+	if ( attr == NULL ) break;
+
+	/* This signals the beginning of a file */
+	if (attr->name == attATTACHRENDDATA)
+	{
+	    if (file)
+	    {
+		file_write (file, directory);
+		file_free (file);
+	    }
+	    else
+	    {
+		file = CHECKED_XCALLOC (File, 1);
+	    }
+	}
+
+	/* Add the data to our lists. */
+	switch (attr->lvl_type)
+	{
+	case LVL_MESSAGE:
+	    if (attr->name == attBODY)
+	    {
+		body.text_body = get_text_data (attr);
+	    }
+	    else if (attr->name == attMAPIPROPS) 
+	    { 
+		MAPI_Attr **mapi_attrs 
+		    = mapi_attr_read (attr->len, attr->buf); 
+		if (mapi_attrs)
+		{ 
+		    int i;
+		    for (i = 0; mapi_attrs[i]; i++)
+		    {
+			MAPI_Attr *a = mapi_attrs[i];
+			    
+			if (a->name == MAPI_BODY_HTML)
+			{
+			    body.html_bodies = get_html_data (a);
+                                html_size = a->num_values;
+			}
+			else if (a->name == MAPI_RTF_COMPRESSED)
+			{
+			    body.rtf_bodies = get_rtf_data (a);
+                                rtf_size = a->num_values;
+			}
+		    }
+		    /* cannot save attributes to file, since they
+		     * are not attachment attributes */ 
+		    /* file_add_mapi_attrs (file, mapi_attrs); */
+		    mapi_attr_free_list (mapi_attrs); 
+		    XFREE (mapi_attrs); 
+		}
+	    }
+	    break;
+	case LVL_ATTACHMENT:
+	    file_add_attr (file, attr);
+	    break;
+	default:
+	    fprintf (stderr, "Invalid lvl type on attribute: %d\n",
+		     attr->lvl_type);
+	    return 1;
+	    break;
+	}
+	attr_free (attr);
+	XFREE (attr);
+    }
+
+    if (file)
+    {
+	file_write (file, directory);
+	file_free (file);
+	XFREE (file);
+    }
+    
+    /* Write the message body */
+    if (flags & SAVEBODY)
+    {
+	int i = 0;
+	int all_flag = 0;
+	if (strcmp (body_pref, "all") == 0) 
+	{
+	    all_flag = 1;
+	    body_pref = "rht";
+	}
+
+	for (; i < 3; i++)
+	{
+	    File **files
+		= get_body_files (body_filename, body_pref[i], &body);
+	    if (files)
+	    {
+		int j = 0; 
+		for (; files[j]; j++)
+		{
+		    file_write(files[j], directory);
+		    file_free (files[j]);
+                    XFREE(files[j]);
+		}
+		XFREE(files);
+		if (!all_flag) break;
+	    }
+	}
+    }
+
+    if (body.text_body)
+    {
+        free_bodies(body.text_body, 1);
+        XFREE(body.text_body);
+    }
+    if (rtf_size > 0)
+    {
+        free_bodies(body.rtf_bodies, rtf_size);
+        XFREE(body.rtf_bodies);
+    }
+    if (html_size > 0)
+    {
+        free_bodies(body.html_bodies, html_size);
+        XFREE(body.html_bodies);
+    }
+    return 0;
+}
+```

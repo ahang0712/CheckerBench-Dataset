@@ -1,0 +1,342 @@
+### File: src/db.c
+```c
+static bool _db_chain_lt(const struct db_arg_chain_tree *a,
+			 const struct db_arg_chain_tree *b)
+{
+	return ((a->arg < b->arg) ||
+		((a->arg == b->arg) &&
+		 ((a->op < b->op) ||
+		  ((a->op == b->op) &&
+		   ((a->mask < b->mask) ||
+		    ((a->mask == b->mask) &&
+		     (a->datum < b->datum)))))));
+}
+
+static bool _db_chain_eq(const struct db_arg_chain_tree *a,
+			 const struct db_arg_chain_tree *b)
+{
+	return ((a->arg == b->arg) && (a->op == b->op) &&
+		(a->datum == b->datum) && (a->mask == b->mask));
+}
+
+static bool _db_chain_zombie(const struct db_arg_chain_tree *iter)
+{
+	return (_db_chain_leaf(iter) &&
+		!(iter->act_t_flg) && !(iter->act_f_flg));
+}
+
+static unsigned int _db_tree_put(struct db_arg_chain_tree **tree)
+{
+	int cnt = 0;
+	struct db_arg_chain_tree *node, *prev, *next;
+
+	if (tree == NULL || *tree == NULL)
+		return 0;
+	node = *tree;
+
+	while (node->lvl_nxt != NULL)
+		node = node->lvl_nxt;
+
+	while (node != NULL) {
+		prev = node->lvl_prv;
+		next = node->lvl_nxt;
+
+		cnt += _db_tree_put(&node->nxt_t);
+		cnt += _db_tree_put(&node->nxt_f);
+		if (--(node->refcnt) == 0) {
+			/* remove the node from the current level */
+			if (prev)
+				prev->lvl_nxt = next;
+			if (next)
+				next->lvl_prv = prev;
+
+			/* reset the caller's pointer */
+			if (prev != NULL)
+				*tree = prev;
+			else
+				*tree = next;
+
+			/* cleanup and accounting */
+			free(node);
+			cnt++;
+		}
+
+		/* next */
+		node = prev;
+	}
+
+	return cnt;
+}
+
+static unsigned int _db_node_put(struct db_arg_chain_tree **node)
+{
+	if ((*node)->refcnt == 1)
+		return _db_tree_put(node);
+	(*node)->refcnt--;
+	return 0;
+}
+
+static struct db_arg_chain_tree *_db_node_get(struct db_arg_chain_tree *node)
+{
+	node->refcnt++;
+	return node;
+}
+
+static struct db_arg_chain_tree *_db_tree_get(struct db_arg_chain_tree *tree)
+{
+	struct db_arg_chain_tree *iter;
+
+	if (tree->nxt_t) {
+		iter = tree->nxt_t;
+		while (iter->lvl_prv != NULL)
+			iter = iter->lvl_prv;
+		do {
+			_db_tree_get(iter);
+			iter = iter->lvl_nxt;
+		} while (iter != NULL);
+	}
+
+	if (tree->nxt_f) {
+		iter = tree->nxt_f;
+		while (iter->lvl_prv != NULL)
+			iter = iter->lvl_prv;
+		do {
+			_db_tree_get(iter);
+			iter = iter->lvl_nxt;
+		} while (iter != NULL);
+	}
+
+	return _db_node_get(tree);
+}
+
+static void _db_level_get(struct db_arg_chain_tree *node)
+{
+	struct db_arg_chain_tree *iter = node;
+
+	while (iter->lvl_prv != NULL)
+		iter = iter->lvl_prv;
+
+	while (iter) {
+		_db_tree_get(iter);
+		iter = iter->lvl_nxt;
+	}
+}
+
+static unsigned int _db_tree_remove(struct db_arg_chain_tree **tree,
+				    struct db_arg_chain_tree *node)
+{
+	int cnt = 0;
+	struct db_arg_chain_tree *c_iter;
+
+	if (tree == NULL || *tree == NULL || node == NULL)
+		return 0;
+
+	c_iter = *tree;
+	while (c_iter->lvl_prv != NULL)
+		c_iter = c_iter->lvl_prv;
+
+	do {
+		/* current node? */
+		if (c_iter == node)
+			goto remove;
+
+		/* check the sub-trees */
+		cnt += _db_tree_remove(&(c_iter->nxt_t), node);
+		cnt += _db_tree_remove(&(c_iter->nxt_f), node);
+
+		/* check for empty/zombie nodes */
+		if (_db_chain_zombie(c_iter))
+			goto remove;
+
+		/* next node on this level */
+		c_iter = c_iter->lvl_nxt;
+	} while (c_iter != NULL && cnt == 0);
+
+	return cnt;
+
+remove:
+	/* reset the tree pointer if needed */
+	if (c_iter == *tree) {
+		if (c_iter->lvl_prv != NULL)
+			*tree = c_iter->lvl_prv;
+		else
+			*tree = c_iter->lvl_nxt;
+	}
+
+	/* remove the node from the current level */
+	if (c_iter->lvl_prv)
+		c_iter->lvl_prv->lvl_nxt = c_iter->lvl_nxt;
+	if (c_iter->lvl_nxt)
+		c_iter->lvl_nxt->lvl_prv = c_iter->lvl_prv;
+	c_iter->lvl_prv = NULL;
+	c_iter->lvl_nxt = NULL;
+
+	/* free the node and any sub-trees */
+	cnt += _db_tree_put(&c_iter);
+
+	return cnt;
+}
+
+static int _db_tree_add(struct db_arg_chain_tree **existing,
+			struct db_arg_chain_tree *new,
+			struct db_iter_state *state)
+{
+	int rc;
+	struct db_arg_chain_tree *x_iter = *existing;
+	struct db_arg_chain_tree *n_iter = new;
+
+	/* TODO: when we add sub-trees to the current level (see the lt/gt
+	 * branches below) we need to grab an extra reference for sub-trees at
+	 * the current as the current level is visible to both the new and
+	 * existing trees; at some point if would be nice if we didn't have to
+	 * take this extra reference */
+
+	do {
+		if (_db_chain_eq(x_iter, n_iter)) {
+			if (n_iter->act_t_flg) {
+				if (!x_iter->act_t_flg) {
+					/* new node has a true action */
+
+					/* do the actions match? */
+					rc = _db_tree_act_check(x_iter->nxt_t,
+								n_iter->act_t);
+					if (rc != 0)
+						return rc;
+
+					/* update with the new action */
+					rc = _db_tree_put(&x_iter->nxt_t);
+					x_iter->nxt_t = NULL;
+					x_iter->act_t = n_iter->act_t;
+					x_iter->act_t_flg = true;
+					state->sx->node_cnt -= rc;
+				} else if (n_iter->act_t != x_iter->act_t)
+					return -EEXIST;
+			}
+			if (n_iter->act_f_flg) {
+				if (!x_iter->act_f_flg) {
+					/* new node has a false action */
+
+					/* do the actions match? */
+					rc = _db_tree_act_check(x_iter->nxt_f,
+								n_iter->act_f);
+					if (rc != 0)
+						return rc;
+
+					/* update with the new action */
+					rc = _db_tree_put(&x_iter->nxt_f);
+					x_iter->nxt_f = NULL;
+					x_iter->act_f = n_iter->act_f;
+					x_iter->act_f_flg = true;
+					state->sx->node_cnt -= rc;
+				} else if (n_iter->act_f != x_iter->act_f)
+					return -EEXIST;
+			}
+
+			if (n_iter->nxt_t) {
+				if (x_iter->nxt_t) {
+					/* compare the next level */
+					rc = _db_tree_add(&x_iter->nxt_t,
+							  n_iter->nxt_t,
+							  state);
+					if (rc != 0)
+						return rc;
+				} else if (!x_iter->act_t_flg) {
+					/* add a new sub-tree */
+					x_iter->nxt_t = _db_tree_get(n_iter->nxt_t);
+				} else
+					/* done - existing tree is "shorter" */
+					return 0;
+			}
+			if (n_iter->nxt_f) {
+				if (x_iter->nxt_f) {
+					/* compare the next level */
+					rc = _db_tree_add(&x_iter->nxt_f,
+							  n_iter->nxt_f,
+							  state);
+					if (rc != 0)
+						return rc;
+				} else if (!x_iter->act_f_flg) {
+					/* add a new sub-tree */
+					x_iter->nxt_f = _db_tree_get(n_iter->nxt_f);
+				} else
+					/* done - existing tree is "shorter" */
+					return 0;
+			}
+
+			return 0;
+		} else if (!_db_chain_lt(x_iter, n_iter)) {
+			/* try to move along the current level */
+			if (x_iter->lvl_nxt == NULL) {
+				/* add to the end of this level */
+				_db_level_get(x_iter);
+				_db_tree_get(n_iter);
+				n_iter->lvl_prv = x_iter;
+				x_iter->lvl_nxt = n_iter;
+				return 0;
+			} else
+				/* next */
+				x_iter = x_iter->lvl_nxt;
+		} else {
+			/* add before the existing node on this level*/
+			_db_level_get(x_iter);
+			_db_tree_get(n_iter);
+			if (x_iter->lvl_prv != NULL)
+				x_iter->lvl_prv->lvl_nxt = n_iter;
+			n_iter->lvl_prv = x_iter->lvl_prv;
+			n_iter->lvl_nxt = x_iter;
+			x_iter->lvl_prv = n_iter;
+			if (*existing == x_iter)
+				*existing = n_iter;
+			return 0;
+		}
+	} while (x_iter);
+
+	return 0;
+}
+
+static struct db_sys_list *_db_rule_gen_64(const struct arch_def *arch,
+					   const struct db_api_rule_list *rule)
+{
+	unsigned int iter;
+	struct db_sys_list *s_new;
+	const struct db_api_arg *chain = rule->args;
+	struct db_arg_chain_tree *c_iter_hi = NULL, *c_iter_lo = NULL;
+	struct db_arg_chain_tree *c_prev_hi = NULL, *c_prev_lo = NULL;
+	bool tf_flag;
+
+	s_new = zmalloc(sizeof(*s_new));
+	if (s_new == NULL)
+		return NULL;
+	s_new->num = rule->syscall;
+	s_new->valid = true;
+	/* run through the argument chain */
+	for (iter = 0; iter < ARG_COUNT_MAX; iter++) {
+		if (chain[iter].valid == 0)
+			continue;
+
+		/* TODO: handle the case were either hi or lo isn't needed */
+
+		/* skip generating instruction which are no-ops */
+		if (!_db_arg_cmp_need_hi(&chain[iter]) &&
+		    !_db_arg_cmp_need_lo(&chain[iter]))
+			continue;
+
+		c_iter_hi = zmalloc(sizeof(*c_iter_hi));
+		if (c_iter_hi == NULL)
+			goto gen_64_failure;
+		c_iter_lo = zmalloc(sizeof(*c_iter_lo));
+		if (c_iter_lo == NULL) {
+			free(c_iter_hi);
+			goto gen_64_failure;
+		}
+
+		/* link this level to the previous level */
+		if (c_prev_lo != NULL) {
+			if (!tf_flag) {
+				c_prev_lo->nxt_f = _db_node_get(c_iter_hi);
+				c_prev_hi->nxt_f = _db_node_get(c_iter_hi);
+			} else
+				c
+
+// ... (3923 more chars)
+```

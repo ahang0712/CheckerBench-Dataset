@@ -1,0 +1,59 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-4954e5890cce23c8b03d",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-4954e5890cce23c8b03d",
+    "project_id": "pyvul__python-imaging__pillow",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "PIL/EpsImagePlugin.py",
+    "PIL/Image.py",
+    "PIL/IptcImagePlugin.py",
+    "PIL/JpegImagePlugin.py"
+  ],
+  "patch_units": {
+    "before": [
+      "function:Ghostscript",
+      "class:Image",
+      "function:Image._dump",
+      "class:IptcImageFile",
+      "function:IptcImageFile.load",
+      "class:JpegImageFile",
+      "function:JpegImageFile.load_djpeg"
+    ],
+    "after": [
+      "function:Ghostscript",
+      "class:Image",
+      "function:Image._dump",
+      "class:IptcImageFile",
+      "function:IptcImageFile.load",
+      "class:JpegImageFile",
+      "function:JpegImageFile.load_djpeg"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/08f641daaaf70221449c3b5c4a84e91796936219a20b91e4d35203686e7f7f18/database",
+      "cache_key": "08f641daaaf70221449c3b5c4a84e91796936219a20b91e4d35203686e7f7f18",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/62d7667e51007d1b94a468ba2fb246305f5f01a271bec41480f941757aef828b/database",
+      "cache_key": "62d7667e51007d1b94a468ba2fb246305f5f01a271bec41480f941757aef828b",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/25ef67aaf353265855d3a53ef7158ae4fa13015799c0bf4d700c936c6487ed7d/database",
+      "cache_key": "25ef67aaf353265855d3a53ef7158ae4fa13015799c0bf4d700c936c6487ed7d",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-4954e5890cce23c8b03d/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-4954e5890cce23c8b03d/ (do not mount into agent)"
+  }
+}

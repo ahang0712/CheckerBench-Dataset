@@ -1,0 +1,50 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-5c2773bb1de86a62a247",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-5c2773bb1de86a62a247",
+    "project_id": "morefixes__goreleaser__goreleaser",
+    "language": "go",
+    "backend": "codeql"
+  },
+  "changed_go_files": [
+    "internal/exec/exec.go",
+    "internal/pipe/sbom/sbom.go",
+    "internal/shell/shell.go"
+  ],
+  "patch_units": {
+    "before": [
+      "internal/exec/exec.go",
+      "internal/pipe/sbom/sbom.go",
+      "internal/shell/shell.go"
+    ],
+    "after": [
+      "internal/exec/exec.go",
+      "internal/pipe/sbom/sbom.go",
+      "internal/shell/shell.go"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/7101a57f51065780434ced8244fd715b05331408762f04b83b457c4f352ca052/database",
+      "cache_key": "7101a57f51065780434ced8244fd715b05331408762f04b83b457c4f352ca052",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/5da2ed8209e8b00fd03136ed2e3a48dfdbf924bbdfeb154d3d5f772001c88596/database",
+      "cache_key": "5da2ed8209e8b00fd03136ed2e3a48dfdbf924bbdfeb154d3d5f772001c88596",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/0607a32b2ab1389fbd71d9ba9aeccd92208f806ca720d338c800612d1435f501/database",
+      "cache_key": "0607a32b2ab1389fbd71d9ba9aeccd92208f806ca720d338c800612d1435f501",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-5c2773bb1de86a62a247/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-5c2773bb1de86a62a247/ (do not mount into agent)"
+  }
+}

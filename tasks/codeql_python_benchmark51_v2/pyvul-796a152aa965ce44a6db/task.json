@@ -1,0 +1,50 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-796a152aa965ce44a6db",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-796a152aa965ce44a6db",
+    "project_id": "pyvul__briancappello__flask-unchained",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "flask_unchained/bundles/controller/utils.py"
+  ],
+  "patch_units": {
+    "before": [
+      "function:redirect",
+      "function:_validate_redirect_url",
+      "module:<module>@9",
+      "module:<module>@10"
+    ],
+    "after": [
+      "function:encode_non_url_reserved_characters",
+      "function:redirect",
+      "function:_validate_redirect_url",
+      "module:<module>@9"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/e5fd82bd60056af5aaffb57019a904ba682f11f2d3661ecf6d18301cd87df6af/database",
+      "cache_key": "e5fd82bd60056af5aaffb57019a904ba682f11f2d3661ecf6d18301cd87df6af",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/7088558c3df474c6d44a72f76f6439b246f196e1d3ef64c90ae22c464de77a19/database",
+      "cache_key": "7088558c3df474c6d44a72f76f6439b246f196e1d3ef64c90ae22c464de77a19",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/557ece170ef451e56128b15092377dd17ef0a82705cb7e5e3baeb37fda3a5ae0/database",
+      "cache_key": "557ece170ef451e56128b15092377dd17ef0a82705cb7e5e3baeb37fda3a5ae0",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-796a152aa965ce44a6db/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-796a152aa965ce44a6db/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,192 @@
+### File: net/netfilter/nf_conncount.c
+```c
+static int __nf_conncount_add(struct net *net,
+			      const struct sk_buff *skb,
+			      u16 l3num,
+			      struct nf_conncount_list *list)
+{
+	const struct nf_conntrack_zone *zone = &nf_ct_zone_dflt;
+	const struct nf_conntrack_tuple_hash *found;
+	struct nf_conncount_tuple *conn, *conn_n;
+	struct nf_conntrack_tuple tuple;
+	struct nf_conn *ct = NULL;
+	struct nf_conn *found_ct;
+	unsigned int collect = 0;
+	bool refcounted = false;
+	int err = 0;
+
+	if (!get_ct_or_tuple_from_skb(net, skb, l3num, &ct, &tuple, &zone, &refcounted))
+		return -ENOENT;
+
+	if (ct && nf_ct_is_confirmed(ct)) {
+		err = -EEXIST;
+		goto out_put;
+	}
+
+	if ((u32)jiffies == list->last_gc)
+		goto add_new_node;
+
+	/* check the saved connections */
+	list_for_each_entry_safe(conn, conn_n, &list->head, node) {
+		if (collect > CONNCOUNT_GC_MAX_NODES)
+			break;
+
+		found = find_or_evict(net, list, conn);
+		if (IS_ERR(found)) {
+			/* Not found, but might be about to be confirmed */
+			if (PTR_ERR(found) == -EAGAIN) {
+				if (nf_ct_tuple_equal(&conn->tuple, &tuple) &&
+				    nf_ct_zone_id(&conn->zone, conn->zone.dir) ==
+				    nf_ct_zone_id(zone, zone->dir))
+					goto out_put; /* already exists */
+			} else {
+				collect++;
+			}
+			continue;
+		}
+
+		found_ct = nf_ct_tuplehash_to_ctrack(found);
+
+		if (nf_ct_tuple_equal(&conn->tuple, &tuple) &&
+		    nf_ct_zone_equal(found_ct, zone, zone->dir)) {
+			/*
+			 * We should not see tuples twice unless someone hooks
+			 * this into a table without "-p tcp --syn".
+			 *
+			 * Attempt to avoid a re-add in this case.
+			 */
+			nf_ct_put(found_ct);
+			goto out_put;
+		} else if (already_closed(found_ct)) {
+			/*
+			 * we do not care about connections which are
+			 * closed already -> ditch it
+			 */
+			nf_ct_put(found_ct);
+			conn_free(list, conn);
+			collect++;
+			continue;
+		}
+
+		nf_ct_put(found_ct);
+	}
+
+add_new_node:
+	if (WARN_ON_ONCE(list->count > INT_MAX)) {
+		err = -EOVERFLOW;
+		goto out_put;
+	}
+
+	conn = kmem_cache_alloc(conncount_conn_cachep, GFP_ATOMIC);
+	if (conn == NULL) {
+		err = -ENOMEM;
+		goto out_put;
+	}
+
+	conn->tuple = tuple;
+	conn->zone = *zone;
+	conn->cpu = raw_smp_processor_id();
+	conn->jiffies32 = (u32)jiffies;
+	list_add_tail(&conn->node, &list->head);
+	list->count++;
+	list->last_gc = (u32)jiffies;
+
+out_put:
+	if (refcounted)
+		nf_ct_put(ct);
+	return err;
+}
+
+static unsigned int
+insert_tree(struct net *net,
+	    const struct sk_buff *skb,
+	    u16 l3num,
+	    struct nf_conncount_data *data,
+	    struct rb_root *root,
+	    unsigned int hash,
+	    const u32 *key)
+{
+	struct nf_conncount_rb *gc_nodes[CONNCOUNT_GC_MAX_NODES];
+	const struct nf_conntrack_zone *zone = &nf_ct_zone_dflt;
+	bool do_gc = true, refcounted = false;
+	unsigned int count = 0, gc_count = 0;
+	struct rb_node **rbnode, *parent;
+	struct nf_conntrack_tuple tuple;
+	struct nf_conncount_tuple *conn;
+	struct nf_conncount_rb *rbconn;
+	struct nf_conn *ct = NULL;
+
+	spin_lock_bh(&nf_conncount_locks[hash]);
+restart:
+	parent = NULL;
+	rbnode = &(root->rb_node);
+	while (*rbnode) {
+		int diff;
+		rbconn = rb_entry(*rbnode, struct nf_conncount_rb, node);
+
+		parent = *rbnode;
+		diff = key_diff(key, rbconn->key, data->keylen);
+		if (diff < 0) {
+			rbnode = &((*rbnode)->rb_left);
+		} else if (diff > 0) {
+			rbnode = &((*rbnode)->rb_right);
+		} else {
+			int ret;
+
+			ret = nf_conncount_add_skb(net, skb, l3num, &rbconn->list);
+			if (ret && ret != -EEXIST)
+				count = 0; /* hotdrop */
+			else
+				count = rbconn->list.count;
+			tree_nodes_free(root, gc_nodes, gc_count);
+			goto out_unlock;
+		}
+
+		if (gc_count >= ARRAY_SIZE(gc_nodes))
+			continue;
+
+		if (do_gc && nf_conncount_gc_list(net, &rbconn->list))
+			gc_nodes[gc_count++] = rbconn;
+	}
+
+	if (gc_count) {
+		tree_nodes_free(root, gc_nodes, gc_count);
+		schedule_gc_worker(data, hash);
+		gc_count = 0;
+		do_gc = false;
+		goto restart;
+	}
+
+	if (get_ct_or_tuple_from_skb(net, skb, l3num, &ct, &tuple, &zone, &refcounted)) {
+		/* expected case: match, insert new node */
+		rbconn = kmem_cache_alloc(conncount_rb_cachep, GFP_ATOMIC);
+		if (rbconn == NULL)
+			goto out_unlock;
+
+		conn = kmem_cache_alloc(conncount_conn_cachep, GFP_ATOMIC);
+		if (conn == NULL) {
+			kmem_cache_free(conncount_rb_cachep, rbconn);
+			goto out_unlock;
+		}
+
+		conn->tuple = tuple;
+		conn->zone = *zone;
+		conn->cpu = raw_smp_processor_id();
+		conn->jiffies32 = (u32)jiffies;
+		memcpy(rbconn->key, key, sizeof(u32) * data->keylen);
+
+		nf_conncount_list_init(&rbconn->list);
+		list_add(&conn->node, &rbconn->list.head);
+		count = 1;
+		rbconn->list.count = count;
+
+		rb_link_node_rcu(&rbconn->node, parent, rbnode);
+		rb_insert_color(&rbconn->node, root);
+	}
+out_unlock:
+	if (refcounted)
+		nf_ct_put(ct);
+	spin_unlock_bh(&nf_conncount_locks[hash]);
+	return count;
+}
+```

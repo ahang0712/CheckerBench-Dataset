@@ -1,0 +1,19 @@
+{
+  "project_id": "libarchive_libarchive",
+  "before_commit": "d767d7904781794442938df6b0dd29c8da325e03",
+  "after_commit": "22531545514043e04633e1c015c7540b9de9dbe4",
+  "repo_path": "/workspace/repo/libarchive/libarchive",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/libarchive_libarchive/e5d1fbb2e24ad7ce3b94740c99c053c9ce24bffd/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/libarchive_libarchive/e5d1fbb2e24ad7ce3b94740c99c053c9ce24bffd/compile_commands.json",
+  "changed_files": [
+    "libarchive/archive_write.c"
+  ],
+  "commit_message": "Limit write requests to at most INT_MAX.\nThis prevents a certain common programming error (passing -1 to write)\nfrom leading to other problems deeper in the library.",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

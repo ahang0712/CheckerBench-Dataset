@@ -1,0 +1,19 @@
+{
+  "project_id": "FFmpeg_FFmpeg",
+  "before_commit": "a0341b4d74f4db289e15dac0d2988eaa2d18a1bb",
+  "after_commit": "e371f031b942d73e02c090170975561fabd5c264",
+  "repo_path": "/workspace/repo/FFmpeg/FFmpeg",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/FFmpeg_FFmpeg/7f9978b0bdfc80ac23248df743645d1efc7e123f/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/FFmpeg_FFmpeg/7f9978b0bdfc80ac23248df743645d1efc7e123f/compile_commands.json",
+  "changed_files": [
+    "libavcodec/pngdec.c"
+  ],
+  "commit_message": "avcodec/pngdec: Fix off by 1 size in decode_zbuf()\n\nFixes out of array access\nFixes: 444/fuzz-2-ffmpeg_VIDEO_AV_CODEC_ID_PNG_fuzzer\n\nFound-by: continuous fuzzing process https://github.com/google/oss-fuzz/tree/master/targets/ffmpeg\nSigned-off-by: Michael Niedermayer <michael@niedermayer.cc>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

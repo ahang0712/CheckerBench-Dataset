@@ -1,0 +1,20 @@
+### File: net/netfilter/nf_tables_api.c
+```c
+static void nft_map_catchall_activate(const struct nft_ctx *ctx,
+				      struct nft_set *set)
+{
+	u8 genmask = nft_genmask_next(ctx->net);
+	struct nft_set_elem_catchall *catchall;
+	struct nft_set_ext *ext;
+
+	list_for_each_entry(catchall, &set->catchall_list, list) {
+		ext = nft_set_elem_ext(set, catchall->elem);
+		if (nft_set_elem_active(ext, genmask))
+			continue;
+
+		nft_clear(ctx->net, ext);
+		nft_setelem_data_activate(ctx->net, set, catchall->elem);
+		break;
+	}
+}
+```

@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "b8ab8858190a1bba5f4b35ca37b1e4d7577b3a75",
+  "after_commit": "3027e7b15b02d2d37e3f82d6b8404f6d37e3b8cf",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/826eb9bcc1844990e3c4a7c84846f1c1eaee0ed0/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/826eb9bcc1844990e3c4a7c84846f1c1eaee0ed0/compile_commands.json",
+  "changed_files": [
+    "drivers/net/ethernet/intel/ice/ice_ptp.c"
+  ],
+  "commit_message": "ice: Fix some null pointer dereference issues in ice_ptp.c\n\ndevm_kasprintf() returns a pointer to dynamically allocated memory\nwhich can be NULL upon failure.\n\nFixes: d938a8cca88a (\"ice: Auxbus devices & driver for E822 TS\")\nCc: Kunwu Chan <kunwu.chan@hotmail.com>\nSuggested-by: Przemek Kitszel <przemyslaw.kitszel@intel.com>\nSigned-off-by: Kunwu Chan <chentao@kylinos.cn>\nReviewed-by: Przemek Kitszel <przemyslaw.kitszel@intel.com>\nReviewed-by: Simon Horman <horms@kernel.org>\nTested-by: Pucha Himasekhar Reddy <himasekharx.reddy.pucha@intel.com> (A Contingent worker at Intel)\nSigned-off-by: Tony Nguyen <anthony.l.nguyen@intel.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,19 @@
+{
+  "project_id": "ccxvii_mujs",
+  "before_commit": "77ab465f1c394bb77f00966cd950650f3f53cb24",
+  "after_commit": "fa3d30fd18c348bb4b1f3858fb860f4fcd4b2045",
+  "repo_path": "/workspace/repo/ccxvii/mujs",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/ccxvii_mujs/eed76191580004d5461bdf8accd8ca23e8541b57/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/ccxvii_mujs/eed76191580004d5461bdf8accd8ca23e8541b57/compile_commands.json",
+  "changed_files": [
+    "regexp.c"
+  ],
+  "commit_message": "Fix 697448: Limit the maximum program size to something reasonable.\n\nA regular expression with lots of nested repetition can lead to\ninteger overflow when calculating the size of the program.\n\nCheck max program size when counting the number of instructions required\nfor a loop, so we can bail before integer overflow can happen.",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "4ee64205ffaa587e8114d84a67ac721399ccb369",
+  "after_commit": "d97708701434ce72968e771976aaf9d3438fcafd",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/028ef9c96e96197026887c0f092424679298aae8/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/028ef9c96e96197026887c0f092424679298aae8/compile_commands.json",
+  "changed_files": [
+    "drivers/vfio/pci/vfio_pci_core.c"
+  ],
+  "commit_message": "vfio/pci: Clean up DMABUFs before disabling function\n\nOn device shutdown, make vfio_pci_core_close_device() call\nvfio_pci_dma_buf_cleanup() before the function is disabled via\nvfio_pci_core_disable().  This ensures that all access via DMABUFs is\nrevoked before the function's BARs become inaccessible.\n\nThis fixes an issue where, if the function is disabled first, a tiny\nwindow exists in which the function's MSE is cleared and yet BARs\ncould still be accessed via the DMABUF.  The resources would also be\nfreed and up for grabs by a different driver.\n\nFixes: 5d74781ebc86c (\"vfio/pci: Add dma-buf export support for MMIO regions\")\nSigned-off-by: Matt Evans <mattev@meta.com>\nReviewed-by: Jason Gunthorpe <jgg@nvidia.com>\nReviewed-by: Kevin Tian <kevin.tian@intel.com>\nReviewed-by: Leon Romanovsky <leonro@nvidia.com>\nLink: https://lore.kernel.org/r/20260415181752.1027604-1-mattev@meta.com\nSigned-off-by: Alex Williamson <alex@shazbot.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "e3952fcce1aad934f1322843b564ff86256444b2",
+  "after_commit": "cc16eecae687912238ee6efbff71ad31e2bc414e",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/cfb92440ee71adcc2105b0890bb01ac3cddb8507/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/cfb92440ee71adcc2105b0890bb01ac3cddb8507/compile_commands.json",
+  "changed_files": [
+    "fs/jbd2/transaction.c"
+  ],
+  "commit_message": "jbd2: fix use-after-free of transaction_t race\n\njbd2_journal_wait_updates() is called with j_state_lock held. But if\nthere is a commit in progress, then this transaction might get committed\nand freed via jbd2_journal_commit_transaction() ->\njbd2_journal_free_transaction(), when we release j_state_lock.\nSo check for journal->j_running_transaction everytime we release and\nacquire j_state_lock to avoid use-after-free issue.\n\nLink: https://lore.kernel.org/r/948c2fed518ae739db6a8f7f83f1d58b504f87d0.1644497105.git.ritesh.list@gmail.com\nFixes: 4f98186848707f53 (\"jbd2: refactor wait logic for transaction updates into a common function\")\nCc: stable@kernel.org\nReported-and-tested-by: syzbot+afa2ca5171d93e44b348@syzkaller.appspotmail.com\nReviewed-by: Jan Kara <jack@suse.cz>\nSigned-off-by: Ritesh Harjani <riteshh@linux.ibm.com>\nSigned-off-by: Theodore Ts'o <tytso@mit.edu>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

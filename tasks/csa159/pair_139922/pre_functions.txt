@@ -1,0 +1,92 @@
+### File: fs/btrfs/lzo.c
+```c
+int lzo_decompress_bio(struct list_head *ws, struct compressed_bio *cb)
+{
+	struct workspace *workspace = list_entry(ws, struct workspace, list);
+	const struct btrfs_fs_info *fs_info = btrfs_sb(cb->inode->i_sb);
+	const u32 sectorsize = fs_info->sectorsize;
+	char *kaddr;
+	int ret;
+	/* Compressed data length, can be unaligned */
+	u32 len_in;
+	/* Offset inside the compressed data */
+	u32 cur_in = 0;
+	/* Bytes decompressed so far */
+	u32 cur_out = 0;
+
+	kaddr = kmap(cb->compressed_pages[0]);
+	len_in = read_compress_length(kaddr);
+	kunmap(cb->compressed_pages[0]);
+	cur_in += LZO_LEN;
+
+	/*
+	 * LZO header length check
+	 *
+	 * The total length should not exceed the maximum extent length,
+	 * and all sectors should be used.
+	 * If this happens, it means the compressed extent is corrupted.
+	 */
+	if (len_in > min_t(size_t, BTRFS_MAX_COMPRESSED, cb->compressed_len) ||
+	    round_up(len_in, sectorsize) < cb->compressed_len) {
+		btrfs_err(fs_info,
+			"invalid lzo header, lzo len %u compressed len %u",
+			len_in, cb->compressed_len);
+		return -EUCLEAN;
+	}
+
+	/* Go through each lzo segment */
+	while (cur_in < len_in) {
+		struct page *cur_page;
+		/* Length of the compressed segment */
+		u32 seg_len;
+		u32 sector_bytes_left;
+		size_t out_len = lzo1x_worst_compress(sectorsize);
+
+		/*
+		 * We should always have enough space for one segment header
+		 * inside current sector.
+		 */
+		ASSERT(cur_in / sectorsize ==
+		       (cur_in + LZO_LEN - 1) / sectorsize);
+		cur_page = cb->compressed_pages[cur_in / PAGE_SIZE];
+		ASSERT(cur_page);
+		kaddr = kmap(cur_page);
+		seg_len = read_compress_length(kaddr + offset_in_page(cur_in));
+		kunmap(cur_page);
+		cur_in += LZO_LEN;
+
+		/* Copy the compressed segment payload into workspace */
+		copy_compressed_segment(cb, workspace->cbuf, seg_len, &cur_in);
+
+		/* Decompress the data */
+		ret = lzo1x_decompress_safe(workspace->cbuf, seg_len,
+					    workspace->buf, &out_len);
+		if (ret != LZO_E_OK) {
+			btrfs_err(fs_info, "failed to decompress");
+			ret = -EIO;
+			goto out;
+		}
+
+		/* Copy the data into inode pages */
+		ret = btrfs_decompress_buf2page(workspace->buf, out_len, cb, cur_out);
+		cur_out += out_len;
+
+		/* All data read, exit */
+		if (ret == 0)
+			goto out;
+		ret = 0;
+
+		/* Check if the sector has enough space for a segment header */
+		sector_bytes_left = sectorsize - (cur_in % sectorsize);
+		if (sector_bytes_left >= LZO_LEN)
+			continue;
+
+		/* Skip the padding zeros */
+		cur_in += sector_bytes_left;
+	}
+out:
+	if (!ret)
+		zero_fill_bio(cb->orig_bio);
+	return ret;
+}
+```

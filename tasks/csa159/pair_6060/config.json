@@ -1,0 +1,19 @@
+{
+  "project_id": "FreeRDP_FreeRDP",
+  "before_commit": "733ee3208306b1ea32697b356c0215180fc3f049",
+  "after_commit": "b8beb55913471952f92770c90c372139d78c16c0",
+  "repo_path": "/workspace/repo/FreeRDP/FreeRDP",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/FreeRDP_FreeRDP/1628939227fa82fa492f068f178f0cc0a42c518b/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/FreeRDP_FreeRDP/1628939227fa82fa492f068f178f0cc0a42c518b/compile_commands.json",
+  "changed_files": [
+    "libfreerdp/core/orders.c"
+  ],
+  "commit_message": "Fixed OOB read in update_read_cache_bitmap_v3_order\n\nCVE-2020-11096 thanks @antonio-morales for finding this.",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

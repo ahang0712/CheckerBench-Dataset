@@ -1,0 +1,46 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-15c0ad3037992bda1b19",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-15c0ad3037992bda1b19",
+    "project_id": "pyvul__deeplook__svglib",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "svglib/svglib.py"
+  ],
+  "patch_units": {
+    "before": [
+      "function:svg2rlg",
+      "function:load_svg_file"
+    ],
+    "after": [
+      "function:svg2rlg",
+      "function:load_svg_file"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/76edd86dc7670f54b28c0c9ceeb4e7982dbc5979fd0dea56fdefe38f57dd1271/database",
+      "cache_key": "76edd86dc7670f54b28c0c9ceeb4e7982dbc5979fd0dea56fdefe38f57dd1271",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/70325685ea4650e97653e83807cf211c0ca7c0917b4a40f2305a3e25b0e78b12/database",
+      "cache_key": "70325685ea4650e97653e83807cf211c0ca7c0917b4a40f2305a3e25b0e78b12",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/92016bca5ca73b3c1a3c8d5677091ec7cca07d51338a9fa9aae517548c33c6bc/database",
+      "cache_key": "92016bca5ca73b3c1a3c8d5677091ec7cca07d51338a9fa9aae517548c33c6bc",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-15c0ad3037992bda1b19/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-15c0ad3037992bda1b19/ (do not mount into agent)"
+  }
+}

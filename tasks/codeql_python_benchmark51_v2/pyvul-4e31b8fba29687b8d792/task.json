@@ -1,0 +1,51 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-4e31b8fba29687b8d792",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-4e31b8fba29687b8d792",
+    "project_id": "pyvul__nyuccl__psiturk",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "psiturk/experiment.py",
+    "tests/test_psiturk.py"
+  ],
+  "patch_units": {
+    "before": [
+      "function:advertisement",
+      "function:give_consent",
+      "function:insert_mode",
+      "function:test_insert_mode"
+    ],
+    "after": [
+      "function:advertisement",
+      "function:give_consent",
+      "function:insert_mode",
+      "function:test_insert_mode"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/79508f84d3892ba1bfd970615da21a2e953cdd965259474c8f524774e9175e08/database",
+      "cache_key": "79508f84d3892ba1bfd970615da21a2e953cdd965259474c8f524774e9175e08",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/01fd9d794d01851dcf2224476d86233b43838f47082fa844196920a9b7eaff7e/database",
+      "cache_key": "01fd9d794d01851dcf2224476d86233b43838f47082fa844196920a9b7eaff7e",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/2f575749daec3dc4cb2bfa1da45d22079c8620e59f4fc5baa4b54ec36d5020d0/database",
+      "cache_key": "2f575749daec3dc4cb2bfa1da45d22079c8620e59f4fc5baa4b54ec36d5020d0",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-4e31b8fba29687b8d792/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-4e31b8fba29687b8d792/ (do not mount into agent)"
+  }
+}

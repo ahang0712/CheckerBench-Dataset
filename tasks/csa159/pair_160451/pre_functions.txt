@@ -1,0 +1,122 @@
+### File: net/core/page_pool.c
+```c
+u64 *page_pool_ethtool_stats_get(u64 *data, const void *stats)
+{
+	const struct page_pool_stats *pool_stats = stats;
+
+	*data++ = pool_stats->alloc_stats.fast;
+	*data++ = pool_stats->alloc_stats.slow;
+	*data++ = pool_stats->alloc_stats.slow_high_order;
+	*data++ = pool_stats->alloc_stats.empty;
+	*data++ = pool_stats->alloc_stats.refill;
+	*data++ = pool_stats->alloc_stats.waive;
+	*data++ = pool_stats->recycle_stats.cached;
+	*data++ = pool_stats->recycle_stats.cache_full;
+	*data++ = pool_stats->recycle_stats.ring;
+	*data++ = pool_stats->recycle_stats.ring_full;
+	*data++ = pool_stats->recycle_stats.released_refcnt;
+
+	return data;
+}
+
+static bool page_pool_producer_lock(struct page_pool *pool)
+	__acquires(&pool->ring.producer_lock)
+{
+	bool in_softirq = in_softirq();
+
+	if (in_softirq)
+		spin_lock(&pool->ring.producer_lock);
+	else
+		spin_lock_bh(&pool->ring.producer_lock);
+
+	return in_softirq;
+}
+
+void page_pool_return_page(struct page_pool *pool, netmem_ref netmem)
+{
+	int count;
+	bool put;
+
+	put = true;
+	if (static_branch_unlikely(&page_pool_mem_providers) && pool->mp_ops)
+		put = pool->mp_ops->release_netmem(pool, netmem);
+	else
+		__page_pool_release_page_dma(pool, netmem);
+
+	/* This may be the last page returned, releasing the pool, so
+	 * it is not safe to reference pool afterwards.
+	 */
+	count = atomic_inc_return_relaxed(&pool->pages_state_release_cnt);
+	trace_page_pool_state_release(pool, netmem, count);
+
+	if (put) {
+		page_pool_clear_pp_info(netmem);
+		put_page(netmem_to_page(netmem));
+	}
+	/* An optimization would be to call __free_pages(page, pool->p.order)
+	 * knowing page is not part of page-cache (thus avoiding a
+	 * __page_cache_release() call).
+	 */
+}
+
+static bool page_pool_recycle_in_ring(struct page_pool *pool, netmem_ref netmem)
+{
+	int ret;
+	/* BH protection not needed if current is softirq */
+	if (in_softirq())
+		ret = ptr_ring_produce(&pool->ring, (__force void *)netmem);
+	else
+		ret = ptr_ring_produce_bh(&pool->ring, (__force void *)netmem);
+
+	if (!ret) {
+		recycle_stat_inc(pool, ring);
+		return true;
+	}
+
+	return false;
+}
+
+static void page_pool_scrub(struct page_pool *pool)
+{
+	unsigned long id;
+	void *ptr;
+
+	page_pool_empty_alloc_cache_once(pool);
+	if (!pool->destroy_cnt++ && pool->dma_map) {
+		if (pool->dma_sync) {
+			/* Disable page_pool_dma_sync_for_device() */
+			pool->dma_sync = false;
+
+			/* Make sure all concurrent returns that may see the old
+			 * value of dma_sync (and thus perform a sync) have
+			 * finished before doing the unmapping below. Skip the
+			 * wait if the device doesn't actually need syncing, or
+			 * if there are no outstanding mapped pages.
+			 */
+			if (dma_dev_need_sync(pool->p.dev) &&
+			    !xa_empty(&pool->dma_mapped))
+				synchronize_net();
+		}
+
+		xa_for_each(&pool->dma_mapped, id, ptr)
+			__page_pool_release_page_dma(pool, page_to_netmem(ptr));
+	}
+
+	/* No more consumers should exist, but producers could still
+	 * be in-flight.
+	 */
+	page_pool_empty_ring(pool);
+}
+
+static int page_pool_release(struct page_pool *pool)
+{
+	int inflight;
+
+	page_pool_scrub(pool);
+	inflight = page_pool_inflight(pool, true);
+	if (!inflight)
+		__page_pool_destroy(pool);
+
+	return inflight;
+}
+```

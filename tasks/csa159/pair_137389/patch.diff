@@ -1,0 +1,38 @@
+diff --git a/jerry-core/ecma/operations/ecma-atomics-object.c b/jerry-core/ecma/operations/ecma-atomics-object.c
+index 6e2cfd0e..c42ad875 100644
+--- a/jerry-core/ecma/operations/ecma-atomics-object.c
++++ b/jerry-core/ecma/operations/ecma-atomics-object.c
+@@ -192,6 +192,8 @@ ecma_atomic_read_modify_write (ecma_value_t typedarray, /**< typedArray argument
+   /* 9. */
+   uint32_t indexed_position = ecma_number_to_uint32 (idx) * element_size + offset;
+ 
++  ecma_free_value (idx);
++
+   JERRY_UNUSED (indexed_position);
+   JERRY_UNUSED (element_type);
+   JERRY_UNUSED (val);
+diff --git a/tests/jerry/es.next/regression-test-issue-4894.js b/tests/jerry/es.next/regression-test-issue-4894.js
+new file mode 100644
+index 00000000..0f2db2c1
+--- /dev/null
++++ b/tests/jerry/es.next/regression-test-issue-4894.js
+@@ -0,0 +1,19 @@
++// Copyright JS Foundation and other contributors, http://js.foundation
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++var sab = new SharedArrayBuffer(4);
++var a = new Int32Array(sab);
++
++/* TODO: replace with the correct value whenever AtomicModifyWrite is properly implemented */
++assert(Atomics.add(a, -0, 1) === 0);

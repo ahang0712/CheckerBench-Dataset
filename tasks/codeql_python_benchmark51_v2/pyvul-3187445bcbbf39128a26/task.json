@@ -1,0 +1,49 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-3187445bcbbf39128a26",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-3187445bcbbf39128a26",
+    "project_id": "pyvul__tankywoo__simiki",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "simiki/config.py",
+    "simiki/generators.py"
+  ],
+  "patch_units": {
+    "before": [
+      "function:parse_config",
+      "class:PageGenerator",
+      "function:PageGenerator.parse_meta"
+    ],
+    "after": [
+      "function:parse_config",
+      "class:PageGenerator",
+      "function:PageGenerator.parse_meta"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/6c677522fd3c28ce7e1472d351798d0e087b50dd4e508e0f5fcc1bee0af173f1/database",
+      "cache_key": "6c677522fd3c28ce7e1472d351798d0e087b50dd4e508e0f5fcc1bee0af173f1",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/7e613b7efe30230563633a9a574d8c2fa71dcc345fff934fc4de7ceb656cf8fe/database",
+      "cache_key": "7e613b7efe30230563633a9a574d8c2fa71dcc345fff934fc4de7ceb656cf8fe",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/8d8b60dfa034c14268f005e72f669accfdfac1fb52182a03fea8cd89a0322db3/database",
+      "cache_key": "8d8b60dfa034c14268f005e72f669accfdfac1fb52182a03fea8cd89a0322db3",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-3187445bcbbf39128a26/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-3187445bcbbf39128a26/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-05d6240fd5a9017a44ec",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-05d6240fd5a9017a44ec",
+    "project_id": "morefixes__jenkinsci__dependency-track-plugin",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "src/main/java/org/jenkinsci/plugins/DependencyTrack/DescriptorImpl.java",
+    "src/test/java/org/jenkinsci/plugins/DependencyTrack/DescriptorImplTest.java"
+  ],
+  "patch_units": {
+    "before": [
+      "src/main/java/org/jenkinsci/plugins/DependencyTrack/DescriptorImpl.java",
+      "src/test/java/org/jenkinsci/plugins/DependencyTrack/DescriptorImplTest.java"
+    ],
+    "after": [
+      "src/main/java/org/jenkinsci/plugins/DependencyTrack/DescriptorImpl.java",
+      "src/test/java/org/jenkinsci/plugins/DependencyTrack/DescriptorImplTest.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/887b51eb6ab229dc31496af9aa4657f503ff35a8627158e9381ebbdf80620bc5/database",
+      "cache_key": "887b51eb6ab229dc31496af9aa4657f503ff35a8627158e9381ebbdf80620bc5",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/b4369a5f486d894569973b82f473ccd2a6e0ab955383f95a9f062f8602f0fdcd/database",
+      "cache_key": "b4369a5f486d894569973b82f473ccd2a6e0ab955383f95a9f062f8602f0fdcd",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/5667afc3dae2ecfa5fb5993689de7477dde985adc049c7fd4fcae5c81a1e12a7/database",
+      "cache_key": "5667afc3dae2ecfa5fb5993689de7477dde985adc049c7fd4fcae5c81a1e12a7",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-05d6240fd5a9017a44ec/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-05d6240fd5a9017a44ec/ (do not mount into agent)"
+  }
+}

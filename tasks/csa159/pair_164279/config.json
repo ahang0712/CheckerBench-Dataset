@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "6da6680632792709cecf2b006f2fe3ca7857e791",
+  "after_commit": "d0aac2363549e12cc79b8e285f13d5a9f42fd08e",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/a38297e3fb012ddfa7ce0321a7e5a8daeb1872b6/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/a38297e3fb012ddfa7ce0321a7e5a8daeb1872b6/compile_commands.json",
+  "changed_files": [
+    "block/blk-cgroup.c"
+  ],
+  "commit_message": "blk-cgroup: fix list corruption from reorder of WRITE ->lqueued\n\n__blkcg_rstat_flush() can be run anytime, especially when blk_cgroup_bio_start\nis being executed.\n\nIf WRITE of `->lqueued` is re-ordered with READ of 'bisc->lnode.next' in\nthe loop of __blkcg_rstat_flush(), `next_bisc` can be assigned with one\nstat instance being added in blk_cgroup_bio_start(), then the local\nlist in __blkcg_rstat_flush() could be corrupted.\n\nFix the issue by adding one barrier.\n\nCc: Tejun Heo <tj@kernel.org>\nCc: Waiman Long <longman@redhat.com>\nFixes: 3b8cc6298724 (\"blk-cgroup: Optimize blkcg_rstat_flush()\")\nSigned-off-by: Ming Lei <ming.lei@redhat.com>\nLink: https://lore.kernel.org/r/20240515013157.443672-3-ming.lei@redhat.com\nSigned-off-by: Jens Axboe <axboe@kernel.dk>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

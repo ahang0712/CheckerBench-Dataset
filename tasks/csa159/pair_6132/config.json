@@ -1,0 +1,19 @@
+{
+  "project_id": "FreeRDP_FreeRDP",
+  "before_commit": "dffd893dc5874b63c99777d7df147e37c770fc92",
+  "after_commit": "06c32f170093a6ecde93e3bc07fed6a706bfbeb3",
+  "repo_path": "/workspace/repo/FreeRDP/FreeRDP",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/FreeRDP_FreeRDP/08fd2876b98ebf45114d0b5cfe6ea948adbc0025/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/FreeRDP_FreeRDP/08fd2876b98ebf45114d0b5cfe6ea948adbc0025/compile_commands.json",
+  "changed_files": [
+    "channels/video/client/video_main.c"
+  ],
+  "commit_message": "Fixed int overflow in PresentationContext_new\n\nThanks to hac425 CVE-2020-11038",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

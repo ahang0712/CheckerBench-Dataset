@@ -1,0 +1,18 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "1168491e7f53581ba7b6014a39a49cfbbb722feb",
+  "after_commit": "4e440abc894585a34c2904a32cd54af1742311b3",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/54be6c6c5ae8e0d93a6c4641cb7528eb0b6ba478/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/54be6c6c5ae8e0d93a6c4641cb7528eb0b6ba478/compile_commands.json",
+  "changed_files": [
+    "drivers/hwmon/coretemp.c"
+  ],
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

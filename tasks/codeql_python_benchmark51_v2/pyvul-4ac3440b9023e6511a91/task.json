@@ -1,0 +1,69 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-4ac3440b9023e6511a91",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-4ac3440b9023e6511a91",
+    "project_id": "pyvul__nautobot__nautobot-plugin-device-onboarding",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "nautobot_device_onboarding/jobs.py",
+    "nautobot_device_onboarding/tests/test_netdev_keeper.py",
+    "nautobot_device_onboarding/tests/test_onboarding.py"
+  ],
+  "patch_units": {
+    "before": [
+      "class:OnboardingTask",
+      "class:OnboardingTask.Meta",
+      "function:OnboardingTask.run",
+      "function:OnboardingTask._parse_credentials",
+      "class:NetdevKeeperTestCase",
+      "function:NetdevKeeperTestCase.setUp",
+      "module:<module>@1",
+      "module:<module>@3",
+      "module:<module>@4",
+      "module:<module>@6",
+      "module:<module>@7",
+      "module:<module>@9",
+      "module:<module>@10",
+      "module:<module>@12",
+      "module:<module>@13",
+      "module:<module>@2",
+      "module:<module>@5",
+      "module:<module>@6",
+      "module:<module>@9",
+      "module:<module>@10"
+    ],
+    "after": [
+      "class:OnboardingTask",
+      "class:OnboardingTask.Meta",
+      "function:OnboardingTask.__init__",
+      "function:OnboardingTask.run",
+      "function:OnboardingTask._parse_credentials"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/012046021b9fd116d3282a28f079c81707cd84efd4d2e1b24f5eb6332073dfb3/database",
+      "cache_key": "012046021b9fd116d3282a28f079c81707cd84efd4d2e1b24f5eb6332073dfb3",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/26efb7af79ad8b530362c838429d28bb72e8ef7f602c5193a4d437580582bf06/database",
+      "cache_key": "26efb7af79ad8b530362c838429d28bb72e8ef7f602c5193a4d437580582bf06",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/b6ecc163bd36c512022db3cd092be7f93d0c25dcb0e080bc5a8a27811bedcd12/database",
+      "cache_key": "b6ecc163bd36c512022db3cd092be7f93d0c25dcb0e080bc5a8a27811bedcd12",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-4ac3440b9023e6511a91/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-4ac3440b9023e6511a91/ (do not mount into agent)"
+  }
+}

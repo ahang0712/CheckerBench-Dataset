@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "ab069ce125965a5e282f7b53b86aee76ab32975c",
+  "after_commit": "63d20a94f24fc1cbaf44d0e7c0e0a8077fde0aef",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/6ba59ff4227927d3a8530fc2973b80e94b54d58f/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/6ba59ff4227927d3a8530fc2973b80e94b54d58f/compile_commands.json",
+  "changed_files": [
+    "drivers/mmc/host/sdhci.c"
+  ],
+  "commit_message": "mmc: sdhci: Fix max_seg_size for 64KiB PAGE_SIZE\n\nblk_queue_max_segment_size() ensured:\n\n\tif (max_size < PAGE_SIZE)\n\t\tmax_size = PAGE_SIZE;\n\nwhereas:\n\nblk_validate_limits() makes it an error:\n\n\tif (WARN_ON_ONCE(lim->max_segment_size < PAGE_SIZE))\n\t\treturn -EINVAL;\n\nThe change from one to the other, exposed sdhci which was setting maximum\nsegment size too low in some circumstances.\n\nFix the maximum segment size when it is too low.\n\nFixes: 616f87661792 (\"mmc: pass queue_limits to blk_mq_alloc_disk\")\nCc: stable@vger.kernel.org\nSigned-off-by: Adrian Hunter <adrian.hunter@intel.com>\nReviewed-by: Christoph Hellwig <hch@lst.de>\nAcked-by: Jon Hunter <jonathanh@nvidia.com>\nTested-by: Jon Hunter <jonathanh@nvidia.com>\nLink: https://lore.kernel.org/r/20240710180737.142504-1-adrian.hunter@intel.com\nSigned-off-by: Ulf Hansson <ulf.hansson@linaro.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

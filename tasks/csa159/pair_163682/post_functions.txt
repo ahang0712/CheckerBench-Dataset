@@ -1,0 +1,289 @@
+### File: net/ipv4/cipso_ipv4.c
+```c
+static int cipso_v4_cache_check(const unsigned char *key,
+				u32 key_len,
+				struct netlbl_lsm_secattr *secattr)
+{
+	u32 bkt;
+	struct cipso_v4_map_cache_entry *entry;
+	struct cipso_v4_map_cache_entry *prev_entry = NULL;
+	u32 hash;
+
+	if (!READ_ONCE(cipso_v4_cache_enabled))
+		return -ENOENT;
+
+	hash = cipso_v4_map_cache_hash(key, key_len);
+	bkt = hash & (CIPSO_V4_CACHE_BUCKETS - 1);
+	spin_lock_bh(&cipso_v4_cache[bkt].lock);
+	list_for_each_entry(entry, &cipso_v4_cache[bkt].list, list) {
+		if (entry->hash == hash &&
+		    entry->key_len == key_len &&
+		    memcmp(entry->key, key, key_len) == 0) {
+			entry->activity += 1;
+			refcount_inc(&entry->lsm_data->refcount);
+			secattr->cache = entry->lsm_data;
+			secattr->flags |= NETLBL_SECATTR_CACHE;
+			secattr->type = NETLBL_NLTYPE_CIPSOV4;
+			if (!prev_entry) {
+				spin_unlock_bh(&cipso_v4_cache[bkt].lock);
+				return 0;
+			}
+
+			if (prev_entry->activity > 0)
+				prev_entry->activity -= 1;
+			if (entry->activity > prev_entry->activity &&
+			    entry->activity - prev_entry->activity >
+			    CIPSO_V4_CACHE_REORDERLIMIT) {
+				__list_del(entry->list.prev, entry->list.next);
+				__list_add(&entry->list,
+					   prev_entry->list.prev,
+					   &prev_entry->list);
+			}
+
+			spin_unlock_bh(&cipso_v4_cache[bkt].lock);
+			return 0;
+		}
+		prev_entry = entry;
+	}
+	spin_unlock_bh(&cipso_v4_cache[bkt].lock);
+
+	return -ENOENT;
+}
+
+int cipso_v4_cache_add(const unsigned char *cipso_ptr,
+		       const struct netlbl_lsm_secattr *secattr)
+{
+	int bkt_size = READ_ONCE(cipso_v4_cache_bucketsize);
+	int ret_val = -EPERM;
+	u32 bkt;
+	struct cipso_v4_map_cache_entry *entry = NULL;
+	struct cipso_v4_map_cache_entry *old_entry = NULL;
+	u32 cipso_ptr_len;
+
+	if (!READ_ONCE(cipso_v4_cache_enabled) || bkt_size <= 0)
+		return 0;
+
+	cipso_ptr_len = cipso_ptr[1];
+
+	entry = kzalloc(sizeof(*entry), GFP_ATOMIC);
+	if (!entry)
+		return -ENOMEM;
+	entry->key = kmemdup(cipso_ptr, cipso_ptr_len, GFP_ATOMIC);
+	if (!entry->key) {
+		ret_val = -ENOMEM;
+		goto cache_add_failure;
+	}
+	entry->key_len = cipso_ptr_len;
+	entry->hash = cipso_v4_map_cache_hash(cipso_ptr, cipso_ptr_len);
+	refcount_inc(&secattr->cache->refcount);
+	entry->lsm_data = secattr->cache;
+
+	bkt = entry->hash & (CIPSO_V4_CACHE_BUCKETS - 1);
+	spin_lock_bh(&cipso_v4_cache[bkt].lock);
+	if (cipso_v4_cache[bkt].size < bkt_size) {
+		list_add(&entry->list, &cipso_v4_cache[bkt].list);
+		cipso_v4_cache[bkt].size += 1;
+	} else {
+		old_entry = list_entry(cipso_v4_cache[bkt].list.prev,
+				       struct cipso_v4_map_cache_entry, list);
+		list_del(&old_entry->list);
+		list_add(&entry->list, &cipso_v4_cache[bkt].list);
+		cipso_v4_cache_entry_free(old_entry);
+	}
+	spin_unlock_bh(&cipso_v4_cache[bkt].lock);
+
+	return 0;
+
+cache_add_failure:
+	if (entry)
+		cipso_v4_cache_entry_free(entry);
+	return ret_val;
+}
+
+static int cipso_v4_gentag_rbm(const struct cipso_v4_doi *doi_def,
+			       const struct netlbl_lsm_secattr *secattr,
+			       unsigned char *buffer,
+			       u32 buffer_len)
+{
+	int ret_val;
+	u32 tag_len;
+	u32 level;
+
+	if ((secattr->flags & NETLBL_SECATTR_MLS_LVL) == 0)
+		return -EPERM;
+
+	ret_val = cipso_v4_map_lvl_hton(doi_def,
+					secattr->attr.mls.lvl,
+					&level);
+	if (ret_val != 0)
+		return ret_val;
+
+	if (secattr->flags & NETLBL_SECATTR_MLS_CAT) {
+		ret_val = cipso_v4_map_cat_rbm_hton(doi_def,
+						    secattr,
+						    &buffer[4],
+						    buffer_len - 4);
+		if (ret_val < 0)
+			return ret_val;
+
+		/* This will send packets using the "optimized" format when
+		 * possible as specified in  section 3.4.2.6 of the
+		 * CIPSO draft. */
+		if (READ_ONCE(cipso_v4_rbm_optfmt) && ret_val > 0 &&
+		    ret_val <= 10)
+			tag_len = 14;
+		else
+			tag_len = 4 + ret_val;
+	} else
+		tag_len = 4;
+
+	buffer[0] = CIPSO_V4_TAG_RBITMAP;
+	buffer[1] = tag_len;
+	buffer[3] = level;
+
+	return tag_len;
+}
+
+int cipso_v4_validate(const struct sk_buff *skb, unsigned char **option)
+{
+	unsigned char *opt = *option;
+	unsigned char *tag;
+	unsigned char opt_iter;
+	unsigned char err_offset = 0;
+	u8 opt_len;
+	u8 tag_len;
+	struct cipso_v4_doi *doi_def = NULL;
+	u32 tag_iter;
+
+	/* caller already checks for length values that are too large */
+	opt_len = opt[1];
+	if (opt_len < 8) {
+		err_offset = 1;
+		goto validate_return;
+	}
+
+	rcu_read_lock();
+	doi_def = cipso_v4_doi_search(get_unaligned_be32(&opt[2]));
+	if (!doi_def) {
+		err_offset = 2;
+		goto validate_return_locked;
+	}
+
+	opt_iter = CIPSO_V4_HDR_LEN;
+	tag = opt + opt_iter;
+	while (opt_iter < opt_len) {
+		for (tag_iter = 0; doi_def->tags[tag_iter] != tag[0];)
+			if (doi_def->tags[tag_iter] == CIPSO_V4_TAG_INVALID ||
+			    ++tag_iter == CIPSO_V4_TAG_MAXCNT) {
+				err_offset = opt_iter;
+				goto validate_return_locked;
+			}
+
+		if (opt_iter + 1 == opt_len) {
+			err_offset = opt_iter;
+			goto validate_return_locked;
+		}
+		tag_len = tag[1];
+		if (tag_len > (opt_len - opt_iter)) {
+			err_offset = opt_iter + 1;
+			goto validate_return_locked;
+		}
+
+		switch (tag[0]) {
+		case CIPSO_V4_TAG_RBITMAP:
+			if (tag_len < CIPSO_V4_TAG_RBM_BLEN) {
+				err_offset = opt_iter + 1;
+				goto validate_return_locked;
+			}
+
+			/* We are already going to do all the verification
+			 * necessary at the socket layer so from our point of
+			 * view it is safe to turn these checks off (and less
+			 * work), however, the CIPSO draft says we should do
+			 * all the CIPSO validations here but it doesn't
+			 * really specify _exactly_ what we need to validate
+			 * ... so, just make it a sysctl tunable. */
+			if (READ_ONCE(cipso_v4_rbm_strictvalid)) {
+				if (cipso_v4_map_lvl_valid(doi_def,
+							   tag[3]) < 0) {
+					err_offset = opt_iter + 3;
+					goto validate_return_locked;
+				}
+				if (tag_len > CIPSO_V4_TAG_RBM_BLEN &&
+				    cipso_v4_map_cat_rbm_valid(doi_def,
+							    &tag[4],
+							    tag_len - 4) < 0) {
+					err_offset = opt_iter + 4;
+					goto validate_return_locked;
+				}
+			}
+			break;
+		case CIPSO_V4_TAG_ENUM:
+			if (tag_len < CIPSO_V4_TAG_ENUM_BLEN) {
+				err_offset = opt_iter + 1;
+				goto validate_return_locked;
+			}
+
+			if (cipso_v4_map_lvl_valid(doi_def,
+						   tag[3]) < 0) {
+				err_offset = opt_iter + 3;
+				goto validate_return_locked;
+			}
+			if (tag_len > CIPSO_V4_TAG_ENUM_BLEN &&
+			    cipso_v4_map_cat_enum_valid(doi_def,
+							&tag[4],
+							tag_len - 4) < 0) {
+				err_offset = opt_iter + 4;
+				goto validate_return_locked;
+			}
+			break;
+		case CIPSO_V4_TAG_RANGE:
+			if (tag_len < CIPSO_V4_TAG_RNG_BLEN) {
+				err_offset = opt_iter + 1;
+				goto validate_return_locked;
+			}
+
+			if (cipso_v4_map_lvl_valid(doi_def,
+						   tag[3]) < 0) {
+				err_offset = opt_iter + 3;
+				goto validate_return_locked;
+			}
+			if (tag_len > CIPSO_V4_TAG_RNG_BLEN &&
+			    cipso_v4_map_cat_rng_valid(doi_def,
+						       &tag[4],
+						       tag_len - 4) < 0) {
+				err_offset = opt_iter + 4;
+				goto validate_return_locked;
+			}
+			break;
+		case CIPSO_V4_TAG_LOCAL:
+			/* This is a non-standard tag that we only allow for
+			 * local connections, so if the incoming interface is
+			 * not the loopback device drop the packet. Further,
+			 * there is no legitimate reason for setting this from
+			 * userspace so reject it if skb is NULL. */
+			if (!skb || !(skb->dev->flags & IFF_LOOPBACK)) {
+				err_offset = opt_iter;
+				goto validate_return_locked;
+			}
+			if (tag_len != CIPSO_V4_TAG_LOC_BLEN) {
+				err_offset = opt_iter + 1;
+				goto validate_return_locked;
+			}
+			break;
+		default:
+			err_offset = opt_iter;
+			goto validate_return_locked;
+		}
+
+		tag += tag_len;
+		opt_iter += tag_len;
+	}
+
+validate_return_locked:
+	rcu_read_unlock();
+validate_return:
+	*option = opt + err_offset;
+	return err_offset;
+}
+```

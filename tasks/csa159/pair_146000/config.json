@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "3acea81be689b77b3ceac6ff345ff0366734d967",
+  "after_commit": "e5ca5d7b4d7c29246d957dc45d63610584ae3a54",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/40384c840ea1944d7c5a392e8975ed088ecf0b37/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/40384c840ea1944d7c5a392e8975ed088ecf0b37/compile_commands.json",
+  "changed_files": [
+    "drivers/clk/mmp/clk-pxa1908-apbc.c"
+  ],
+  "commit_message": "clk: mmp: pxa1908-apbc: Fix NULL vs IS_ERR() check\n\nThe devm_kzalloc() function returns NULL on error, not error pointers.\nFix the check.\n\nFixes: 51ce55919273 (\"clk: mmp: Add Marvell PXA1908 APBC driver\")\nSigned-off-by: Dan Carpenter <dan.carpenter@linaro.org>\nLink: https://lore.kernel.org/r/d7078eb7-a7d6-4753-b453-8fce15245c34@stanley.mountain\nAcked-by: Duje Mihanović <duje.mihanovic@skole.hr>\nSigned-off-by: Stephen Boyd <sboyd@kernel.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,19 @@
+{
+  "project_id": "gpac_gpac",
+  "before_commit": "5ce0c906ed8599d218036b18b78e8126a496f137",
+  "after_commit": "7bb1b4a4dd23c885f9db9f577dfe79ecc5433109",
+  "repo_path": "/workspace/repo/gpac/gpac",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/gpac_gpac/91d397ddce227a2559bb9b16528c8087e5425961/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/gpac_gpac/91d397ddce227a2559bb9b16528c8087e5425961/compile_commands.json",
+  "changed_files": [
+    "src/media_tools/av_parsers.c"
+  ],
+  "commit_message": "fixed #1893",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,19 @@
+{
+  "project_id": "LibVNC_libvncserver",
+  "before_commit": "9664466442a63afd3fe51b63d6eded64bdde031b",
+  "after_commit": "dc78dee51a7e270e537a541a17befdf2073f5314",
+  "repo_path": "/workspace/repo/LibVNC/libvncserver",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/LibVNC_libvncserver/fb2901aef780d02c19acf0731ac7e104a41d9704/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/LibVNC_libvncserver/fb2901aef780d02c19acf0731ac7e104a41d9704/compile_commands.json",
+  "changed_files": [
+    "src/libvncserver/httpd.c"
+  ],
+  "commit_message": "libvncserver: fix NULL pointer dereferences in httpd proxy handlers\n\nhttpProcessInput() passes the return value of strchr() to atoi()\nand strncmp() without checking for NULL. If a CONNECT request\ncontains no colon, or a GET request contains no slash, strchr()\nreturns NULL, leading to a segmentation fault.\n\nAdd NULL checks before using the strchr() return values.",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-a9ee7c2085f2981a7be1",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-a9ee7c2085f2981a7be1",
+    "project_id": "morefixes__ossrs__srs",
+    "language": "go",
+    "backend": "codeql"
+  },
+  "changed_go_files": [
+    "trunk/research/api-server/server.go"
+  ],
+  "patch_units": {
+    "before": [
+      "trunk/research/api-server/server.go"
+    ],
+    "after": [
+      "trunk/research/api-server/server.go"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/413d2119d608c1f0d90b902b68d4cf06c2d82ea3ec1fb118d3a4acb374c6eb65/database",
+      "cache_key": "413d2119d608c1f0d90b902b68d4cf06c2d82ea3ec1fb118d3a4acb374c6eb65",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/edb72e6267072f564ee22bd9d50533dc6618941683a298ba8c6bc84e770a54fc/database",
+      "cache_key": "edb72e6267072f564ee22bd9d50533dc6618941683a298ba8c6bc84e770a54fc",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/5a759afea9f5969b3cc1506aaa38a1356db9a369994235ae5d7edf46f2f222bf/database",
+      "cache_key": "5a759afea9f5969b3cc1506aaa38a1356db9a369994235ae5d7edf46f2f222bf",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-a9ee7c2085f2981a7be1/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-a9ee7c2085f2981a7be1/ (do not mount into agent)"
+  }
+}

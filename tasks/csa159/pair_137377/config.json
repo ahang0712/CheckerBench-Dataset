@@ -1,0 +1,19 @@
+{
+  "project_id": "jerryscript-project_jerryscript",
+  "before_commit": "ab2e8217778b95977821ccbcd9a11346f5749fc2",
+  "after_commit": "1230d4532c215abe8679a3c6ecda6152c502ae60",
+  "repo_path": "/workspace/repo/jerryscript-project/jerryscript",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/jerryscript-project_jerryscript/aaf0442611e0707a3bc680d30b532b93e30e1066/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/jerryscript-project_jerryscript/aaf0442611e0707a3bc680d30b532b93e30e1066/compile_commands.json",
+  "changed_files": [
+    "jerry-core/parser/js/js-lexer.c"
+  ],
+  "commit_message": "Asterisk should be ignored by object initializers. (#3872)\n\nFixes #3869\n\nJerryScript-DCO-1.0-Signed-off-by: Zoltan Herczeg zherczeg.u-szeged@partner.samsung.com",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,20 @@
+{
+  "project_id": "jerryscript-project_jerryscript",
+  "before_commit": "4aa27371b6de44d87d96713ef3b3d87dd988a957",
+  "after_commit": "bd1c4df9a608cc7193330944c857ca4f6294b993",
+  "repo_path": "/workspace/repo/jerryscript-project/jerryscript",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/jerryscript-project_jerryscript/aaf0442611e0707a3bc680d30b532b93e30e1066/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/jerryscript-project_jerryscript/aaf0442611e0707a3bc680d30b532b93e30e1066/compile_commands.json",
+  "changed_files": [
+    "jerry-core/parser/js/js-parser-statm.c",
+    "jerry-core/parser/js/js-scanner-ops.c"
+  ],
+  "commit_message": "Fix keyword parsing after use strict. (#3740)\n\nJerryScript-DCO-1.0-Signed-off-by: Zoltan Herczeg zherczeg.u-szeged@partner.samsung.com",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

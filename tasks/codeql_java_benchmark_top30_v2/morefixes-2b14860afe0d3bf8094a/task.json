@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-2b14860afe0d3bf8094a",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-2b14860afe0d3bf8094a",
+    "project_id": "morefixes__jdhwpgmbca__pcapture",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "src/main/java/com/rtds/svc/CaptureTypeService.java"
+  ],
+  "patch_units": {
+    "before": [
+      "src/main/java/com/rtds/svc/CaptureTypeService.java"
+    ],
+    "after": [
+      "src/main/java/com/rtds/svc/CaptureTypeService.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/30119a94ef62626c4bac0389d0b1095dd82b5260b88858fa1cbeadac2987c670/database",
+      "cache_key": "30119a94ef62626c4bac0389d0b1095dd82b5260b88858fa1cbeadac2987c670",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/c9decbefe36510374b95632d7d034cc36106223a99577803faab4dca8607121e/database",
+      "cache_key": "c9decbefe36510374b95632d7d034cc36106223a99577803faab4dca8607121e",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/ea28801407083c2a3dff37f0e57bc821a08600250bf6a683af5d981c67d269cf/database",
+      "cache_key": "ea28801407083c2a3dff37f0e57bc821a08600250bf6a683af5d981c67d269cf",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-2b14860afe0d3bf8094a/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-2b14860afe0d3bf8094a/ (do not mount into agent)"
+  }
+}

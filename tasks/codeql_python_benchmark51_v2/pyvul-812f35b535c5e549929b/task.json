@@ -1,0 +1,50 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-812f35b535c5e549929b",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-812f35b535c5e549929b",
+    "project_id": "pyvul__nvidia__nvflare",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "nvflare/lighter/provision.py",
+    "nvflare/lighter/utils.py"
+  ],
+  "patch_units": {
+    "before": [
+      "function:main",
+      "module:<module>@24",
+      "function:load_yaml"
+    ],
+    "after": [
+      "function:main",
+      "module:<module>@24",
+      "module:<module>@26",
+      "function:load_yaml"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/0c74f67edeac885371c5795fb5db4e46a3ae1ebe715fff561a666c7e5549f7c1/database",
+      "cache_key": "0c74f67edeac885371c5795fb5db4e46a3ae1ebe715fff561a666c7e5549f7c1",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/e544f3e58c71b5f2093f8bea6c589e01394fd70fcfdcc50ad73f6bf7a37344be/database",
+      "cache_key": "e544f3e58c71b5f2093f8bea6c589e01394fd70fcfdcc50ad73f6bf7a37344be",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/18bff336ccc01b2550b176d0d232f30be820a98efc31cdc3441453fa19e7d0a7/database",
+      "cache_key": "18bff336ccc01b2550b176d0d232f30be820a98efc31cdc3441453fa19e7d0a7",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-812f35b535c5e549929b/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-812f35b535c5e549929b/ (do not mount into agent)"
+  }
+}

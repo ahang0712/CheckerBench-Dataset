@@ -1,0 +1,74 @@
+diff --git a/langchain/tools/jira/prompt.py b/langchain/tools/jira/prompt.py
+index a50c373c9a..08f0602304 100644
+--- a/langchain/tools/jira/prompt.py
++++ b/langchain/tools/jira/prompt.py
+@@ -25,11 +25,12 @@ JIRA_CATCH_ALL_PROMPT = """
+     This tool is a wrapper around atlassian-python-api's Jira API.
+     There are other dedicated tools for fetching all projects, and creating and searching for issues, 
+     use this tool if you need to perform any other actions allowed by the atlassian-python-api Jira API.
+-    The input to this tool is line of python code that calls a function from atlassian-python-api's Jira API
+-    For example, to update the summary field of an issue, you would pass in the following string:
+-    self.jira.update_issue_field(key, {{"summary": "New summary"}})
++    The input to this tool is a dictionary specifying a function from atlassian-python-api's Jira API, 
++    as well as a list of arguments and dictionary of keyword arguments to pass into the function.
++    For example, to get all the users in a group, while increasing the max number of results to 100, you would
++    pass in the following dictionary: {{"function": "get_all_users_from_group", "args": ["group"], "kwargs": {{"limit":100}} }}
+     or to find out how many projects are in the Jira instance, you would pass in the following string:
+-    self.jira.projects()
++    {{"function": "projects"}}
+     For more information on the Jira API, refer to https://atlassian-python-api.readthedocs.io/jira.html
+     """
+ 
+diff --git a/langchain/utilities/jira.py b/langchain/utilities/jira.py
+index 3f3719437e..f3fe4dfe3e 100644
+--- a/langchain/utilities/jira.py
++++ b/langchain/utilities/jira.py
+@@ -188,10 +188,15 @@ class JiraAPIWrapper(BaseModel):
+         return self.confluence.create_page(**dict(params))
+ 
+     def other(self, query: str) -> str:
+-        context = {"self": self}
+-        exec(f"result = {query}", context)
+-        result = context["result"]
+-        return str(result)
++        try:
++            import json
++        except ImportError:
++            raise ImportError(
++                "json is not installed. Please install it with `pip install json`"
++            )
++        params = json.loads(query)
++        jira_function = getattr(self.jira, params["function"])
++        return jira_function(*params.get("args", []), **params.get("kwargs", {}))
+ 
+     def run(self, mode: str, query: str) -> str:
+         if mode == "jql":
+diff --git a/tests/integration_tests/utilities/test_jira_api.py b/tests/integration_tests/utilities/test_jira_api.py
+index fa44a6014d..3a74e9e943 100644
+--- a/tests/integration_tests/utilities/test_jira_api.py
++++ b/tests/integration_tests/utilities/test_jira_api.py
+@@ -41,3 +41,24 @@ def test_create_confluence_page() -> None:
+     output = jira.run("create_page", create_page_dict)
+     assert "type" in output
+     assert "page" in output
++
++
++def test_other() -> None:
++    """Non-exhaustive test for accessing other JIRA API methods"""
++    jira = JiraAPIWrapper()
++    issue_create_dict = """
++        {
++            "function":"issue_create",
++            "kwargs": {
++                "fields": {
++                    "summary": "Test Summary",
++                    "description": "Test Description",
++                    "issuetype": {"name": "Bug"},
++                    "project": {"key": "TP"}
++                }
++            }
++        }
++    """
++    output = jira.run("other", issue_create_dict)
++    assert "id" in output
++    assert "key" in output

@@ -1,0 +1,19 @@
+{
+  "project_id": "jedisct1_pure-ftpd",
+  "before_commit": "9a8d379512dd7af25965746d65f5d187c9cbda4c",
+  "after_commit": "bf6fcd4935e95128cf22af5924cdc8fe5c0579da",
+  "repo_path": "/workspace/repo/jedisct1/pure-ftpd",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/jedisct1_pure-ftpd/ed78ab681e7025c3f6eee0106d504095995fee90/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/jedisct1_pure-ftpd/ed78ab681e7025c3f6eee0106d504095995fee90/compile_commands.json",
+  "changed_files": [
+    "src/utils.c"
+  ],
+  "commit_message": "pure_strcmp(): len(s2) can be > len(s1)\n\nReported by Antonio Morales from GitHub Security Labs, thanks!",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

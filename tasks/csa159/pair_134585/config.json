@@ -1,0 +1,19 @@
+{
+  "project_id": "adaptivecomputing_torque",
+  "before_commit": "94480e87f9779363780f4cf8d35831663ab354f4",
+  "after_commit": "3ed749263abe3d69fa3626d142a5789dcb5a5684",
+  "repo_path": "/workspace/repo/adaptivecomputing/torque",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/adaptivecomputing_torque/deb44cd48e9a01a88128f531bef29c09a287379a/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/adaptivecomputing_torque/deb44cd48e9a01a88128f531bef29c09a287379a/compile_commands.json",
+  "changed_files": [
+    "src/lib/Libdis/disrsi_.c"
+  ],
+  "commit_message": "Merge pull request #171 into 2.5-fixes.",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

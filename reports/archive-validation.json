@@ -1,0 +1,45 @@
+{
+  "task_count": 300,
+  "packages": [
+    {
+      "package": "codeql_go_benchmark_top30_v1",
+      "task_count": 30,
+      "regular_files": 30505,
+      "logical_bytes": 2962723420,
+      "file_checksums_verified": true,
+      "fixture_task": "morefixes-02cb4e0a6c5aaabd6a78"
+    },
+    {
+      "package": "codeql_java_benchmark_top30_v2",
+      "task_count": 30,
+      "regular_files": 42278,
+      "logical_bytes": 957672106,
+      "file_checksums_verified": true,
+      "fixture_task": "morefixes-02f75a63a6f0b8d6c6c7"
+    },
+    {
+      "package": "codeql_javascript_benchmark_top30_v1",
+      "task_count": 30,
+      "regular_files": 48500,
+      "logical_bytes": 6232335624,
+      "file_checksums_verified": true,
+      "fixture_task": "morefixes-040d724ca8211a3aaf1d"
+    },
+    {
+      "package": "codeql_python_benchmark51_v2",
+      "task_count": 51,
+      "regular_files": 69002,
+      "logical_bytes": 5307115528,
+      "file_checksums_verified": true,
+      "fixture_task": "pyvul-03252773bde39ba37465"
+    },
+    {
+      "package": "csa159",
+      "task_count": 159,
+      "regular_files": 185075,
+      "logical_bytes": 12551690467,
+      "file_checksums_verified": true,
+      "fixture_task": "pair_134943"
+    }
+  ]
+}

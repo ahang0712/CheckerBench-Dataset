@@ -1,0 +1,23 @@
+{
+  "project_id": "redis_redis",
+  "before_commit": "50188747cbfe43528d2719399a2a3c9599169445",
+  "after_commit": "bde62951accfc4bb0a516276fd0b4b307e140ce2",
+  "repo_path": "/workspace/repo/redis/redis",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/redis_redis/00cfa6ebbc8b04c9d156dca4ff94811523565226/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/redis_redis/00cfa6ebbc8b04c9d156dca4ff94811523565226/compile_commands.json",
+  "changed_files": [
+    "src/anet.c",
+    "src/cluster_legacy.c",
+    "src/socket.c",
+    "src/tls.c",
+    "src/unix.c"
+  ],
+  "commit_message": "Retry accept() even if accepted connection reports an error (CVE-2025-48367)\n\nIn case of accept4() returns an error, we should check errno value and decide if we should retry accept4() without waiting next event loop iteration.",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "ca76bb226bf47ff04c782cacbd299f12ddee1ec1",
+  "after_commit": "367a9bffabe08c04f6d725032cce3d891b2b9e1a",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/0fafc9e1563fbacb92b19ccbde5b8e73280d34b7/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/0fafc9e1563fbacb92b19ccbde5b8e73280d34b7/compile_commands.json",
+  "changed_files": [
+    "fs/nilfs2/segment.c"
+  ],
+  "commit_message": "nilfs2: protect access to buffers with no active references\n\nnilfs_lookup_dirty_data_buffers(), which iterates through the buffers\nattached to dirty data folios/pages, accesses the attached buffers without\nlocking the folios/pages.\n\nFor data cache, nilfs_clear_folio_dirty() may be called asynchronously\nwhen the file system degenerates to read only, so\nnilfs_lookup_dirty_data_buffers() still has the potential to cause use\nafter free issues when buffers lose the protection of their dirty state\nmidway due to this asynchronous clearing and are unintentionally freed by\ntry_to_free_buffers().\n\nEliminate this race issue by adjusting the lock section in this function.\n\nLink: https://lkml.kernel.org/r/20250107200202.6432-3-konishi.ryusuke@gmail.com\nSigned-off-by: Ryusuke Konishi <konishi.ryusuke@gmail.com>\nFixes: 8c26c4e2694a (\"nilfs2: fix issue with flush kernel thread after remount in RO mode because of driver's internal error or metadata corruption\")\nSigned-off-by: Andrew Morton <akpm@linux-foundation.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

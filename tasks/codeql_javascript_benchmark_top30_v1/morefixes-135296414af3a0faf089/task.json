@@ -1,0 +1,47 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-135296414af3a0faf089",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-135296414af3a0faf089",
+    "project_id": "morefixes__moodle__moodle",
+    "language": "javascript",
+    "backend": "codeql"
+  },
+  "changed_javascript_files": [
+    "mod/forum/amd/build/form-user-selector.min.js",
+    "mod/forum/amd/src/form-user-selector.js"
+  ],
+  "patch_units": {
+    "before": [
+      "mod/forum/amd/build/form-user-selector.min.js",
+      "mod/forum/amd/src/form-user-selector.js"
+    ],
+    "after": [
+      "mod/forum/amd/build/form-user-selector.min.js",
+      "mod/forum/amd/src/form-user-selector.js"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/7ec19fc9118f2f7bd261cbdd3c6dc9bd22ded1a90a809820f6ce2f2680e23b21/database",
+      "cache_key": "7ec19fc9118f2f7bd261cbdd3c6dc9bd22ded1a90a809820f6ce2f2680e23b21",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/060da133900ea1a6bd7398648161eab46bef4cf3cf1a37e07530bbb9c35268e1/database",
+      "cache_key": "060da133900ea1a6bd7398648161eab46bef4cf3cf1a37e07530bbb9c35268e1",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/e25af13c7192912d1a48d5de43bf5ef55ecde1235e29154046d3e0b99ec954dd/database",
+      "cache_key": "e25af13c7192912d1a48d5de43bf5ef55ecde1235e29154046d3e0b99ec954dd",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-135296414af3a0faf089/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-135296414af3a0faf089/ (do not mount into agent)"
+  }
+}

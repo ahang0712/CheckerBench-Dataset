@@ -1,0 +1,10 @@
+### File: net/sched/act_ct.c
+```c
+static struct flow_action_entry *
+tcf_ct_flow_table_flow_action_get_next(struct flow_action *flow_action)
+{
+	int i = flow_action->num_entries++;
+
+	return &flow_action->entries[i];
+}
+```

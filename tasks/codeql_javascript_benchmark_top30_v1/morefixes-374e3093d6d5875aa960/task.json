@@ -1,0 +1,47 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-374e3093d6d5875aa960",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-374e3093d6d5875aa960",
+    "project_id": "morefixes__keycloak__keycloak",
+    "language": "javascript",
+    "backend": "codeql"
+  },
+  "changed_javascript_files": [
+    "js/libs/ui-shared/src/context/ErrorPage.tsx",
+    "js/libs/ui-shared/src/context/KeycloakContext.tsx"
+  ],
+  "patch_units": {
+    "before": [
+      "js/libs/ui-shared/src/context/ErrorPage.tsx",
+      "js/libs/ui-shared/src/context/KeycloakContext.tsx"
+    ],
+    "after": [
+      "js/libs/ui-shared/src/context/ErrorPage.tsx",
+      "js/libs/ui-shared/src/context/KeycloakContext.tsx"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/039cff9113eb5f170eb84606f752299155c0a1efd1f90abf93a67ee9e9d2966c/database",
+      "cache_key": "039cff9113eb5f170eb84606f752299155c0a1efd1f90abf93a67ee9e9d2966c",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/59586ffbf15f875040eda6f1081b1079590530d41afb8d486d6e9b0a1283ec7c/database",
+      "cache_key": "59586ffbf15f875040eda6f1081b1079590530d41afb8d486d6e9b0a1283ec7c",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/09db0defee988bce391e5f868e54f8afef64fee42b4785166abe002fedbf97ed/database",
+      "cache_key": "09db0defee988bce391e5f868e54f8afef64fee42b4785166abe002fedbf97ed",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-374e3093d6d5875aa960/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-374e3093d6d5875aa960/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,249 @@
+diff --git a/plugins/meta/portmap/portmap_nftables.go b/plugins/meta/portmap/portmap_nftables.go
+index d3e7049d..bd58e4ae 100644
+--- a/plugins/meta/portmap/portmap_nftables.go
++++ b/plugins/meta/portmap/portmap_nftables.go
+@@ -26,9 +26,14 @@ import (
+ const (
+ 	tableName = "cni_hostport"
+ 
++	// Intermediate chain to jump to both 'hostip_hostports' and 'hostports'
++	hostPortsAllChain = "hostports_all"
++	// This chain was used for rules with hostIP, we do not use it anymore,
++	// but we keep it to make upgrade transparent
+ 	hostIPHostPortsChain = "hostip_hostports"
+-	hostPortsChain       = "hostports"
+-	masqueradingChain    = "masquerading"
++	// Chain containing all the rules
++	hostPortsChain    = "hostports"
++	masqueradingChain = "masquerading"
+ )
+ 
+ // The nftables portmap implementation is fairly similar to the iptables implementation:
+@@ -104,58 +109,69 @@ func (pmNFT *portMapperNFTables) forwardPorts(config *PortMapConf, containerNet
+ 	})
+ 
+ 	tx.Add(&knftables.Chain{
+-		Name: "hostports",
++		Name: hostPortsChain,
+ 	})
++
+ 	tx.Add(&knftables.Chain{
+-		Name: "hostip_hostports",
++		Name: hostIPHostPortsChain,
+ 	})
+ 
++	// setup intermediate chain
+ 	tx.Add(&knftables.Chain{
+-		Name:     "prerouting",
+-		Type:     knftables.PtrTo(knftables.NATType),
+-		Hook:     knftables.PtrTo(knftables.PreroutingHook),
+-		Priority: knftables.PtrTo(knftables.DNATPriority),
++		Name: hostPortsAllChain,
+ 	})
++
+ 	tx.Flush(&knftables.Chain{
+-		Name: "prerouting",
++		Name: hostPortsAllChain,
+ 	})
++
+ 	tx.Add(&knftables.Rule{
+-		Chain: "prerouting",
++		Chain: hostPortsAllChain,
+ 		Rule: knftables.Concat(
+-			conditions,
+ 			"jump", hostIPHostPortsChain,
+ 		),
+ 	})
++
+ 	tx.Add(&knftables.Rule{
+-		Chain: "prerouting",
++		Chain: hostPortsAllChain,
+ 		Rule: knftables.Concat(
+-			conditions,
+ 			"jump", hostPortsChain,
+ 		),
+ 	})
+ 
+ 	tx.Add(&knftables.Chain{
+-		Name:     "output",
++		Name:     "prerouting",
+ 		Type:     knftables.PtrTo(knftables.NATType),
+-		Hook:     knftables.PtrTo(knftables.OutputHook),
++		Hook:     knftables.PtrTo(knftables.PreroutingHook),
+ 		Priority: knftables.PtrTo(knftables.DNATPriority),
+ 	})
+ 	tx.Flush(&knftables.Chain{
+-		Name: "output",
++		Name: "prerouting",
+ 	})
+ 	tx.Add(&knftables.Rule{
+-		Chain: "output",
++		Chain: "prerouting",
+ 		Rule: knftables.Concat(
+ 			conditions,
+-			"jump", hostIPHostPortsChain,
++			"fib daddr type local",
++			"jump", hostPortsAllChain,
+ 		),
+ 	})
++
++	tx.Add(&knftables.Chain{
++		Name:     "output",
++		Type:     knftables.PtrTo(knftables.NATType),
++		Hook:     knftables.PtrTo(knftables.OutputHook),
++		Priority: knftables.PtrTo(knftables.DNATPriority),
++	})
++	tx.Flush(&knftables.Chain{
++		Name: "output",
++	})
+ 	tx.Add(&knftables.Rule{
+ 		Chain: "output",
+ 		Rule: knftables.Concat(
+ 			conditions,
+ 			"fib daddr type local",
+-			"jump", hostPortsChain,
++			"jump", hostPortsAllChain,
+ 		),
+ 	})
+ 
+@@ -184,8 +200,10 @@ func (pmNFT *portMapperNFTables) forwardPorts(config *PortMapConf, containerNet
+ 		}
+ 
+ 		if useHostIP {
++			// we add the rule to 'hostports' instead of 'hostip_hostports'
++			// as we want to remove 'hostip_hostports' long-term
+ 			tx.Add(&knftables.Rule{
+-				Chain: hostIPHostPortsChain,
++				Chain: hostPortsChain,
+ 				Rule: knftables.Concat(
+ 					ipX, "daddr", e.HostIP,
+ 					e.Protocol, "dport", e.HostPort,
+@@ -243,7 +261,7 @@ func (pmNFT *portMapperNFTables) forwardPorts(config *PortMapConf, containerNet
+ func (pmNFT *portMapperNFTables) checkPorts(config *PortMapConf, containerNet net.IPNet) error {
+ 	isV6 := (containerNet.IP.To4() == nil)
+ 
+-	var hostPorts, hostIPHostPorts, masqueradings int
++	var hostPorts, masqueradings int
+ 	for _, e := range config.RuntimeConfig.PortMaps {
+ 		if e.HostIP != "" {
+ 			hostIP := net.ParseIP(e.HostIP)
+@@ -252,14 +270,8 @@ func (pmNFT *portMapperNFTables) checkPorts(config *PortMapConf, containerNet ne
+ 			if isV6 != isHostV6 {
+ 				continue
+ 			}
+-			if hostIP.IsUnspecified() {
+-				hostPorts++
+-			} else {
+-				hostIPHostPorts++
+-			}
+-		} else {
+-			hostPorts++
+ 		}
++		hostPorts++
+ 	}
+ 	if *config.SNAT {
+ 		masqueradings = 1
+@@ -278,12 +290,6 @@ func (pmNFT *portMapperNFTables) checkPorts(config *PortMapConf, containerNet ne
+ 			return err
+ 		}
+ 	}
+-	if hostIPHostPorts > 0 {
+-		err := checkPortsAgainstRules(nft, hostIPHostPortsChain, config.ContainerID, hostIPHostPorts)
+-		if err != nil {
+-			return err
+-		}
+-	}
+ 	if masqueradings > 0 {
+ 		err := checkPortsAgainstRules(nft, masqueradingChain, config.ContainerID, masqueradings)
+ 		if err != nil {
+diff --git a/plugins/meta/portmap/portmap_nftables_test.go b/plugins/meta/portmap/portmap_nftables_test.go
+index c367f7ad..340c88a4 100644
+--- a/plugins/meta/portmap/portmap_nftables_test.go
++++ b/plugins/meta/portmap/portmap_nftables_test.go
+@@ -84,21 +84,22 @@ var _ = Describe("portmapping configuration (nftables)", func() {
+ add table ip cni_hostport { comment "CNI portmap plugin" ; }
+ add chain ip cni_hostport hostip_hostports
+ add chain ip cni_hostport hostports
++add chain ip cni_hostport hostports_all
+ add chain ip cni_hostport masquerading { type nat hook postrouting priority 100 ; }
+ add chain ip cni_hostport output { type nat hook output priority -100 ; }
+ add chain ip cni_hostport prerouting { type nat hook prerouting priority -100 ; }
+-add rule ip cni_hostport hostip_hostports ip daddr 192.168.0.2 tcp dport 8083 dnat to 10.0.0.2:83 comment "icee6giejonei6so"
+ add rule ip cni_hostport hostports tcp dport 8080 dnat to 10.0.0.2:80 comment "icee6giejonei6so"
+ add rule ip cni_hostport hostports tcp dport 8081 dnat to 10.0.0.2:80 comment "icee6giejonei6so"
+ add rule ip cni_hostport hostports udp dport 8080 dnat to 10.0.0.2:81 comment "icee6giejonei6so"
+ add rule ip cni_hostport hostports udp dport 8082 dnat to 10.0.0.2:82 comment "icee6giejonei6so"
++add rule ip cni_hostport hostports ip daddr 192.168.0.2 tcp dport 8083 dnat to 10.0.0.2:83 comment "icee6giejonei6so"
+ add rule ip cni_hostport hostports tcp dport 8084 dnat to 10.0.0.2:84 comment "icee6giejonei6so"
++add rule ip cni_hostport hostports_all jump hostip_hostports
++add rule ip cni_hostport hostports_all jump hostports
+ add rule ip cni_hostport masquerading ip saddr 10.0.0.2 ip daddr 10.0.0.2 masquerade comment "icee6giejonei6so"
+ add rule ip cni_hostport masquerading ip saddr 127.0.0.1 ip daddr 10.0.0.2 masquerade comment "icee6giejonei6so"
+-add rule ip cni_hostport output a b jump hostip_hostports
+-add rule ip cni_hostport output a b fib daddr type local jump hostports
+-add rule ip cni_hostport prerouting a b jump hostip_hostports
+-add rule ip cni_hostport prerouting a b jump hostports
++add rule ip cni_hostport output a b fib daddr type local jump hostports_all
++add rule ip cni_hostport prerouting a b fib daddr type local jump hostports_all
+ `)
+ 				actualRules := strings.TrimSpace(ipv4Fake.Dump())
+ 				Expect(actualRules).To(Equal(expectedRules))
+@@ -113,18 +114,53 @@ add rule ip cni_hostport prerouting a b jump hostports
+ add table ip6 cni_hostport { comment "CNI portmap plugin" ; }
+ add chain ip6 cni_hostport hostip_hostports
+ add chain ip6 cni_hostport hostports
++add chain ip6 cni_hostport hostports_all
+ add chain ip6 cni_hostport output { type nat hook output priority -100 ; }
+ add chain ip6 cni_hostport prerouting { type nat hook prerouting priority -100 ; }
+-add rule ip6 cni_hostport hostip_hostports ip6 daddr 2001:db8:a::1 tcp dport 8085 dnat to [2001:db8::2]:85 comment "icee6giejonei6so"
+ add rule ip6 cni_hostport hostports tcp dport 8080 dnat to [2001:db8::2]:80 comment "icee6giejonei6so"
+ add rule ip6 cni_hostport hostports tcp dport 8081 dnat to [2001:db8::2]:80 comment "icee6giejonei6so"
+ add rule ip6 cni_hostport hostports udp dport 8080 dnat to [2001:db8::2]:81 comment "icee6giejonei6so"
+ add rule ip6 cni_hostport hostports udp dport 8082 dnat to [2001:db8::2]:82 comment "icee6giejonei6so"
++add rule ip6 cni_hostport hostports ip6 daddr 2001:db8:a::1 tcp dport 8085 dnat to [2001:db8::2]:85 comment "icee6giejonei6so"
+ add rule ip6 cni_hostport hostports tcp dport 8086 dnat to [2001:db8::2]:86 comment "icee6giejonei6so"
+-add rule ip6 cni_hostport output c d jump hostip_hostports
+-add rule ip6 cni_hostport output c d fib daddr type local jump hostports
+-add rule ip6 cni_hostport prerouting c d jump hostip_hostports
+-add rule ip6 cni_hostport prerouting c d jump hostports
++add rule ip6 cni_hostport hostports_all jump hostip_hostports
++add rule ip6 cni_hostport hostports_all jump hostports
++add rule ip6 cni_hostport output c d fib daddr type local jump hostports_all
++add rule ip6 cni_hostport prerouting c d fib daddr type local jump hostports_all
++`)
++				actualRules = strings.TrimSpace(ipv6Fake.Dump())
++				Expect(actualRules).To(Equal(expectedRules))
++
++				err = pmNFT.unforwardPorts(conf)
++				Expect(err).NotTo(HaveOccurred())
++
++				expectedRules = strings.TrimSpace(`
++add table ip cni_hostport { comment "CNI portmap plugin" ; }
++add chain ip cni_hostport hostip_hostports
++add chain ip cni_hostport hostports
++add chain ip cni_hostport hostports_all
++add chain ip cni_hostport masquerading { type nat hook postrouting priority 100 ; }
++add chain ip cni_hostport output { type nat hook output priority -100 ; }
++add chain ip cni_hostport prerouting { type nat hook prerouting priority -100 ; }
++add rule ip cni_hostport hostports_all jump hostip_hostports
++add rule ip cni_hostport hostports_all jump hostports
++add rule ip cni_hostport output a b fib daddr type local jump hostports_all
++add rule ip cni_hostport prerouting a b fib daddr type local jump hostports_all
++`)
++				actualRules = strings.TrimSpace(ipv4Fake.Dump())
++				Expect(actualRules).To(Equal(expectedRules))
++
++				expectedRules = strings.TrimSpace(`
++add table ip6 cni_hostport { comment "CNI portmap plugin" ; }
++add chain ip6 cni_hostport hostip_hostports
++add chain ip6 cni_hostport hostports
++add chain ip6 cni_hostport hostports_all
++add chain ip6 cni_hostport output { type nat hook output priority -100 ; }
++add chain ip6 cni_hostport prerouting { type nat hook prerouting priority -100 ; }
++add rule ip6 cni_hostport hostports_all jump hostip_hostports
++add rule ip6 cni_hostport hostports_all jump hostports
++add rule ip6 cni_hostport output c d fib daddr type local jump hostports_all
++add rule ip6 cni_hostport prerouting c d fib daddr type local jump hostports_all
+ `)
+ 				actualRules = strings.TrimSpace(ipv6Fake.Dump())
+ 				Expect(actualRules).To(Equal(expectedRules))

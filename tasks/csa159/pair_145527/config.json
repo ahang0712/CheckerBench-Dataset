@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "2481af79671a6603fce201cbbc48f31e488e9fae",
+  "after_commit": "e56aac6e5a25630645607b6856d4b2a17b2311a5",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/7c561b8c3e83687064c957c394ed9fe49e38fe00/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/7c561b8c3e83687064c957c394ed9fe49e38fe00/compile_commands.json",
+  "changed_files": [
+    "drivers/usb/typec/ucsi/ucsi_ccg.c"
+  ],
+  "commit_message": "usb: typec: fix potential array underflow in ucsi_ccg_sync_control()\n\nThe \"command\" variable can be controlled by the user via debugfs.  The\nworry is that if con_index is zero then \"&uc->ucsi->connector[con_index\n- 1]\" would be an array underflow.\n\nFixes: 170a6726d0e2 (\"usb: typec: ucsi: add support for separate DP altmode devices\")\nSigned-off-by: Dan Carpenter <dan.carpenter@linaro.org>\nReviewed-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>\nLink: https://lore.kernel.org/r/c69ef0b3-61b0-4dde-98dd-97b97f81d912@stanley.mountain\nSigned-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

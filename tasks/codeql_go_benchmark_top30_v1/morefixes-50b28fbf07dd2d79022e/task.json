@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-50b28fbf07dd2d79022e",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-50b28fbf07dd2d79022e",
+    "project_id": "morefixes__cilium__ebpf",
+    "language": "go",
+    "backend": "codeql"
+  },
+  "changed_go_files": [
+    "btf/btf.go"
+  ],
+  "patch_units": {
+    "before": [
+      "btf/btf.go"
+    ],
+    "after": [
+      "btf/btf.go"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/73f634bd3320b19d83c698c6b16d7c987d1a2187b2b581fd73612eb9f6f8a32b/database",
+      "cache_key": "73f634bd3320b19d83c698c6b16d7c987d1a2187b2b581fd73612eb9f6f8a32b",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/9310f4ca0a56ecfbd5f938880ff7107667e471966316d6253a08ce16134c5901/database",
+      "cache_key": "9310f4ca0a56ecfbd5f938880ff7107667e471966316d6253a08ce16134c5901",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/c382231dcfb382c7f329cc314404827452a98b2729e54bc72c77fc7dd753a8f5/database",
+      "cache_key": "c382231dcfb382c7f329cc314404827452a98b2729e54bc72c77fc7dd753a8f5",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-50b28fbf07dd2d79022e/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-50b28fbf07dd2d79022e/ (do not mount into agent)"
+  }
+}

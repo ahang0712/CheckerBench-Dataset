@@ -1,0 +1,69 @@
+### File: jerry-core/ecma/operations/ecma-atomics-object.c
+```c
+ecma_value_t
+ecma_atomic_read_modify_write (ecma_value_t typedarray, /**< typedArray argument */
+                               ecma_value_t index, /**< index argument */
+                               ecma_value_t value, /**< value argument */
+                               ecma_atomics_op_t op) /**< operation argument */
+{
+  /* 1. */
+  ecma_value_t buffer = ecma_validate_shared_integer_typedarray (typedarray, false);
+
+  if (ECMA_IS_VALUE_ERROR (buffer))
+  {
+    return buffer;
+  }
+
+  /* 2. */
+  ecma_value_t idx = ecma_validate_atomic_access (typedarray, index);
+
+  if (ECMA_IS_VALUE_ERROR (idx))
+  {
+    return idx;
+  }
+
+  /* 3. */
+  ecma_object_t *typedarray_p = ecma_get_object_from_value (typedarray);
+  ecma_typedarray_info_t target_info = ecma_typedarray_get_info (typedarray_p);
+
+  /* 4-5. */
+  ecma_value_t val = ECMA_VALUE_ERROR;
+  ecma_number_t tmp;
+  if (target_info.id == ECMA_BIGINT64_ARRAY || target_info.id == ECMA_BIGUINT64_ARRAY)
+  {
+    val = ecma_bigint_to_bigint (value, true);
+  }
+  else if (!ECMA_IS_VALUE_ERROR (ecma_op_to_integer (value, &tmp)))
+  {
+    val = ecma_make_number_value (tmp);
+  }
+
+  if (ECMA_IS_VALUE_ERROR (val))
+  {
+    return val;
+  }
+
+  /* 6. */
+  uint8_t element_size = target_info.element_size;
+
+  /* 7. */
+  ecma_typedarray_type_t element_type = target_info.id;
+
+  /* 8. */
+  uint32_t offset = target_info.offset;
+
+  /* 9. */
+  uint32_t indexed_position = ecma_number_to_uint32 (idx) * element_size + offset;
+
+  JERRY_UNUSED (indexed_position);
+  JERRY_UNUSED (element_type);
+  JERRY_UNUSED (val);
+  JERRY_UNUSED (buffer);
+  JERRY_UNUSED (op);
+
+  ecma_free_value (val);
+
+  /* 10. */
+  return ecma_make_uint32_value (0);
+}
+```

@@ -1,0 +1,50 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-8641a4da2de2d0610576",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-8641a4da2de2d0610576",
+    "project_id": "morefixes__smallrye__smallrye-config",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "implementation/src/main/java/io/smallrye/config/SecuritySupport.java",
+    "implementation/src/main/java/io/smallrye/config/inject/ConfigProducer.java",
+    "implementation/src/main/java/io/smallrye/config/inject/SecuritySupport.java"
+  ],
+  "patch_units": {
+    "before": [
+      "implementation/src/main/java/io/smallrye/config/SecuritySupport.java",
+      "implementation/src/main/java/io/smallrye/config/inject/ConfigProducer.java",
+      "implementation/src/main/java/io/smallrye/config/SecuritySupport.java"
+    ],
+    "after": [
+      "implementation/src/main/java/io/smallrye/config/SecuritySupport.java",
+      "implementation/src/main/java/io/smallrye/config/inject/ConfigProducer.java",
+      "implementation/src/main/java/io/smallrye/config/inject/SecuritySupport.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/2f9f5bc684c4d1dc3fc0b7fb90cb194d15cb5944fab38a54e89ca376a758adb7/database",
+      "cache_key": "2f9f5bc684c4d1dc3fc0b7fb90cb194d15cb5944fab38a54e89ca376a758adb7",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/2841da6f53e5ccd5bd47fd283cb2717e333f904c525907f0d3a70e5bc72084ea/database",
+      "cache_key": "2841da6f53e5ccd5bd47fd283cb2717e333f904c525907f0d3a70e5bc72084ea",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/2ac2d03f81eb0baff2f64448b40fe0bac273ab527733abf1985467c0a7e8d2c3/database",
+      "cache_key": "2ac2d03f81eb0baff2f64448b40fe0bac273ab527733abf1985467c0a7e8d2c3",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-8641a4da2de2d0610576/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-8641a4da2de2d0610576/ (do not mount into agent)"
+  }
+}

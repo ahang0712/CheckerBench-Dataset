@@ -1,0 +1,13 @@
+diff --git a/app/scripts/xdLocalStorage.js b/app/scripts/xdLocalStorage.js
+index b4646e8..ffe2b9b 100644
+--- a/app/scripts/xdLocalStorage.js
++++ b/app/scripts/xdLocalStorage.js
+@@ -63,7 +63,7 @@ window.xdLocalStorage = window.xdLocalStorage || (function () {
+       window.attachEvent('onmessage', receiveMessage);
+     }
+ 
+-    temp.innerHTML = '<iframe id="' + options.iframeId + '" src=' + options.iframeUrl + ' style="display: none;"></iframe>';
++    temp.innerHTML = '<iframe id="' + options.iframeId + '" src="' + options.iframeUrl + '" style="display: none;"></iframe>';
+     document.body.appendChild(temp);
+     iframe = document.getElementById(options.iframeId);
+   }

@@ -1,0 +1,50 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-9f8a2d1b597df98c6680",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-9f8a2d1b597df98c6680",
+    "project_id": "morefixes__overleaf__overleaf",
+    "language": "javascript",
+    "backend": "codeql"
+  },
+  "changed_javascript_files": [
+    "services/web/app/src/Features/Spelling/SpellingController.js",
+    "services/web/app/src/router.js",
+    "services/web/test/unit/src/Spelling/SpellingControllerTests.js"
+  ],
+  "patch_units": {
+    "before": [
+      "services/web/app/src/Features/Spelling/SpellingController.js",
+      "services/web/app/src/router.js",
+      "services/web/test/unit/src/Spelling/SpellingControllerTests.js"
+    ],
+    "after": [
+      "services/web/app/src/Features/Spelling/SpellingController.js",
+      "services/web/app/src/router.js",
+      "services/web/test/unit/src/Spelling/SpellingControllerTests.js"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/9c125d5d996d169f5a2acc091362b08a12211146b47ec059fe07623e65761fd0/database",
+      "cache_key": "9c125d5d996d169f5a2acc091362b08a12211146b47ec059fe07623e65761fd0",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/49bd5b401c2b3cf3dead174604dddaf86bd5cc07885ad1f78d3ee30454cb06a8/database",
+      "cache_key": "49bd5b401c2b3cf3dead174604dddaf86bd5cc07885ad1f78d3ee30454cb06a8",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/3d802fde742e06df1c24039d6a199149fc58b0437c4c2d58781cbdf4488530d7/database",
+      "cache_key": "3d802fde742e06df1c24039d6a199149fc58b0437c4c2d58781cbdf4488530d7",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-9f8a2d1b597df98c6680/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-9f8a2d1b597df98c6680/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,35 @@
+diff --git a/src/main/java/org/jboss/ejb/protocol/remote/EJBSimpleTransactionControl.java b/src/main/java/org/jboss/ejb/protocol/remote/EJBSimpleTransactionControl.java
+index af32394..807d5c0 100644
+--- a/src/main/java/org/jboss/ejb/protocol/remote/EJBSimpleTransactionControl.java
++++ b/src/main/java/org/jboss/ejb/protocol/remote/EJBSimpleTransactionControl.java
+@@ -104,6 +104,8 @@ class EJBSimpleTransactionControl implements SimpleTransactionControl {
+             throw new SystemException();
+         } catch (IOException e) {
+             throw new SystemException();
++        } finally {
++            invocationTracker.remove(invocation);
+         }
+     }
+ 
+diff --git a/src/main/java/org/jboss/ejb/protocol/remote/EJBTransactionOperations.java b/src/main/java/org/jboss/ejb/protocol/remote/EJBTransactionOperations.java
+index d41c124..cb110f5 100644
+--- a/src/main/java/org/jboss/ejb/protocol/remote/EJBTransactionOperations.java
++++ b/src/main/java/org/jboss/ejb/protocol/remote/EJBTransactionOperations.java
+@@ -125,6 +125,8 @@ class EJBTransactionOperations implements RemotingOperations {
+             throw new XAException(XAException.XAER_RMERR);
+         } catch (IOException e) {
+             throw new XAException(XAException.XAER_RMERR);
++        } finally {
++            invocationTracker.remove(invocation);
+         }
+     }
+ 
+@@ -204,6 +206,8 @@ class EJBTransactionOperations implements RemotingOperations {
+             throw new XAException(XAException.XAER_RMERR);
+         } catch (IOException | ClassNotFoundException e) {
+             throw new XAException(XAException.XAER_RMERR);
++        } finally {
++            invocationTracker.remove(invocation);
+         }
+     }
+ 

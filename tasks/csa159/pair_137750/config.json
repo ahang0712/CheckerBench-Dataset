@@ -1,0 +1,19 @@
+{
+  "project_id": "qemu_qemu",
+  "before_commit": "6b7d4c55586a849aa8313282d79432917eade3bf",
+  "after_commit": "11b128f4062dd7f89b14abc8877ff20d41b28be9",
+  "repo_path": "/workspace/repo/qemu/qemu",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/qemu_qemu/f4b11eee2f562c23b3efc33b96ba4542c9ca81aa/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/qemu_qemu/f4b11eee2f562c23b3efc33b96ba4542c9ca81aa/compile_commands.json",
+  "changed_files": [
+    "block/qcow2.c"
+  ],
+  "commit_message": "qcow2: Fix NULL dereference in qcow2_open() error path (CVE-2014-0146)\n\nThe qcow2 code assumes that s->snapshots is non-NULL if s->nb_snapshots\n!= 0. By having the initialisation of both fields separated in\nqcow2_open(), any error occuring in between would cause the error path\nto dereference NULL in qcow2_free_snapshots() if the image had any\nsnapshots.\n\nSigned-off-by: Kevin Wolf <kwolf@redhat.com>\nReviewed-by: Max Reitz <mreitz@redhat.com>\nSigned-off-by: Stefan Hajnoczi <stefanha@redhat.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

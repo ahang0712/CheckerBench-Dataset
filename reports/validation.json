@@ -1,0 +1,62 @@
+{
+  "task_count": 300,
+  "backend_counts": {
+    "csa": 159,
+    "codeql": 141
+  },
+  "archive_regular_files_verified": 375360,
+  "validation_scope": {
+    "archive_integrity": "All regular archived files checked against per-file SHA-256 manifests",
+    "task_roster": "All 300 task directories checked against the release roster",
+    "restoration": "Complete Java archive restored with scripts/restore.py",
+    "download": "Java release asset downloaded again and its SHA-256 verified",
+    "runtime": "One reference task per backend/language; compilation and before/after scans in the distributed environment"
+  },
+  "smoke_results": [
+    {
+      "backend": "codeql",
+      "language": "go",
+      "task_id": "morefixes-02cb4e0a6c5aaabd6a78",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 49.1
+    },
+    {
+      "backend": "codeql",
+      "language": "java",
+      "task_id": "morefixes-02f75a63a6f0b8d6c6c7",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 34.6
+    },
+    {
+      "backend": "codeql",
+      "language": "javascript",
+      "task_id": "morefixes-040d724ca8211a3aaf1d",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 114.0
+    },
+    {
+      "backend": "codeql",
+      "language": "python",
+      "task_id": "pyvul-03252773bde39ba37465",
+      "exit_code": 0,
+      "passed": true,
+      "seconds": 36.9
+    },
+    {
+      "backend": "csa",
+      "language": "c/c++",
+      "task_id": "pair_134943",
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 8.0,
+      "checker": "security.PureMemcmpOobRead"
+    }
+  ],
+  "limitations": [
+    "Runtime smoke checks cover 5 representative tasks, not a new complete 300-task score evaluation.",
+    "Full CSA refinement replay is not covered by these before/after smoke checks."
+  ]
+}

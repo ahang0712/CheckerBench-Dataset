@@ -1,0 +1,127 @@
+### File: drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+```c
+static void brcmf_sdio_bus_stop(struct device *dev)
+{
+	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+	struct brcmf_sdio *bus = sdiodev->bus;
+	struct brcmf_core *core = bus->sdio_core;
+	u32 local_hostintmask;
+	u8 saveclk, bpreq;
+	int err;
+
+	brcmf_dbg(TRACE, "Enter\n");
+
+	if (bus->watchdog_tsk) {
+		send_sig(SIGTERM, bus->watchdog_tsk, 1);
+		kthread_stop(bus->watchdog_tsk);
+		bus->watchdog_tsk = NULL;
+	}
+
+	if (sdiodev->state != BRCMF_SDIOD_NOMEDIUM) {
+		sdio_claim_host(sdiodev->func1);
+
+		/* Enable clock for device interrupts */
+		brcmf_sdio_bus_sleep(bus, false, false);
+
+		/* Disable and clear interrupts at the chip level also */
+		brcmf_sdiod_writel(sdiodev, core->base + SD_REG(hostintmask),
+				   0, NULL);
+
+		local_hostintmask = bus->hostintmask;
+		bus->hostintmask = 0;
+
+		/* Force backplane clocks to assure F2 interrupt propagates */
+		saveclk = brcmf_sdiod_readb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
+					    &err);
+		if (!err) {
+			bpreq = saveclk;
+			bpreq |= brcmf_chip_is_ulp(bus->ci) ?
+				SBSDIO_HT_AVAIL_REQ : SBSDIO_FORCE_HT;
+			brcmf_sdiod_writeb(sdiodev,
+					   SBSDIO_FUNC1_CHIPCLKCSR,
+					   bpreq, &err);
+		}
+		if (err)
+			brcmf_err("Failed to force clock for F2: err %d\n",
+				  err);
+
+		/* Turn off the bus (F2), free any pending packets */
+		brcmf_dbg(INTR, "disable SDIO interrupts\n");
+		sdio_disable_func(sdiodev->func2);
+
+		/* Clear any pending interrupts now that F2 is disabled */
+		brcmf_sdiod_writel(sdiodev, core->base + SD_REG(intstatus),
+				   local_hostintmask, NULL);
+
+		sdio_release_host(sdiodev->func1);
+	}
+	/* Clear the data packet queues */
+	brcmu_pktq_flush(&bus->txq, true, NULL, NULL);
+
+	/* Clear any held glomming stuff */
+	brcmu_pkt_buf_free_skb(bus->glomd);
+	brcmf_sdio_free_glom(bus);
+
+	/* Clear rx control and wake any waiters */
+	spin_lock_bh(&bus->rxctl_lock);
+	bus->rxlen = 0;
+	spin_unlock_bh(&bus->rxctl_lock);
+	brcmf_sdio_dcmd_resp_wake(bus);
+
+	/* Reset some F2 state stuff */
+	bus->rxskip = false;
+	bus->tx_seq = bus->rx_seq = 0;
+}
+
+void brcmf_sdio_remove(struct brcmf_sdio *bus)
+{
+	brcmf_dbg(TRACE, "Enter\n");
+
+	if (bus) {
+		/* Stop watchdog task */
+		if (bus->watchdog_tsk) {
+			send_sig(SIGTERM, bus->watchdog_tsk, 1);
+			kthread_stop(bus->watchdog_tsk);
+			bus->watchdog_tsk = NULL;
+		}
+
+		/* De-register interrupt handler */
+		brcmf_sdiod_intr_unregister(bus->sdiodev);
+
+		brcmf_detach(bus->sdiodev->dev);
+		brcmf_free(bus->sdiodev->dev);
+
+		cancel_work_sync(&bus->datawork);
+		if (bus->brcmf_wq)
+			destroy_workqueue(bus->brcmf_wq);
+
+		if (bus->ci) {
+			if (bus->sdiodev->state != BRCMF_SDIOD_NOMEDIUM) {
+				sdio_claim_host(bus->sdiodev->func1);
+				brcmf_sdio_wd_timer(bus, false);
+				brcmf_sdio_clkctl(bus, CLK_AVAIL, false);
+				/* Leave the device in state where it is
+				 * 'passive'. This is done by resetting all
+				 * necessary cores.
+				 */
+				msleep(20);
+				brcmf_chip_set_passive(bus->ci);
+				brcmf_sdio_clkctl(bus, CLK_NONE, false);
+				sdio_release_host(bus->sdiodev->func1);
+			}
+			brcmf_chip_detach(bus->ci);
+		}
+		if (bus->sdiodev->settings)
+			brcmf_release_module_param(bus->sdiodev->settings);
+
+		release_firmware(bus->sdiodev->clm_fw);
+		bus->sdiodev->clm_fw = NULL;
+		kfree(bus->rxbuf);
+		kfree(bus->hdrbuf);
+		kfree(bus);
+	}
+
+	brcmf_dbg(TRACE, "Disconnected\n");
+}
+```

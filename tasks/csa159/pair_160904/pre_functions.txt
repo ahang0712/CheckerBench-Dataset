@@ -1,0 +1,95 @@
+### File: fs/hfsplus/xattr.c
+```c
+ssize_t hfsplus_listxattr(struct dentry *dentry, char *buffer, size_t size)
+{
+	ssize_t err;
+	ssize_t res;
+	struct inode *inode = d_inode(dentry);
+	struct hfs_find_data fd;
+	struct hfsplus_attr_key attr_key;
+	char *strbuf;
+	int xattr_name_len;
+
+	if ((!S_ISREG(inode->i_mode) &&
+			!S_ISDIR(inode->i_mode)) ||
+				HFSPLUS_IS_RSRC(inode))
+		return -EOPNOTSUPP;
+
+	res = hfsplus_listxattr_finder_info(dentry, buffer, size);
+	if (res < 0)
+		return res;
+	else if (!HFSPLUS_SB(inode->i_sb)->attr_tree)
+		return (res == 0) ? -EOPNOTSUPP : res;
+
+	err = hfs_find_init(HFSPLUS_SB(inode->i_sb)->attr_tree, &fd);
+	if (err) {
+		pr_err("can't init xattr find struct\n");
+		return err;
+	}
+
+	strbuf = kmalloc(NLS_MAX_CHARSET_SIZE * HFSPLUS_ATTR_MAX_STRLEN +
+			XATTR_MAC_OSX_PREFIX_LEN + 1, GFP_KERNEL);
+	if (!strbuf) {
+		res = -ENOMEM;
+		goto out;
+	}
+
+	err = hfsplus_find_attr(inode->i_sb, inode->i_ino, NULL, &fd);
+	if (err) {
+		if (err == -ENOENT) {
+			if (res == 0)
+				res = -ENODATA;
+			goto end_listxattr;
+		} else {
+			res = err;
+			goto end_listxattr;
+		}
+	}
+
+	for (;;) {
+		u16 key_len = hfs_bnode_read_u16(fd.bnode, fd.keyoffset);
+
+		if (key_len == 0 || key_len > fd.tree->max_key_len) {
+			pr_err("invalid xattr key length: %d\n", key_len);
+			res = -EIO;
+			goto end_listxattr;
+		}
+
+		hfs_bnode_read(fd.bnode, &attr_key,
+				fd.keyoffset, key_len + sizeof(key_len));
+
+		if (be32_to_cpu(attr_key.cnid) != inode->i_ino)
+			goto end_listxattr;
+
+		xattr_name_len = NLS_MAX_CHARSET_SIZE * HFSPLUS_ATTR_MAX_STRLEN;
+		if (hfsplus_uni2asc(inode->i_sb,
+			(const struct hfsplus_unistr *)&fd.key->attr.key_name,
+					strbuf, &xattr_name_len)) {
+			pr_err("unicode conversion failed\n");
+			res = -EIO;
+			goto end_listxattr;
+		}
+
+		if (!buffer || !size) {
+			if (can_list(strbuf))
+				res += name_len(strbuf, xattr_name_len);
+		} else if (can_list(strbuf)) {
+			if (size < (res + name_len(strbuf, xattr_name_len))) {
+				res = -ERANGE;
+				goto end_listxattr;
+			} else
+				res += copy_name(buffer + res,
+						strbuf, xattr_name_len);
+		}
+
+		if (hfs_brec_goto(&fd, 1))
+			goto end_listxattr;
+	}
+
+end_listxattr:
+	kfree(strbuf);
+out:
+	hfs_find_exit(&fd);
+	return res;
+}
+```

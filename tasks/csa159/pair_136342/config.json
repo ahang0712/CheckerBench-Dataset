@@ -1,0 +1,20 @@
+{
+  "project_id": "vadz_libtiff",
+  "before_commit": "3206e0c752a62da1ae606867113ed3bf9bf73306",
+  "after_commit": "3996fa0f84f4a8b7e65fe4b8f0681711022034ea",
+  "repo_path": "/workspace/repo/vadz/libtiff",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/vadz_libtiff/2701f47b544ab7eb2d40bb9e0542f17a7ba1437a/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/vadz_libtiff/2701f47b544ab7eb2d40bb9e0542f17a7ba1437a/compile_commands.json",
+  "changed_files": [
+    "tools/pal2rgb.c",
+    "tools/thumbnail.c"
+  ],
+  "commit_message": "* tools/pal2rgb.c, tools/thumbnail.c: fix crash by disabling TIFFTAG_INKNAMES\ncopying. The right fix would be to properly copy it, but not worth the burden\nfor those esoteric utilities.\nhttp://bugzilla.maptools.org/show_bug.cgi?id=2484 (CVE-2014-8127)",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,84 @@
+### File: drivers/net/dsa/mv88e6xxx/chip.c
+```c
+static int mv88e6xxx_mdio_register(struct mv88e6xxx_chip *chip,
+				   struct device_node *np,
+				   bool external)
+{
+	static int index;
+	struct mv88e6xxx_mdio_bus *mdio_bus;
+	struct mii_bus *bus;
+	int err;
+
+	if (external) {
+		mv88e6xxx_reg_lock(chip);
+		err = mv88e6xxx_g2_scratch_gpio_set_smi(chip, true);
+		mv88e6xxx_reg_unlock(chip);
+
+		if (err)
+			return err;
+	}
+
+	bus = mdiobus_alloc_size(sizeof(*mdio_bus));
+	if (!bus)
+		return -ENOMEM;
+
+	mdio_bus = bus->priv;
+	mdio_bus->bus = bus;
+	mdio_bus->chip = chip;
+	INIT_LIST_HEAD(&mdio_bus->list);
+	mdio_bus->external = external;
+
+	if (np) {
+		bus->name = np->full_name;
+		snprintf(bus->id, MII_BUS_ID_SIZE, "%pOF", np);
+	} else {
+		bus->name = "mv88e6xxx SMI";
+		snprintf(bus->id, MII_BUS_ID_SIZE, "mv88e6xxx-%d", index++);
+	}
+
+	bus->read = mv88e6xxx_mdio_read;
+	bus->write = mv88e6xxx_mdio_write;
+	bus->parent = chip->dev;
+
+	if (!external) {
+		err = mv88e6xxx_g2_irq_mdio_setup(chip, bus);
+		if (err)
+			goto out;
+	}
+
+	err = of_mdiobus_register(bus, np);
+	if (err) {
+		dev_err(chip->dev, "Cannot register MDIO bus (%d)\n", err);
+		mv88e6xxx_g2_irq_mdio_free(chip, bus);
+		goto out;
+	}
+
+	if (external)
+		list_add_tail(&mdio_bus->list, &chip->mdios);
+	else
+		list_add(&mdio_bus->list, &chip->mdios);
+
+	return 0;
+
+out:
+	mdiobus_free(bus);
+	return err;
+}
+
+static void mv88e6xxx_mdios_unregister(struct mv88e6xxx_chip *chip)
+
+{
+	struct mv88e6xxx_mdio_bus *mdio_bus;
+	struct mii_bus *bus;
+
+	list_for_each_entry(mdio_bus, &chip->mdios, list) {
+		bus = mdio_bus->bus;
+
+		if (!mdio_bus->external)
+			mv88e6xxx_g2_irq_mdio_free(chip, bus);
+
+		mdiobus_unregister(bus);
+		mdiobus_free(bus);
+	}
+}
+```

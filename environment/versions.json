@@ -1,0 +1,11 @@
+{
+  "platform": "linux/amd64",
+  "image": "checkerbench-runtime:review-v1",
+  "ubuntu": "24.04",
+  "llvm": "18.1.8",
+  "codeql": "2.26.4",
+  "jdk": "17",
+  "gcc": "11",
+  "node": "22.23.1",
+  "python": "3.12"
+}

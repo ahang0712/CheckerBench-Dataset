@@ -1,0 +1,128 @@
+diff --git a/cmd/root.go b/cmd/root.go
+index 8fefcb37..b062eba2 100644
+--- a/cmd/root.go
++++ b/cmd/root.go
+@@ -9,6 +9,7 @@ import (
+ 	"time"
+ 
+ 	"knative.dev/func/cmd/templates"
++	"knative.dev/func/k8s"
+ 
+ 	"github.com/ory/viper"
+ 	"github.com/spf13/cobra"
+@@ -361,7 +362,12 @@ func (v Version) StringVerbose() string {
+ 	if date == "" {
+ 		date = time.Now().Format(time.RFC3339)
+ 	}
+-	return fmt.Sprintf("%s-%s-%s", vers, hash, date)
++	funcVersion := fmt.Sprintf("%s-%s-%s", vers, hash, date)
++	return fmt.Sprintf("Version: %s\n"+
++		"SocatImage: %s\n"+
++		"TarImage: %s", funcVersion,
++		k8s.SocatImage,
++		k8s.TarImage)
+ }
+ 
+ // surveySelectDefault returns 'value' if defined and exists in 'options'.
+diff --git a/cmd/root_test.go b/cmd/root_test.go
+index 25f73c24..89569cfb 100644
+--- a/cmd/root_test.go
++++ b/cmd/root_test.go
+@@ -209,24 +209,28 @@ func TestRoot_CommandNameParameterized(t *testing.T) {
+ 
+ func TestVerbose(t *testing.T) {
+ 	tests := []struct {
+-		name string
+-		args []string
+-		want string
++		name   string
++		args   []string
++		want   string
++		wantLF int
+ 	}{
+ 		{
+-			name: "verbose as version's flag",
+-			args: []string{"version", "-v"},
+-			want: "v0.42.0-cafe-1970-01-01\n",
++			name:   "verbose as version's flag",
++			args:   []string{"version", "-v"},
++			want:   "Version: v0.42.0-cafe-1970-01-01",
++			wantLF: 3,
+ 		},
+ 		{
+-			name: "no verbose",
+-			args: []string{"version"},
+-			want: "v0.42.0\n",
++			name:   "no verbose",
++			args:   []string{"version"},
++			want:   "v0.42.0",
++			wantLF: 1,
+ 		},
+ 		{
+-			name: "verbose as root's flag",
+-			args: []string{"--verbose", "version"},
+-			want: "v0.42.0-cafe-1970-01-01\n",
++			name:   "verbose as root's flag",
++			args:   []string{"--verbose", "version"},
++			want:   "Version: v0.42.0-cafe-1970-01-01",
++			wantLF: 3,
+ 		},
+ 	}
+ 	for _, tt := range tests {
+@@ -249,8 +253,12 @@ func TestVerbose(t *testing.T) {
+ 				t.Fatal(err)
+ 			}
+ 
+-			if out.String() != tt.want {
+-				t.Errorf("expected output: %q but got: %q", tt.want, out.String())
++			outLines := strings.Split(out.String(), "\n")
++			if len(outLines)-1 != tt.wantLF {
++				t.Errorf("expected output with %v line breaks but got %v:", tt.wantLF, len(outLines)-1)
++			}
++			if outLines[0] != tt.want {
++				t.Errorf("expected output: %q but got: %q", tt.want, outLines[0])
+ 			}
+ 		})
+ 	}
+diff --git a/k8s/dialer.go b/k8s/dialer.go
+index d11116d3..b2551837 100644
+--- a/k8s/dialer.go
++++ b/k8s/dialer.go
+@@ -7,7 +7,6 @@ import (
+ 	"fmt"
+ 	"io"
+ 	"net"
+-	"os"
+ 	"sync"
+ 	"time"
+ 
+@@ -23,7 +22,7 @@ import (
+ 	"k8s.io/client-go/tools/remotecommand"
+ )
+ 
+-var socatImage = "quay.io/boson/alpine-socat:1.7.4.3-r1-non-root"
++var SocatImage = "quay.io/boson/alpine-socat:1.7.4.3-r1-non-root"
+ 
+ // NewInClusterDialer creates context dialer that will dial TCP connections via POD running in k8s cluster.
+ // This is useful when accessing k8s services that are not exposed outside cluster (e.g. openshift image registry).
+@@ -129,11 +128,6 @@ func (c *contextDialer) startDialerPod(ctx context.Context) (err error) {
+ 		}
+ 	}()
+ 
+-	img := socatImage
+-	if i, ok := os.LookupEnv("SOCAT_IMAGE"); ok {
+-		img = i
+-	}
+-
+ 	pod := &coreV1.Pod{
+ 		ObjectMeta: metaV1.ObjectMeta{
+ 			Name:        c.podName,
+@@ -144,7 +138,7 @@ func (c *contextDialer) startDialerPod(ctx context.Context) (err error) {
+ 			Containers: []coreV1.Container{
+ 				{
+ 					Name:            c.podName,
+-					Image:           img,
++					Image:           SocatImage,
+ 					Stdin:           true,
+ 					StdinOnce:       true,
+ 					Command:         []string{"socat", "-u", "-", "OPEN:/dev/null"},

@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "504fa212d7030fb1c042290dc2eb92b21515573a",
+  "after_commit": "3bb2a01caa813d3a1845d378bbe4169ef280d394",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/b7bfaa761d760e72a969d116517eaa12e404c262/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/b7bfaa761d760e72a969d116517eaa12e404c262/compile_commands.json",
+  "changed_files": [
+    "lib/kobject.c"
+  ],
+  "commit_message": "kobject: Fix slab-out-of-bounds in fill_kobj_path()\n\nIn kobject_get_path(), if kobj->name is changed between calls\nget_kobj_path_length() and fill_kobj_path() and the length becomes\nlonger, then fill_kobj_path() will have an out-of-bounds bug.\n\nThe actual current problem occurs when the ixgbe probe.\n\nIn ixgbe_mii_bus_init(), if the length of netdev->dev.kobj.name\nlength becomes longer, out-of-bounds will occur.\n\ncpu0                                         cpu1\nixgbe_probe\n register_netdev(netdev)\n  netdev_register_kobject\n   device_add\n    kobject_uevent // Sending ADD events\n                                             systemd-udevd // rename netdev\n                                              dev_change_name\n                                               device_rename\n                                                kobject_rename\n ixgbe_mii_bus_init                             |\n  mdiobus_register                              |\n   __mdiobus_register                           |\n    device_register                             |\n     device_add                                 |\n      kobject_uevent                            |\n       kobject_get_path                         |\n        len = get_kobj_path_length // old name  |\n        path = kzalloc(len, gfp_mask);          |\n                                                kobj->name = name;\n                                                /* name length becomes\n                                                 * longer\n                                                 */\n        fill_kobj_path /* kobj path length is\n                        * longer than path,\n                        * resulting in out of\n                        * bounds when filling path\n                        */\n\nThis is the kasan report:\n\n==================================================================\nBUG: KASAN: slab-out-of-bounds in fill_kobj_path+0x50/0xc0\nWrite of size 7 at addr ff1100090573d1fd by task kworker/28:1/673\n\n Workqueue: events work_for_cpu_fn\n Call Trace:\n <TASK>\n dump_stack_lvl+0x34/0x48\n print_address_description.constprop.0+0x86/0x1e7\n print_report+0x36/0x4f\n kasan_report+0xad/0x130\n kasan_check_range+0x35/0x1c0\n memcpy+0x39/0x60\n fill_kobj_path+0x50/0xc0\n kobject_get_path+0x5a/0xc0\n kobject_uevent_env+0x140/0x460\n device_add+0x5c7/0x910\n __mdiobus_register+0x14e/0x490\n ixgbe_probe.cold+0x441/0x574 [ixgbe]\n local_pci_probe+0x78/0xc0\n work_for_cpu_fn+0x26/0x40\n process_one_work+0x3b6/0x6a0\n worker_thread+0x368/0x520\n kthread+0x165/0x1a0\n ret_from_fork+0x1f/0x30\n\nThis reproducer triggers that bug:\n\nwhile:\ndo\n    rmmod ixgbe\n    sleep 0.5\n    modprobe ixgbe\n    sleep 0.5\n\nWhen calling fill_kobj_path() to fill path, if the name length of\nkobj becomes longer, return failure and retry. This fixes the problem.\n\nFixes: 1da177e4c3f4 (\"Linux-2.6.12-rc2\")\nSigned-off-by: Wang Hai <wanghai38@huawei.com>\nLink: https://lore.kernel.org/r/20221220012143.52141-1-wanghai38@huawei.com\nSigned-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

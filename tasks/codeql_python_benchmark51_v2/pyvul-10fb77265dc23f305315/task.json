@@ -1,0 +1,49 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-10fb77265dc23f305315",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-10fb77265dc23f305315",
+    "project_id": "pyvul__vyperlang__vyper",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "tests/parser/functions/test_raw_call.py",
+    "vyper/builtins/functions.py"
+  ],
+  "patch_units": {
+    "before": [
+      "function:test_checkable_raw_call",
+      "class:RawCall",
+      "function:RawCall.build_IR"
+    ],
+    "after": [
+      "function:test_checkable_raw_call",
+      "class:RawCall",
+      "function:RawCall.build_IR"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/7127d3397fc92515dfd08a0954cb092c2c193d95630b0bbaf40c615721cfaecc/database",
+      "cache_key": "7127d3397fc92515dfd08a0954cb092c2c193d95630b0bbaf40c615721cfaecc",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/7258a2ea05e45b102c9c6292e214b903ccdab2e13a0a6752d5f349ae26adf4c1/database",
+      "cache_key": "7258a2ea05e45b102c9c6292e214b903ccdab2e13a0a6752d5f349ae26adf4c1",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/1e60e899150b178df303db67b76cdaa24d81b185b66a334f096b26d9a09f89d1/database",
+      "cache_key": "1e60e899150b178df303db67b76cdaa24d81b185b66a334f096b26d9a09f89d1",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-10fb77265dc23f305315/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-10fb77265dc23f305315/ (do not mount into agent)"
+  }
+}

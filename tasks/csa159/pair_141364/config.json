@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "c863a2dcb9b0894d9ac6030c4d1ab2e7867dabcb",
+  "after_commit": "57569c37f0add1b6489e1a1563c71519daf732cf",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/fc7212fd3100920fea711a80482d967388a4603c/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/fc7212fd3100920fea711a80482d967388a4603c/compile_commands.json",
+  "changed_files": [
+    "drivers/scsi/iscsi_tcp.c"
+  ],
+  "commit_message": "scsi: iscsi: iscsi_tcp: Fix null-ptr-deref while calling getpeername()\n\nFix a NULL pointer crash that occurs when we are freeing the socket at the\nsame time we access it via sysfs.\n\nThe problem is that:\n\n 1. iscsi_sw_tcp_conn_get_param() and iscsi_sw_tcp_host_get_param() take\n    the frwd_lock and do sock_hold() then drop the frwd_lock. sock_hold()\n    does a get on the \"struct sock\".\n\n 2. iscsi_sw_tcp_release_conn() does sockfd_put() which does the last put\n    on the \"struct socket\" and that does __sock_release() which sets the\n    sock->ops to NULL.\n\n 3. iscsi_sw_tcp_conn_get_param() and iscsi_sw_tcp_host_get_param() then\n    call kernel_getpeername() which accesses the NULL sock->ops.\n\nAbove we do a get on the \"struct sock\", but we needed a get on the \"struct\nsocket\". Originally, we just held the frwd_lock the entire time but in\ncommit bcf3a2953d36 (\"scsi: iscsi: iscsi_tcp: Avoid holding spinlock while\ncalling getpeername()\") we switched to refcount based because the network\nlayer changed and started taking a mutex in that path, so we could no\nlonger hold the frwd_lock.\n\nInstead of trying to maintain multiple refcounts, this just has us use a\nmutex for accessing the socket in the interface code paths.\n\nLink: https://lore.kernel.org/r/20220907221700.10302-1-michael.christie@oracle.com\nFixes: bcf3a2953d36 (\"scsi: iscsi: iscsi_tcp: Avoid holding spinlock while calling getpeername()\")\nSigned-off-by: Mike Christie <michael.christie@oracle.com>\nSigned-off-by: Martin K. Petersen <martin.petersen@oracle.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

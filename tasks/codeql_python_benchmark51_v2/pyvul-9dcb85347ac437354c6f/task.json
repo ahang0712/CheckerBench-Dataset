@@ -1,0 +1,50 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-9dcb85347ac437354c6f",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-9dcb85347ac437354c6f",
+    "project_id": "pyvul__spiral-project__ihatemoney",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "ihatemoney/models.py"
+  ],
+  "patch_units": {
+    "before": [
+      "class:Person",
+      "class:Person.PersonQuery",
+      "function:Person.PersonQuery.get_by_name",
+      "function:Person.PersonQuery.get"
+    ],
+    "after": [
+      "class:Person",
+      "class:Person.PersonQuery",
+      "function:Person.PersonQuery.get_by_name",
+      "function:Person.PersonQuery.get"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/f4e621bc66ecb6cf8d794115e8783eea997e1f3cfe851195d5e84276de6e0794/database",
+      "cache_key": "f4e621bc66ecb6cf8d794115e8783eea997e1f3cfe851195d5e84276de6e0794",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/03264965946d82ef188b86242c3273ce6f2d80cad4ae65d91d941d6cc908d53f/database",
+      "cache_key": "03264965946d82ef188b86242c3273ce6f2d80cad4ae65d91d941d6cc908d53f",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/67adc1490f6bfb9d8b441f24b1db2dfb93e91d1bbed6aeed4d7cb4097a86343f/database",
+      "cache_key": "67adc1490f6bfb9d8b441f24b1db2dfb93e91d1bbed6aeed4d7cb4097a86343f",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-9dcb85347ac437354c6f/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-9dcb85347ac437354c6f/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,49 @@
+### File: drivers/rtc/rtc-mt6397.c
+```c
+static int mtk_rtc_probe(struct platform_device *pdev)
+{
+	struct resource *res;
+	struct mt6397_chip *mt6397_chip = dev_get_drvdata(pdev->dev.parent);
+	struct mt6397_rtc *rtc;
+	int ret;
+
+	rtc = devm_kzalloc(&pdev->dev, sizeof(struct mt6397_rtc), GFP_KERNEL);
+	if (!rtc)
+		return -ENOMEM;
+
+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+	rtc->addr_base = res->start;
+
+	rtc->data = of_device_get_match_data(&pdev->dev);
+
+	rtc->irq = platform_get_irq(pdev, 0);
+	if (rtc->irq < 0)
+		return rtc->irq;
+
+	rtc->regmap = mt6397_chip->regmap;
+	mutex_init(&rtc->lock);
+
+	platform_set_drvdata(pdev, rtc);
+
+	rtc->rtc_dev = devm_rtc_allocate_device(&pdev->dev);
+	if (IS_ERR(rtc->rtc_dev))
+		return PTR_ERR(rtc->rtc_dev);
+
+	ret = devm_request_threaded_irq(&pdev->dev, rtc->irq, NULL,
+					mtk_rtc_irq_handler_thread,
+					IRQF_ONESHOT | IRQF_TRIGGER_HIGH,
+					"mt6397-rtc", rtc);
+
+	if (ret) {
+		dev_err(&pdev->dev, "Failed to request alarm IRQ: %d: %d\n",
+			rtc->irq, ret);
+		return ret;
+	}
+
+	device_init_wakeup(&pdev->dev, 1);
+
+	rtc->rtc_dev->ops = &mtk_rtc_ops;
+
+	return devm_rtc_register_device(rtc->rtc_dev);
+}
+```

@@ -1,0 +1,199 @@
+### File: fs/jfs/jfs_dtree.c
+```c
+static int dtSplitRoot(tid_t tid,
+	    struct inode *ip, struct dtsplit * split, struct metapage ** rmpp)
+{
+	struct super_block *sb = ip->i_sb;
+	struct metapage *smp;
+	dtroot_t *sp;
+	struct metapage *rmp;
+	dtpage_t *rp;
+	s64 rbn;
+	int xlen;
+	int xsize;
+	struct dtslot *f;
+	s8 *stbl;
+	int fsi, stblsize, n;
+	struct idtentry *s;
+	pxd_t *ppxd;
+	struct pxdlist *pxdlist;
+	pxd_t *pxd;
+	struct dt_lock *dtlck;
+	struct tlock *tlck;
+	struct lv *lv;
+	int rc;
+
+	/* get split root page */
+	smp = split->mp;
+	sp = &JFS_IP(ip)->i_dtroot;
+
+	/*
+	 *	allocate/initialize a single (right) child page
+	 *
+	 * N.B. at first split, a one (or two) block to fit new entry
+	 * is allocated; at subsequent split, a full page is allocated;
+	 */
+	pxdlist = split->pxdlist;
+	pxd = &pxdlist->pxd[pxdlist->npxd];
+	pxdlist->npxd++;
+	rbn = addressPXD(pxd);
+	xlen = lengthPXD(pxd);
+	xsize = xlen << JFS_SBI(sb)->l2bsize;
+	rmp = get_metapage(ip, rbn, xsize, 1);
+	if (!rmp)
+		return -EIO;
+
+	rp = rmp->data;
+
+	/* Allocate blocks to quota. */
+	rc = dquot_alloc_block(ip, lengthPXD(pxd));
+	if (rc) {
+		release_metapage(rmp);
+		return rc;
+	}
+
+	BT_MARK_DIRTY(rmp, ip);
+	/*
+	 * acquire a transaction lock on the new right page
+	 */
+	tlck = txLock(tid, ip, rmp, tlckDTREE | tlckNEW);
+	dtlck = (struct dt_lock *) & tlck->lock;
+
+	rp->header.flag =
+	    (sp->header.flag & BT_LEAF) ? BT_LEAF : BT_INTERNAL;
+	rp->header.self = *pxd;
+
+	/* initialize sibling pointers */
+	rp->header.next = 0;
+	rp->header.prev = 0;
+
+	/*
+	 *	move in-line root page into new right page extent
+	 */
+	/* linelock header + copied entries + new stbl (1st slot) in new page */
+	ASSERT(dtlck->index == 0);
+	lv = & dtlck->lv[0];
+	lv->offset = 0;
+	lv->length = 10;	/* 1 + 8 + 1 */
+	dtlck->index++;
+
+	n = xsize >> L2DTSLOTSIZE;
+	rp->header.maxslot = n;
+	stblsize = (n + 31) >> L2DTSLOTSIZE;
+
+	/* copy old stbl to new stbl at start of extended area */
+	rp->header.stblindex = DTROOTMAXSLOT;
+	stbl = (s8 *) & rp->slot[DTROOTMAXSLOT];
+	memcpy(stbl, sp->header.stbl, sp->header.nextindex);
+	rp->header.nextindex = sp->header.nextindex;
+
+	/* copy old data area to start of new data area */
+	memcpy(&rp->slot[1], &sp->slot[1], IDATASIZE);
+
+	/*
+	 * append free region of newly extended area at tail of freelist
+	 */
+	/* init free region of newly extended area */
+	fsi = n = DTROOTMAXSLOT + stblsize;
+	f = &rp->slot[fsi];
+	for (fsi++; fsi < rp->header.maxslot; f++, fsi++)
+		f->next = fsi;
+	f->next = -1;
+
+	/* append new free region at tail of old freelist */
+	fsi = sp->header.freelist;
+	if (fsi == -1)
+		rp->header.freelist = n;
+	else {
+		rp->header.freelist = fsi;
+
+		do {
+			f = &rp->slot[fsi];
+			fsi = f->next;
+		} while (fsi >= 0);
+
+		f->next = n;
+	}
+
+	rp->header.freecnt = sp->header.freecnt + rp->header.maxslot - n;
+
+	/*
+	 * Update directory index table for entries now in right page
+	 */
+	if ((rp->header.flag & BT_LEAF) && DO_INDEX(ip)) {
+		s64 lblock;
+		struct metapage *mp = NULL;
+		struct ldtentry *ldtentry;
+
+		stbl = DT_GETSTBL(rp);
+		for (n = 0; n < rp->header.nextindex; n++) {
+			ldtentry = (struct ldtentry *) & rp->slot[stbl[n]];
+			modify_index(tid, ip, le32_to_cpu(ldtentry->index),
+				     rbn, n, &mp, &lblock);
+		}
+		if (mp)
+			release_metapage(mp);
+	}
+	/*
+	 * insert the new entry into the new right/child page
+	 * (skip index in the new right page will not change)
+	 */
+	dtInsertEntry(rp, split->index, split->key, split->data, &dtlck);
+
+	/*
+	 *	reset parent/root page
+	 *
+	 * set the 1st entry offset to 0, which force the left-most key
+	 * at any level of the tree to be less than any search key.
+	 *
+	 * The btree comparison code guarantees that the left-most key on any
+	 * level of the tree is never used, so it doesn't need to be filled in.
+	 */
+	BT_MARK_DIRTY(smp, ip);
+	/*
+	 * acquire a transaction lock on the root page (in-memory inode)
+	 */
+	tlck = txLock(tid, ip, smp, tlckDTREE | tlckNEW | tlckBTROOT);
+	dtlck = (struct dt_lock *) & tlck->lock;
+
+	/* linelock root */
+	ASSERT(dtlck->index == 0);
+	lv = & dtlck->lv[0];
+	lv->offset = 0;
+	lv->length = DTROOTMAXSLOT;
+	dtlck->index++;
+
+	/* update page header of root */
+	if (sp->header.flag & BT_LEAF) {
+		sp->header.flag &= ~BT_LEAF;
+		sp->header.flag |= BT_INTERNAL;
+	}
+
+	/* init the first entry */
+	s = (struct idtentry *) & sp->slot[DTENTRYSTART];
+	ppxd = (pxd_t *) s;
+	*ppxd = *pxd;
+	s->next = -1;
+	s->namlen = 0;
+
+	stbl = sp->header.stbl;
+	stbl[0] = DTENTRYSTART;
+	sp->header.nextindex = 1;
+
+	/* init freelist */
+	fsi = DTENTRYSTART + 1;
+	f = &sp->slot[fsi];
+
+	/* init free region of remaining area */
+	for (fsi++; fsi < DTROOTMAXSLOT; f++, fsi++)
+		f->next = fsi;
+	f->next = -1;
+
+	sp->header.freelist = DTENTRYSTART + 1;
+	sp->header.freecnt = DTROOTMAXSLOT - (DTENTRYSTART + 1);
+
+	*rmpp = rmp;
+
+	return 0;
+}
+```

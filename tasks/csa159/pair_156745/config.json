@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "1b777d4d9e383d2744fc9b3a09af6ec1893c8b1a",
+  "after_commit": "92c4cfaee6872038563c5b6f2e8e613f9d84d47d",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/519d81956ee277b4419c723adfb154603c2565ba/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/519d81956ee277b4419c723adfb154603c2565ba/compile_commands.json",
+  "changed_files": [
+    "drivers/dma-buf/dma-heap.c"
+  ],
+  "commit_message": "dma-buf: heaps: Fix potential spectre v1 gadget\n\nIt appears like nr could be a Spectre v1 gadget as it's supplied by a\nuser and used as an array index. Prevent the contents\nof kernel memory from being leaked to userspace via speculative\nexecution by using array_index_nospec.\n\nSigned-off-by: Jordy Zomer <jordy@pwning.systems>\nFixes: c02a81fba74f (\"dma-buf: Add dma-buf heaps framework\")\nCc: <stable@vger.kernel.org> # v5.6+\nAcked-by: John Stultz <john.stultz@linaro.org>\nSigned-off-by: Sumit Semwal <sumit.semwal@linaro.org>\n [sumits: added fixes and cc: stable tags]\nLink: https://patchwork.freedesktop.org/patch/msgid/20220129150604.3461652-1-jordy@pwning.systems",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

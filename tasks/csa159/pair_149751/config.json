@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "bf4fde7db4a8e2613cba36d81ac271f3d66c28f7",
+  "after_commit": "4a2d046e4b13202a6301a993961f5b30ae4d7119",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f/compile_commands.json",
+  "changed_files": [
+    "fs/erofs/zmap.c"
+  ],
+  "commit_message": "erofs: fix interlaced plain identification for encoded extents\n\nOnly plain data whose start position and on-disk physical length are\nboth aligned to the block size should be classified as interlaced\nplain extents. Otherwise, it must be treated as shifted plain extents.\n\nThis issue was found by syzbot using a crafted compressed image\ncontaining plain extents with unaligned physical lengths, which can\ncause OOB read in z_erofs_transform_plain().\n\nReported-and-tested-by: syzbot+d988dc155e740d76a331@syzkaller.appspotmail.com\nCloses: https://lore.kernel.org/r/699d5714.050a0220.cdd3c.03e7.GAE@google.com\nFixes: 1d191b4ca51d (\"erofs: implement encoded extent metadata\")\nSigned-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

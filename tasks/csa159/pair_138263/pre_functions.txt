@@ -1,0 +1,138 @@
+### File: src/decode.c
+```c
+int
+decompress_R2004_section (Bit_Chain *restrict src, Bit_Chain *restrict dec)
+{
+  unsigned int lit_length;
+  int comp_offset, comp_bytes;
+  size_t pos, end;
+  unsigned char opcode1 = 0, opcode2;
+
+  if (src->byte > src->size) // bytes left to read from
+    {
+      LOG_WARN ("Invalid comp_data_size %" PRIuSIZE " @%" PRIuSIZE, src->size,
+                src->byte);
+      return DWG_ERR_VALUEOUTOFBOUNDS;
+    }
+  // length of the first sequence of uncompressed or literal data.
+  // lit_length = read_literal_length (src, opcode1);
+  // LOG_INSANE ("L: %u\n", lit_length);
+  // if ((unsigned long)lit_length > dec->size)
+  //  {
+  //    LOG_ERROR ("Invalid literal_length %u > %lu dec.size", lit_length,
+  //               dec->size)
+  //    return DWG_ERR_VALUEOUTOFBOUNDS;
+  //  }
+  // bit_read_fixed (src, dec->chain, lit_length);
+  // dec->byte += lit_length;
+  // bytes_left -= lit_length;
+  LOG_INSANE ("(%" PRIuSIZE ")\n", dec->byte);
+
+  opcode1 = bit_read_RC (src);
+  if ((opcode1 & 0xF0) == 0)
+    opcode1 = copy_bytes (read_literal_length (src, opcode1), src, dec);
+
+  while (src->byte < src->size && dec->byte < dec->size && opcode1 != 0x11)
+    {
+      LOG_INSANE ("\n(%" PRIuSIZE ") -O %x\n", dec->byte, opcode1);
+      comp_bytes = 0;
+      comp_offset = 0;
+      if (opcode1 < 0x10 || opcode1 >= 0x40) // oda has <0x10 as unused
+        {
+          comp_bytes = (opcode1 >> 4) - 1;
+          opcode2 = bit_read_RC (src);
+          LOG_INSANE ("<O2 %x\n", opcode2);
+          comp_offset = (((opcode1 >> 2) & 3) | (opcode2 << 2)) + 1;
+          LOG_INSANE ("o: %d %d\n", comp_bytes, comp_offset);
+        }
+      else if (opcode1 < 0x20) // 0x12-0x1f
+        {
+          comp_bytes = read_compressed_bytes (src, opcode1, 7);
+          comp_offset = (opcode1 & 8) << 11;
+          opcode1 = two_byte_offset (src, 0x4000, &comp_offset);
+          LOG_INSANE ("<O %x\n", opcode1);
+          LOG_INSANE ("2bo: %d %d\n", comp_bytes, comp_offset);
+        }
+      else if (opcode1 >= 0x20)
+        {
+          comp_bytes = read_compressed_bytes (src, opcode1, 0x1f);
+          opcode1 = two_byte_offset (src, 1, &comp_offset);
+          LOG_INSANE ("<O: %x\n", opcode1);
+          LOG_INSANE ("2bo: %d %d\n", comp_bytes, comp_offset);
+        }
+      else if (opcode1 == 0x11)
+        {
+          LOG_INSANE (">O %x!\n", opcode1);
+          break; // Terminates the input stream, everything is ok
+        }
+      else
+        {
+          LOG_ERROR ("Invalid opcode 0x%x in input stream at pos %" PRIuSIZE,
+                     opcode1, src->byte);
+          return DWG_ERR_INTERNALERROR; // error in input stream
+        }
+      // copy previous offset'ed bytes.
+      pos = dec->byte;
+      LOG_INSANE ("co: %d %ld->%" PRIuSIZE "\n", comp_bytes,
+                  (long)pos - comp_offset, pos);
+      // This seems to be a comp_bytes encoding bug,
+      // copying past the decompressed_size. rather cap it and stop
+      // decompression. ACadSharp decompresses all comp_bytes, enlarging the
+      // buffer (but not using it)
+      end = pos + comp_bytes;
+      if (end >= dec->size)
+        {
+          LOG_TRACE ("decompress oob: %" PRIuSIZE " >= %" PRIuSIZE "\n", end,
+                     dec->size);
+          // bit_chain_alloc_size (dec, pos + comp_bytes);
+          comp_bytes = (int)(dec->size - pos);
+          end = pos + comp_bytes;
+          opcode1 = 0x11;
+          LOG_INSANE (">O %x!\n", opcode1);
+        }
+      // GH #1204: memmove is wrong here: when comp_offset < comp_bytes the
+      // source and destination overlap and newly-written bytes must be read
+      // back (LZ77 run-length extension). memmove copies from original bytes.
+      for (; pos < end; pos++)
+        {
+#ifndef NDEBUG
+          assert ((long)pos >= (long)comp_offset);
+          assert (pos - comp_offset < dec->size);
+          assert (pos < dec->size);
+#endif
+          dec->chain[pos] = dec->chain[pos - comp_offset];
+        }
+      dec->byte = end;
+      // copy "literal data"
+      lit_length = opcode1 & 3;
+      if (lit_length == 0)
+        {
+          opcode1 = bit_read_RC (src);
+          LOG_INSANE ("<O %x\n", opcode1);
+          if ((opcode1 & 0xf0) == 0)
+            lit_length = read_literal_length (src, opcode1);
+        }
+      LOG_INSANE ("L %d\n", lit_length);
+      if (lit_length && end + (size_t)lit_length <= dec->size)
+        {
+          opcode1 = copy_bytes (lit_length, src, dec);
+          LOG_INSANE ("<O %x\n", opcode1);
+        }
+      else if (lit_length)
+        break;
+    }
+#ifdef DEBUG
+  if (DWG_LOGLEVEL >= DWG_LOGLEVEL_INSANE)
+    {
+      static int ctr = 0;
+      char out[80];
+      FILE *fp;
+      snprintf (out, 80, "decomp_%u.bin", ctr++);
+      fp = fopen (out, "wb");
+      fwrite (dec->chain, 1, dec->size, fp);
+      fclose (fp);
+    }
+#endif
+  return 0; // Success
+}
+```

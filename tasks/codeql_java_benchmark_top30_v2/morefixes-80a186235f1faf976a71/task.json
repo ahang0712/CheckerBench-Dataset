@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-80a186235f1faf976a71",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-80a186235f1faf976a71",
+    "project_id": "morefixes__bonigarcia__webdrivermanager",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "src/main/java/io/github/bonigarcia/wdm/WebDriverManager.java"
+  ],
+  "patch_units": {
+    "before": [
+      "src/main/java/io/github/bonigarcia/wdm/WebDriverManager.java"
+    ],
+    "after": [
+      "src/main/java/io/github/bonigarcia/wdm/WebDriverManager.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/a539f48dad78f3669c2e5b3c9283705f6481a844fcbd5b617d221078bcc2429b/database",
+      "cache_key": "a539f48dad78f3669c2e5b3c9283705f6481a844fcbd5b617d221078bcc2429b",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/338fcdd679be8e876f8ad8023ebf714df54f4fc87e20c66e97686b8c65925f9f/database",
+      "cache_key": "338fcdd679be8e876f8ad8023ebf714df54f4fc87e20c66e97686b8c65925f9f",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/375401feeb5337543389b418ee15b36f26a2a307cbc80881ec53c0fb872a2c3d/database",
+      "cache_key": "375401feeb5337543389b418ee15b36f26a2a307cbc80881ec53c0fb872a2c3d",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-80a186235f1faf976a71/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-80a186235f1faf976a71/ (do not mount into agent)"
+  }
+}

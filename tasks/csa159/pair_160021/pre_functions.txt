@@ -1,0 +1,55 @@
+### File: drivers/usb/cdns3/cdns3-gadget.c
+```c
+static irqreturn_t cdns3_device_thread_irq_handler(int irq, void *data)
+{
+	struct cdns3_device *priv_dev = data;
+	irqreturn_t ret = IRQ_NONE;
+	unsigned long flags;
+	unsigned int bit;
+	unsigned long reg;
+
+	spin_lock_irqsave(&priv_dev->lock, flags);
+
+	reg = readl(&priv_dev->regs->usb_ists);
+	if (reg) {
+		writel(reg, &priv_dev->regs->usb_ists);
+		writel(USB_IEN_INIT, &priv_dev->regs->usb_ien);
+		cdns3_check_usb_interrupt_proceed(priv_dev, reg);
+		ret = IRQ_HANDLED;
+	}
+
+	reg = readl(&priv_dev->regs->ep_ists);
+
+	/* handle default endpoint OUT */
+	if (reg & EP_ISTS_EP_OUT0) {
+		cdns3_check_ep0_interrupt_proceed(priv_dev, USB_DIR_OUT);
+		ret = IRQ_HANDLED;
+	}
+
+	/* handle default endpoint IN */
+	if (reg & EP_ISTS_EP_IN0) {
+		cdns3_check_ep0_interrupt_proceed(priv_dev, USB_DIR_IN);
+		ret = IRQ_HANDLED;
+	}
+
+	/* check if interrupt from non default endpoint, if no exit */
+	reg &= ~(EP_ISTS_EP_OUT0 | EP_ISTS_EP_IN0);
+	if (!reg)
+		goto irqend;
+
+	for_each_set_bit(bit, &reg,
+			 sizeof(u32) * BITS_PER_BYTE) {
+		cdns3_check_ep_interrupt_proceed(priv_dev->eps[bit]);
+		ret = IRQ_HANDLED;
+	}
+
+	if (priv_dev->dev_ver < DEV_VER_V2 && priv_dev->using_streams)
+		cdns3_wa2_check_outq_status(priv_dev);
+
+irqend:
+	writel(~0, &priv_dev->regs->ep_ien);
+	spin_unlock_irqrestore(&priv_dev->lock, flags);
+
+	return ret;
+}
+```

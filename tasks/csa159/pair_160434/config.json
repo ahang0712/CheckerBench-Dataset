@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "9a8ec9e8ebb5a7c0cfbce2d6b4a6b67b2b78e8f3",
+  "after_commit": "975abc0c90fc485ff9b4a6afa475c3b1398d5d47",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/7e364e56293bb98cae1b55fd835f5991c4e96e7d/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/7e364e56293bb98cae1b55fd835f5991c4e96e7d/compile_commands.json",
+  "changed_files": [
+    "net/bluetooth/sco.c"
+  ],
+  "commit_message": "Bluetooth: SCO: Fix possible circular locking dependency sco_sock_getsockopt\n\nThis attempts to fix the following trace:\n\n======================================================\nWARNING: possible circular locking dependency detected\n6.3.0-rc2-g68fcb3a7bf97 #4706 Not tainted\n------------------------------------------------------\nsco-tester/31 is trying to acquire lock:\nffff8880025b8070 (&hdev->lock){+.+.}-{3:3}, at:\nsco_sock_getsockopt+0x1fc/0xa90\n\nbut task is already holding lock:\nffff888001eeb130 (sk_lock-AF_BLUETOOTH-BTPROTO_SCO){+.+.}-{0:0}, at:\nsco_sock_getsockopt+0x104/0xa90\n\nwhich lock already depends on the new lock.\n\nthe existing dependency chain (in reverse order) is:\n\n-> #2 (sk_lock-AF_BLUETOOTH-BTPROTO_SCO){+.+.}-{0:0}:\n       lock_sock_nested+0x32/0x80\n       sco_connect_cfm+0x118/0x4a0\n       hci_sync_conn_complete_evt+0x1e6/0x3d0\n       hci_event_packet+0x55c/0x7c0\n       hci_rx_work+0x34c/0xa00\n       process_one_work+0x575/0x910\n       worker_thread+0x89/0x6f0\n       kthread+0x14e/0x180\n       ret_from_fork+0x2b/0x50\n\n-> #1 (hci_cb_list_lock){+.+.}-{3:3}:\n       __mutex_lock+0x13b/0xcc0\n       hci_sync_conn_complete_evt+0x1ad/0x3d0\n       hci_event_packet+0x55c/0x7c0\n       hci_rx_work+0x34c/0xa00\n       process_one_work+0x575/0x910\n       worker_thread+0x89/0x6f0\n       kthread+0x14e/0x180\n       ret_from_fork+0x2b/0x50\n\n-> #0 (&hdev->lock){+.+.}-{3:3}:\n       __lock_acquire+0x18cc/0x3740\n       lock_acquire+0x151/0x3a0\n       __mutex_lock+0x13b/0xcc0\n       sco_sock_getsockopt+0x1fc/0xa90\n       __sys_getsockopt+0xe9/0x190\n       __x64_sys_getsockopt+0x5b/0x70\n       do_syscall_64+0x42/0x90\n       entry_SYSCALL_64_after_hwframe+0x70/0xda\n\nother info that might help us debug this:\n\nChain exists of:\n  &hdev->lock --> hci_cb_list_lock --> sk_lock-AF_BLUETOOTH-BTPROTO_SCO\n\n Possible unsafe locking scenario:\n\n       CPU0                    CPU1\n       ----                    ----\n  lock(sk_lock-AF_BLUETOOTH-BTPROTO_SCO);\n                               lock(hci_cb_list_lock);\n                               lock(sk_lock-AF_BLUETOOTH-BTPROTO_SCO);\n  lock(&hdev->lock);\n\n *** DEADLOCK ***\n\n1 lock held by sco-tester/31:\n #0: ffff888001eeb130 (sk_lock-AF_BLUETOOTH-BTPROTO_SCO){+.+.}-{0:0},\n at: sco_sock_getsockopt+0x104/0xa90\n\nFixes: 248733e87d50 (\"Bluetooth: Allow querying of supported offload codecs over SCO socket\")\nSigned-off-by: Luiz Augusto von Dentz <luiz.von.dentz@intel.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

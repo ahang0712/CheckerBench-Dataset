@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "e783362eb54cd99b2cac8b3a9aeac942e6f6ac07",
+  "after_commit": "549f8ffc7b2f7561bea7f90930b6c5104318e87b",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/e783362eb54cd99b2cac8b3a9aeac942e6f6ac07/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/e783362eb54cd99b2cac8b3a9aeac942e6f6ac07/compile_commands.json",
+  "changed_files": [
+    "sound/pci/hda/hda_generic.c"
+  ],
+  "commit_message": "ALSA: hda: Fix UAF of leds class devs at unbinding\n\nThe LED class devices that are created by HD-audio codec drivers are\nregistered via devm_led_classdev_register() and associated with the\nHD-audio codec device.  Unfortunately, it turned out that the devres\nrelease doesn't work for this case; namely, since the codec resource\nrelease happens before the devm call chain, it triggers a NULL\ndereference or a UAF for a stale set_brightness_delay callback.\n\nFor fixing the bug, this patch changes the LED class device register\nand unregister in a manual manner without devres, keeping the\ninstances in hda_gen_spec.\n\nReported-by: Alexander Sergeyev <sergeev917@gmail.com>\nCc: <stable@vger.kernel.org>\nLink: https://lore.kernel.org/r/20220111195229.a77wrpjclqwrx4bx@localhost.localdomain\nLink: https://lore.kernel.org/r/20220126145011.16728-1-tiwai@suse.de\nSigned-off-by: Takashi Iwai <tiwai@suse.de>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,19 @@
+{
+  "project_id": "openexr_openexr",
+  "before_commit": "1cbf6b9a4497f71586ac11dc60ed21cf0cc529bd",
+  "after_commit": "6bad53af7eebed507564dd5fc90320e4c6a6c0bc",
+  "repo_path": "/workspace/repo/openexr/openexr",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/openexr_openexr/6546ff20961003825f86662efe16842ff6a64f32/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/openexr_openexr/6546ff20961003825f86662efe16842ff6a64f32/compile_commands.json",
+  "changed_files": [
+    "OpenEXR/IlmImf/ImfHeader.cpp"
+  ],
+  "commit_message": "Force tile sizes to be less than INT_MAX bytes, in line with the maximum dimensions of data windows\n\nSigned-off-by: Peter Hillman <peterh@wetafx.co.nz>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

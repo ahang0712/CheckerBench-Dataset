@@ -1,0 +1,46 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-2ab65d62986b80922362",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-2ab65d62986b80922362",
+    "project_id": "pyvul__sehmaschine__django-grappelli",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "grappelli/views/switch.py"
+  ],
+  "patch_units": {
+    "before": [
+      "function:switch_user",
+      "module:<module>@11"
+    ],
+    "after": [
+      "function:switch_user",
+      "module:<module>@11"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/a651d858d8c6a33884674a524fc8f61c7e7ccfccade3966409515abaecba586d/database",
+      "cache_key": "a651d858d8c6a33884674a524fc8f61c7e7ccfccade3966409515abaecba586d",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/346863e80f97754d1d2004217a3308ad91897bf7891ed868b01ecd17ed39d300/database",
+      "cache_key": "346863e80f97754d1d2004217a3308ad91897bf7891ed868b01ecd17ed39d300",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/091b842c9e7302a8f7aee586e6738c61c6607f0befe3559f5296b1b32275785b/database",
+      "cache_key": "091b842c9e7302a8f7aee586e6738c61c6607f0befe3559f5296b1b32275785b",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-2ab65d62986b80922362/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-2ab65d62986b80922362/ (do not mount into agent)"
+  }
+}

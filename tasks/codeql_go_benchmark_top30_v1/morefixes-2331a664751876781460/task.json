@@ -1,0 +1,47 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-2331a664751876781460",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-2331a664751876781460",
+    "project_id": "morefixes__argoproj__argo-workflows",
+    "language": "go",
+    "backend": "codeql"
+  },
+  "changed_go_files": [
+    "workflow/executor/executor.go",
+    "workflow/executor/executor_test.go"
+  ],
+  "patch_units": {
+    "before": [
+      "workflow/executor/executor.go",
+      "workflow/executor/executor_test.go"
+    ],
+    "after": [
+      "workflow/executor/executor.go",
+      "workflow/executor/executor_test.go"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/7bcf53fa77dff1713a21a1673ac843c5abcc8c8a2e13adabe90e8835f7b5d3be/database",
+      "cache_key": "7bcf53fa77dff1713a21a1673ac843c5abcc8c8a2e13adabe90e8835f7b5d3be",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/d27350a8949789211a3700e321882ad4997e8f47b49c205fb4949a075dd03162/database",
+      "cache_key": "d27350a8949789211a3700e321882ad4997e8f47b49c205fb4949a075dd03162",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/92bfca31f310d4b8fcf297747ebe623381a8b525bcdbb4919b27fb37a72abc35/database",
+      "cache_key": "92bfca31f310d4b8fcf297747ebe623381a8b525bcdbb4919b27fb37a72abc35",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-2331a664751876781460/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-2331a664751876781460/ (do not mount into agent)"
+  }
+}

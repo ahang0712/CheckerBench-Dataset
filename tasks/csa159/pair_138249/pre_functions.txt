@@ -1,0 +1,60 @@
+### File: src/decode_r2007.c
+```c
+static r2007_page *
+read_pages_map (Bit_Chain *dat, int64_t size_comp, int64_t size_uncomp,
+                int64_t correction)
+{
+  BITCODE_RC *data, *ptr, *ptr_end;
+  r2007_page *pages = NULL, *last_page = NULL, *page;
+  int64_t offset = 0x480; // dat->byte;
+  // int64_t index;
+
+  data = read_system_page (dat, size_comp, size_uncomp, correction);
+  if (!data)
+    {
+      LOG_ERROR ("Failed to read system page")
+      return NULL;
+    }
+
+  ptr = data;
+  ptr_end = data + size_uncomp;
+
+  LOG_TRACE ("\n=== System Section (Pages Map) ===\n")
+
+  while (ptr < ptr_end)
+    {
+      page = (r2007_page *)malloc (sizeof (r2007_page));
+      if (page == NULL)
+        {
+          LOG_ERROR ("Out of memory")
+          free (data);
+          pages_destroy (pages);
+          return NULL;
+        }
+
+      page->size = bfr_read_uint64 (ptr);
+      page->id = bfr_read_int64 (ptr);
+      page->offset = offset;
+      offset += page->size;
+
+      // index = page->id > 0 ? page->id : -page->id;
+
+      LOG_TRACE ("Page [%3" PRId64 "]: ", page->id)
+      LOG_TRACE ("size: %6" PRIu64 " ", page->size)
+      LOG_TRACE ("id: 0x%04" PRIx64 " ", page->id)
+      LOG_TRACE ("offset: 0x%" PRIx64 " \n", page->offset)
+
+      page->next = NULL;
+
+      if (pages == NULL)
+        pages = last_page = page;
+      else
+        {
+          last_page->next = page;
+          last_page = page;
+        }
+    }
+  free (data);
+  return pages;
+}
+```

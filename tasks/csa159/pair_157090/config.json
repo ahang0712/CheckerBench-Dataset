@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "2734d6c1b1a089fb593ef6a23d4b70903526fe0c",
+  "after_commit": "b49a0e69a7b1a68c8d3f64097d06dabb770fec96",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/2734d6c1b1a089fb593ef6a23d4b70903526fe0c/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/2734d6c1b1a089fb593ef6a23d4b70903526fe0c/compile_commands.json",
+  "changed_files": [
+    "drivers/soc/aspeed/aspeed-lpc-ctrl.c"
+  ],
+  "commit_message": "soc: aspeed: lpc-ctrl: Fix boundary check for mmap\n\nThe check mixes pages (vm_pgoff) with bytes (vm_start, vm_end) on one\nside of the comparison, and uses resource address (rather than just the\nresource size) on the other side of the comparison.\nThis can allow malicious userspace to easily bypass the boundary check and\nmap pages that are located outside memory-region reserved by the driver.\n\nFixes: 6c4e97678501 (\"drivers/misc: Add Aspeed LPC control driver\")\nCc: stable@vger.kernel.org\nSigned-off-by: Iwona Winiarska <iwona.winiarska@intel.com>\nReviewed-by: Andrew Jeffery <andrew@aj.id.au>\nTested-by: Andrew Jeffery <andrew@aj.id.au>\nReviewed-by: Joel Stanley <joel@aj.id.au>\nSigned-off-by: Joel Stanley <joel@jms.id.au>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

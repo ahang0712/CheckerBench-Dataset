@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "175811b8f05f0da3e19b7d3124666649ddde3802",
+  "after_commit": "ffd2dc4c6c49ff4f1e5d34e454a6a55608104c17",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/038d61fd642278bab63ee8ef722c50d10ab01e8f/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/038d61fd642278bab63ee8ef722c50d10ab01e8f/compile_commands.json",
+  "changed_files": [
+    "net/sched/sch_mqprio.c"
+  ],
+  "commit_message": "net/sched: mqprio: fix stack out-of-bounds write in tc entry parsing\n\nTCA_MQPRIO_TC_ENTRY_INDEX is validated using\nNLA_POLICY_MAX(NLA_U32, TC_QOPT_MAX_QUEUE), which allows the value\nTC_QOPT_MAX_QUEUE (16). This leads to a 4-byte out-of-bounds stack\nwrite in the fp[] array, which only has room for 16 elements (0–15).\n\nFix this by changing the policy to allow only up to TC_QOPT_MAX_QUEUE - 1.\n\nFixes: f62af20bed2d (\"net/sched: mqprio: allow per-TC user input of FP adminStatus\")\nReviewed-by: Eric Dumazet <edumazet@google.com>\nSigned-off-by: Maher Azzouzi <maherazz04@gmail.com>\nReviewed-by: Vladimir Oltean <vladimir.oltean@nxp.com>\nLink: https://patch.msgid.link/20250802001857.2702497-1-kuba@kernel.org\nSigned-off-by: Jakub Kicinski <kuba@kernel.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,40 @@
+### File: net/core/neighbour.c
+```c
+static int neigh_forced_gc(struct neigh_table *tbl)
+{
+	int max_clean = atomic_read(&tbl->gc_entries) - tbl->gc_thresh2;
+	unsigned long tref = jiffies - 5 * HZ;
+	struct neighbour *n, *tmp;
+	int shrunk = 0;
+
+	NEIGH_CACHE_STAT_INC(tbl, forced_gc_runs);
+
+	write_lock_bh(&tbl->lock);
+
+	list_for_each_entry_safe(n, tmp, &tbl->gc_list, gc_list) {
+		if (refcount_read(&n->refcnt) == 1) {
+			bool remove = false;
+
+			write_lock(&n->lock);
+			if ((n->nud_state == NUD_FAILED) ||
+			    (n->nud_state == NUD_NOARP) ||
+			    (tbl->is_multicast &&
+			     tbl->is_multicast(n->primary_key)) ||
+			    time_after(tref, n->updated))
+				remove = true;
+			write_unlock(&n->lock);
+
+			if (remove && neigh_remove_one(n, tbl))
+				shrunk++;
+			if (shrunk >= max_clean)
+				break;
+		}
+	}
+
+	tbl->last_flush = jiffies;
+
+	write_unlock_bh(&tbl->lock);
+
+	return shrunk;
+}
+```

@@ -1,0 +1,13 @@
+diff --git a/apprise/plugins/NotifyIFTTT.py b/apprise/plugins/NotifyIFTTT.py
+index c038a9e..b735a4d 100644
+--- a/apprise/plugins/NotifyIFTTT.py
++++ b/apprise/plugins/NotifyIFTTT.py
+@@ -355,7 +355,7 @@ class NotifyIFTTT(NotifyBase):
+         result = re.match(
+             r'^https?://maker\.ifttt\.com/use/'
+             r'(?P<webhook_id>[A-Z0-9_-]+)'
+-            r'/?(?P<events>([A-Z0-9_-]+/?)+)?'
++            r'((?P<events>(/[A-Z0-9_-]+)+))?'
+             r'/?(?P<params>\?.+)?$', url, re.I)
+ 
+         if result:

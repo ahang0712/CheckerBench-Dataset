@@ -1,0 +1,12 @@
+diff --git a/net/vmw_vsock/virtio_transport_common.c b/net/vmw_vsock/virtio_transport_common.c
+index cd075f608d4f..e2e6a30b759b 100644
+--- a/net/vmw_vsock/virtio_transport_common.c
++++ b/net/vmw_vsock/virtio_transport_common.c
+@@ -400,6 +400,7 @@ static int virtio_transport_send_pkt_info(struct vsock_sock *vsk,
+ 			if (virtio_transport_init_zcopy_skb(vsk, skb,
+ 							    info->msg,
+ 							    can_zcopy)) {
++				kfree_skb(skb);
+ 				ret = -ENOMEM;
+ 				break;
+ 			}

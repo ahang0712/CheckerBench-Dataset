@@ -1,0 +1,47 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-f1044573e0d15a82a1d0",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-f1044573e0d15a82a1d0",
+    "project_id": "morefixes__matrix-org__matrix-react-sdk",
+    "language": "javascript",
+    "backend": "codeql"
+  },
+  "changed_javascript_files": [
+    "src/utils/exportUtils/HtmlExport.tsx",
+    "test/utils/exportUtils/HTMLExport-test.ts"
+  ],
+  "patch_units": {
+    "before": [
+      "src/utils/exportUtils/HtmlExport.tsx",
+      "test/utils/exportUtils/HTMLExport-test.ts"
+    ],
+    "after": [
+      "src/utils/exportUtils/HtmlExport.tsx",
+      "test/utils/exportUtils/HTMLExport-test.ts"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/3bf2d293c4959446952000269397f7cdaf8f1c5d428cc959cb5d9e13d12d7c99/database",
+      "cache_key": "3bf2d293c4959446952000269397f7cdaf8f1c5d428cc959cb5d9e13d12d7c99",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/94864cf945ed0108614340e54ecc4e60302f77b5fc3c02105fa10b2727a5fbb8/database",
+      "cache_key": "94864cf945ed0108614340e54ecc4e60302f77b5fc3c02105fa10b2727a5fbb8",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/f2e1bb79cd44ad6c44978d2dd46388ad46ef11c8be0ee87ceb9c389d996c1969/database",
+      "cache_key": "f2e1bb79cd44ad6c44978d2dd46388ad46ef11c8be0ee87ceb9c389d996c1969",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-f1044573e0d15a82a1d0/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-f1044573e0d15a82a1d0/ (do not mount into agent)"
+  }
+}

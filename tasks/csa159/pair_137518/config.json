@@ -1,0 +1,20 @@
+{
+  "project_id": "michaelforney_samurai",
+  "before_commit": "309c9d26cb9f5d0e64ab7c7ea6f73a94af221dd3",
+  "after_commit": "8b069471005e6c242795b68ad91c3b9000dad40e",
+  "repo_path": "/workspace/repo/michaelforney/samurai",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/michaelforney_samurai/80320920be3df3e827b127e27281224c32be9903/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/michaelforney_samurai/80320920be3df3e827b127e27281224c32be9903/compile_commands.json",
+  "changed_files": [
+    "env.c",
+    "scan.c"
+  ],
+  "commit_message": "Detect cycles in rule variables\n\nReported by Frederic Cambus in #29.",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

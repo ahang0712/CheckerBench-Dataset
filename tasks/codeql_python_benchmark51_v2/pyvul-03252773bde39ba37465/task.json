@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-03252773bde39ba37465",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-03252773bde39ba37465",
+    "project_id": "pyvul__tenable__integration-jira-cloud",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "tenable_jira/cli.py"
+  ],
+  "patch_units": {
+    "before": [
+      "function:cli"
+    ],
+    "after": [
+      "function:cli"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/3e62105fda1c5a4db53ac36c5700394cb7e0caa4ae5fd2e64a4e3e11e9a8e74b/database",
+      "cache_key": "3e62105fda1c5a4db53ac36c5700394cb7e0caa4ae5fd2e64a4e3e11e9a8e74b",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/0194c5ec0d5c1e22b141b7d5959456e923a045125530df9140dcb198b3fd9ec3/database",
+      "cache_key": "0194c5ec0d5c1e22b141b7d5959456e923a045125530df9140dcb198b3fd9ec3",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/388531c271f62b50e530af2833359caf6655cddfc1ad6266143c71bfdbd7521f/database",
+      "cache_key": "388531c271f62b50e530af2833359caf6655cddfc1ad6266143c71bfdbd7521f",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-03252773bde39ba37465/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-03252773bde39ba37465/ (do not mount into agent)"
+  }
+}

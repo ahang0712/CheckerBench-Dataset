@@ -1,0 +1,26 @@
+### File: drivers/base/dd.c
+```c
+static int deferred_devs_show(struct seq_file *s, void *data)
+{
+	struct device_private *curr;
+
+	mutex_lock(&deferred_probe_mutex);
+
+	list_for_each_entry(curr, &deferred_probe_pending_list, deferred_probe)
+		seq_printf(s, "%s\t%s", dev_name(curr->device),
+			   curr->device->p->deferred_probe_reason ?: "\n");
+
+	mutex_unlock(&deferred_probe_mutex);
+
+	return 0;
+}
+
+static int __init deferred_probe_timeout_setup(char *str)
+{
+	int timeout;
+
+	if (!kstrtoint(str, 10, &timeout))
+		driver_deferred_probe_timeout = timeout;
+	return 1;
+}
+```

@@ -1,0 +1,19 @@
+{
+  "project_id": "mity_md4c",
+  "before_commit": "bcdbd126a5c099981b6d637b09d376dc22fa0f46",
+  "after_commit": "22ca89a3008966c4316d6b0a158b1a49f9038df0",
+  "repo_path": "/workspace/repo/mity/md4c",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/mity_md4c/db7d1c92ec34cae9624be373726e36f22a7d7019/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/mity_md4c/db7d1c92ec34cae9624be373726e36f22a7d7019/compile_commands.json",
+  "changed_files": [
+    "src/md4c.c"
+  ],
+  "commit_message": "Fix ISANYOF encountering a zero byte in the input.\n\nWhen it happened, it could lead to unexpected results, including broken\ninternal state of the parser.\n\nFixes #130.",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

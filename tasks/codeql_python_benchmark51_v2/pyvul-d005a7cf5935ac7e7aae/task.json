@@ -1,0 +1,54 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-d005a7cf5935ac7e7aae",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-d005a7cf5935ac7e7aae",
+    "project_id": "pyvul__jupyter-server__jupyter_server",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "jupyter_server/base/handlers.py",
+    "jupyter_server/services/kernels/handlers.py"
+  ],
+  "patch_units": {
+    "before": [
+      "class:APIHandler",
+      "function:APIHandler.write_error",
+      "module:<module>@13",
+      "class:KernelActionHandler",
+      "function:KernelActionHandler.post",
+      "module:<module>@8"
+    ],
+    "after": [
+      "class:APIHandler",
+      "function:APIHandler.write_error",
+      "module:<module>@13",
+      "class:KernelActionHandler",
+      "function:KernelActionHandler.post"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/b64a19b97baa0ccdbe5b40540f40e553adaa3f88e44f223936afd33bafc01b97/database",
+      "cache_key": "b64a19b97baa0ccdbe5b40540f40e553adaa3f88e44f223936afd33bafc01b97",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/4a63c032f2e58cff5581c9dfdae450535c4c7ecc195a2938763e30a27f37a1d6/database",
+      "cache_key": "4a63c032f2e58cff5581c9dfdae450535c4c7ecc195a2938763e30a27f37a1d6",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/5cd7ddec99c106b4a5ddd7bc057c6a28b35cb219bf995cf90754a2d27152d5ec/database",
+      "cache_key": "5cd7ddec99c106b4a5ddd7bc057c6a28b35cb219bf995cf90754a2d27152d5ec",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-d005a7cf5935ac7e7aae/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-d005a7cf5935ac7e7aae/ (do not mount into agent)"
+  }
+}

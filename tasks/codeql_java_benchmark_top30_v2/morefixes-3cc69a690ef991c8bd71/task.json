@@ -1,0 +1,46 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-3cc69a690ef991c8bd71",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-3cc69a690ef991c8bd71",
+    "project_id": "morefixes__mommyheather__advancedbackups",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "src/main/java/co/uk/mommyheather/advancedbackups/cli/AdvancedBackupsCLI.java",
+    "src/main/java/co/uk/mommyheather/advancedbackups/cli/IllegalBackupException.java"
+  ],
+  "patch_units": {
+    "before": [
+      "src/main/java/co/uk/mommyheather/advancedbackups/cli/AdvancedBackupsCLI.java"
+    ],
+    "after": [
+      "src/main/java/co/uk/mommyheather/advancedbackups/cli/AdvancedBackupsCLI.java",
+      "src/main/java/co/uk/mommyheather/advancedbackups/cli/IllegalBackupException.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/28bffef4ceebf1aa5c53305f523be8d23bd64a197a3d27544804b9e799dcea36/database",
+      "cache_key": "28bffef4ceebf1aa5c53305f523be8d23bd64a197a3d27544804b9e799dcea36",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/ab2cff8e4bdfae339682b0695271a7fde84700fd6837c62bb98bfbe732efed65/database",
+      "cache_key": "ab2cff8e4bdfae339682b0695271a7fde84700fd6837c62bb98bfbe732efed65",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/64b7c7c1b3cbdcf62cd9a8552435b76068c6350eb53729e8d67c55027a1c30b7/database",
+      "cache_key": "64b7c7c1b3cbdcf62cd9a8552435b76068c6350eb53729e8d67c55027a1c30b7",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-3cc69a690ef991c8bd71/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-3cc69a690ef991c8bd71/ (do not mount into agent)"
+  }
+}

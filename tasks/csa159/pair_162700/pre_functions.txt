@@ -1,0 +1,178 @@
+### File: drivers/tty/n_gsm.c
+```c
+static void gsm0_receive(struct gsm_mux *gsm, u8 c)
+{
+	unsigned int len;
+
+	switch (gsm->state) {
+	case GSM_SEARCH:	/* SOF marker */
+		if (c == GSM0_SOF) {
+			gsm->state = GSM_ADDRESS;
+			gsm->address = 0;
+			gsm->len = 0;
+			gsm->fcs = INIT_FCS;
+		}
+		break;
+	case GSM_ADDRESS:	/* Address EA */
+		gsm->fcs = gsm_fcs_add(gsm->fcs, c);
+		if (gsm_read_ea(&gsm->address, c))
+			gsm->state = GSM_CONTROL;
+		break;
+	case GSM_CONTROL:	/* Control Byte */
+		gsm->fcs = gsm_fcs_add(gsm->fcs, c);
+		gsm->control = c;
+		gsm->state = GSM_LEN0;
+		break;
+	case GSM_LEN0:		/* Length EA */
+		gsm->fcs = gsm_fcs_add(gsm->fcs, c);
+		if (gsm_read_ea(&gsm->len, c)) {
+			if (gsm->len > gsm->mru) {
+				gsm->bad_size++;
+				gsm->state = GSM_SEARCH;
+				break;
+			}
+			gsm->count = 0;
+			if (!gsm->len)
+				gsm->state = GSM_FCS;
+			else
+				gsm->state = GSM_DATA;
+			break;
+		}
+		gsm->state = GSM_LEN1;
+		break;
+	case GSM_LEN1:
+		gsm->fcs = gsm_fcs_add(gsm->fcs, c);
+		len = c;
+		gsm->len |= len << 7;
+		if (gsm->len > gsm->mru) {
+			gsm->bad_size++;
+			gsm->state = GSM_SEARCH;
+			break;
+		}
+		gsm->count = 0;
+		if (!gsm->len)
+			gsm->state = GSM_FCS;
+		else
+			gsm->state = GSM_DATA;
+		break;
+	case GSM_DATA:		/* Data */
+		gsm->buf[gsm->count++] = c;
+		if (gsm->count == gsm->len) {
+			/* Calculate final FCS for UI frames over all data */
+			if ((gsm->control & ~PF) != UIH) {
+				gsm->fcs = gsm_fcs_add_block(gsm->fcs, gsm->buf,
+							     gsm->count);
+			}
+			gsm->state = GSM_FCS;
+		}
+		break;
+	case GSM_FCS:		/* FCS follows the packet */
+		gsm->fcs = gsm_fcs_add(gsm->fcs, c);
+		gsm->state = GSM_SSOF;
+		break;
+	case GSM_SSOF:
+		gsm->state = GSM_SEARCH;
+		if (c == GSM0_SOF)
+			gsm_queue(gsm);
+		else
+			gsm->bad_size++;
+		break;
+	default:
+		pr_debug("%s: unhandled state: %d\n", __func__, gsm->state);
+		break;
+	}
+}
+
+static void gsm1_receive(struct gsm_mux *gsm, u8 c)
+{
+	/* handle XON/XOFF */
+	if ((c & ISO_IEC_646_MASK) == XON) {
+		gsm->constipated = true;
+		return;
+	} else if ((c & ISO_IEC_646_MASK) == XOFF) {
+		gsm->constipated = false;
+		/* Kick the link in case it is idling */
+		gsmld_write_trigger(gsm);
+		return;
+	}
+	if (c == GSM1_SOF) {
+		/* EOF is only valid in frame if we have got to the data state */
+		if (gsm->state == GSM_DATA) {
+			if (gsm->count < 1) {
+				/* Missing FSC */
+				gsm->malformed++;
+				gsm->state = GSM_START;
+				return;
+			}
+			/* Remove the FCS from data */
+			gsm->count--;
+			if ((gsm->control & ~PF) != UIH) {
+				/* Calculate final FCS for UI frames over all
+				 * data but FCS
+				 */
+				gsm->fcs = gsm_fcs_add_block(gsm->fcs, gsm->buf,
+							     gsm->count);
+			}
+			/* Add the FCS itself to test against GOOD_FCS */
+			gsm->fcs = gsm_fcs_add(gsm->fcs, gsm->buf[gsm->count]);
+			gsm->len = gsm->count;
+			gsm_queue(gsm);
+			gsm->state  = GSM_START;
+			return;
+		}
+		/* Any partial frame was a runt so go back to start */
+		if (gsm->state != GSM_START) {
+			if (gsm->state != GSM_SEARCH)
+				gsm->malformed++;
+			gsm->state = GSM_START;
+		}
+		/* A SOF in GSM_START means we are still reading idling or
+		   framing bytes */
+		return;
+	}
+
+	if (c == GSM1_ESCAPE) {
+		gsm->escape = true;
+		return;
+	}
+
+	/* Only an unescaped SOF gets us out of GSM search */
+	if (gsm->state == GSM_SEARCH)
+		return;
+
+	if (gsm->escape) {
+		c ^= GSM1_ESCAPE_BITS;
+		gsm->escape = false;
+	}
+	switch (gsm->state) {
+	case GSM_START:		/* First byte after SOF */
+		gsm->address = 0;
+		gsm->state = GSM_ADDRESS;
+		gsm->fcs = INIT_FCS;
+		fallthrough;
+	case GSM_ADDRESS:	/* Address continuation */
+		gsm->fcs = gsm_fcs_add(gsm->fcs, c);
+		if (gsm_read_ea(&gsm->address, c))
+			gsm->state = GSM_CONTROL;
+		break;
+	case GSM_CONTROL:	/* Control Byte */
+		gsm->fcs = gsm_fcs_add(gsm->fcs, c);
+		gsm->control = c;
+		gsm->count = 0;
+		gsm->state = GSM_DATA;
+		break;
+	case GSM_DATA:		/* Data */
+		if (gsm->count > gsm->mru) {	/* Allow one for the FCS */
+			gsm->state = GSM_OVERRUN;
+			gsm->bad_size++;
+		} else
+			gsm->buf[gsm->count++] = c;
+		break;
+	case GSM_OVERRUN:	/* Over-long - eg a dropped SOF */
+		break;
+	default:
+		pr_debug("%s: unhandled state: %d\n", __func__, gsm->state);
+		break;
+	}
+}
+```

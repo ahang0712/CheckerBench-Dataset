@@ -1,0 +1,19 @@
+{
+  "project_id": "gpac_gpac",
+  "before_commit": "422b78ecf79ceeee97104d219cc4f184b1348cec",
+  "after_commit": "cb3c29809bddfa32686e3deb231a76af67b68e1e",
+  "repo_path": "/workspace/repo/gpac/gpac",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/gpac_gpac/4f4af3d2fc8819dd96672e22ca7e624c3faf849c/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/gpac_gpac/4f4af3d2fc8819dd96672e22ca7e624c3faf849c/compile_commands.json",
+  "changed_files": [
+    "src/media_tools/dash_client.c"
+  ],
+  "commit_message": "null guard on mpd_desc value in dasher (fixes #2763)",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

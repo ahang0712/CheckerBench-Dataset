@@ -1,0 +1,19 @@
+{
+  "project_id": "ImageMagick_ImageMagick6",
+  "before_commit": "b466a96965afc1308a4ace93f5535c2b770f294b",
+  "after_commit": "7486477aa00c5c7856b111506da075b6cdfa8b73",
+  "repo_path": "/workspace/repo/ImageMagick/ImageMagick6",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/ImageMagick_ImageMagick6/b7c9c8972ef11481d92b1f57172fe72c54b0c4a2/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/ImageMagick_ImageMagick6/b7c9c8972ef11481d92b1f57172fe72c54b0c4a2/compile_commands.json",
+  "changed_files": [
+    "coders/tiff.c"
+  ],
+  "commit_message": "https://github.com/ImageMagick/ImageMagick/issues/1857",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

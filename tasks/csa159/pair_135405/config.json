@@ -1,0 +1,19 @@
+{
+  "project_id": "mwarning_KadNode",
+  "before_commit": "d52f6f543faa5304f23d2275bf248cd62b39322a",
+  "after_commit": "91b38304755310458e01243214d8fbe792ba887d",
+  "repo_path": "/workspace/repo/mwarning/KadNode",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/mwarning_KadNode/d52f6f543faa5304f23d2275bf248cd62b39322a/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/mwarning_KadNode/d52f6f543faa5304f23d2275bf248cd62b39322a/compile_commands.json",
+  "changed_files": [
+    "src/ext-cmd.c"
+  ],
+  "commit_message": "cmd: check input length, fixes #79",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

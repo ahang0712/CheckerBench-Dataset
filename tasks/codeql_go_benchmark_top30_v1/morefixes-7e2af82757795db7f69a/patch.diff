@@ -1,0 +1,60 @@
+diff --git a/modules/zerogod/zerogod_acceptor.go b/modules/zerogod/zerogod_acceptor.go
+index ccb956ef..ccae002d 100644
+--- a/modules/zerogod/zerogod_acceptor.go
++++ b/modules/zerogod/zerogod_acceptor.go
+@@ -117,16 +117,24 @@ func (a *Acceptor) startTCP() (err error) {
+ 				}
+ 			} else {
+ 				a.mod.Debug("accepted %s connection for service %s (port %d): %v", a.proto, tui.Green(a.service), a.port, conn.RemoteAddr())
+-				go a.handler.Handle(&HandlerContext{
+-					service:       a.service,
+-					mod:           a.mod,
+-					client:        conn,
+-					srvHost:       a.srvHost,
+-					srvPort:       int(a.port),
+-					srvTLS:        a.tlsConfig != nil,
+-					ippAttributes: a.ippAttributes,
+-					httpPaths:     a.httpPaths,
+-				})
++				go func() {
++					ctx := &HandlerContext{
++						service:       a.service,
++						mod:           a.mod,
++						client:        conn,
++						srvHost:       a.srvHost,
++						srvPort:       int(a.port),
++						srvTLS:        a.tlsConfig != nil,
++						ippAttributes: a.ippAttributes,
++						httpPaths:     a.httpPaths,
++					}
++					defer func() {
++						if r := recover(); r != nil {
++							a.mod.Error("panic in %s handler for %s: %v", a.service, conn.RemoteAddr(), r)
++						}
++					}()
++					a.handler.Handle(ctx)
++				}()
+ 			}
+ 		}
+ 		a.mod.Debug("%s listener for port %d (%s) stopped", a.proto, a.port, tui.Green(a.service))
+diff --git a/modules/zerogod/zerogod_ipp_primitives.go b/modules/zerogod/zerogod_ipp_primitives.go
+index a87a1fe7..abba691b 100644
+--- a/modules/zerogod/zerogod_ipp_primitives.go
++++ b/modules/zerogod/zerogod_ipp_primitives.go
+@@ -13,6 +13,7 @@ import (
+ )
+ 
+ const IPP_CHUNK_MAX_LINE_SIZE = 1024
++const IPP_CHUNK_MAX_SIZE = 10 * 1024 * 1024 // 10 MB
+ 
+ var IPP_REQUEST_NAMES = map[int16]string{
+ 	// https://tools.ietf.org/html/rfc2911#section-4.4.15
+@@ -136,6 +137,8 @@ func ippReadChunkedBody(ctx *HandlerContext) ([]byte, error) {
+ 			return nil, fmt.Errorf("error reading next chunk size: %v", err)
+ 		} else if chunkSize == 0 {
+ 			break
++		} else if chunkSize > IPP_CHUNK_MAX_SIZE {
++			return nil, fmt.Errorf("chunk size %d exceeds maximum allowed size of %d bytes", chunkSize, IPP_CHUNK_MAX_SIZE)
+ 		} else {
+ 			chunk := make([]byte, chunkSize)
+ 			if n, err := ctx.client.Read(chunk); err != nil {

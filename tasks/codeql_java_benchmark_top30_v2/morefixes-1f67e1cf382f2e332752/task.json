@@ -1,0 +1,50 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-1f67e1cf382f2e332752",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-1f67e1cf382f2e332752",
+    "project_id": "morefixes__netty__netty-incubator-codec-quic",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "codec-classes-quic/src/main/java/io/netty/incubator/codec/quic/ConnectionIdChannelMap.java",
+    "codec-classes-quic/src/main/java/io/netty/incubator/codec/quic/QuicheQuicCodec.java",
+    "codec-classes-quic/src/main/java/io/netty/incubator/codec/quic/SipHash.java",
+    "codec-native-quic/src/test/java/io/netty/incubator/codec/quic/SipHashTest.java"
+  ],
+  "patch_units": {
+    "before": [
+      "codec-classes-quic/src/main/java/io/netty/incubator/codec/quic/QuicheQuicCodec.java"
+    ],
+    "after": [
+      "codec-classes-quic/src/main/java/io/netty/incubator/codec/quic/ConnectionIdChannelMap.java",
+      "codec-classes-quic/src/main/java/io/netty/incubator/codec/quic/QuicheQuicCodec.java",
+      "codec-classes-quic/src/main/java/io/netty/incubator/codec/quic/SipHash.java",
+      "codec-native-quic/src/test/java/io/netty/incubator/codec/quic/SipHashTest.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/99fcdd57bcf223659f8b0211031eaad327f274bd0580744480a0961059e862f0/database",
+      "cache_key": "99fcdd57bcf223659f8b0211031eaad327f274bd0580744480a0961059e862f0",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/f7d99c3b45f1009ec5e42ae2c947ed4b732f8d9e35e7270b94052e53441a19a9/database",
+      "cache_key": "f7d99c3b45f1009ec5e42ae2c947ed4b732f8d9e35e7270b94052e53441a19a9",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/ca039c8a2cf3627a72b15ac71d6292f1749234abd0f04bd2d3ff5392bb43fd41/database",
+      "cache_key": "ca039c8a2cf3627a72b15ac71d6292f1749234abd0f04bd2d3ff5392bb43fd41",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-1f67e1cf382f2e332752/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-1f67e1cf382f2e332752/ (do not mount into agent)"
+  }
+}

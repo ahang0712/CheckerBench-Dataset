@@ -1,0 +1,273 @@
+### File: libarchive/archive_write_disk_posix.c
+```c
+static int
+create_filesystem_object(struct archive_write_disk *a)
+{
+	/* Create the entry. */
+	const char *linkname;
+	mode_t final_mode, mode;
+	int r;
+	/* these for check_symlinks_fsobj */
+	char *linkname_copy;	/* non-const copy of linkname */
+	struct archive_string error_string;
+	int error_number;
+
+	/* We identify hard/symlinks according to the link names. */
+	/* Since link(2) and symlink(2) don't handle modes, we're done here. */
+	linkname = archive_entry_hardlink(a->entry);
+	if (linkname != NULL) {
+#if !HAVE_LINK
+		return (EPERM);
+#else
+		archive_string_init(&error_string);
+		linkname_copy = strdup(linkname);
+		if (linkname_copy == NULL) {
+		    return (EPERM);
+		}
+		/* TODO: consider using the cleaned-up path as the link target? */
+		r = cleanup_pathname_fsobj(linkname_copy, &error_number, &error_string, a->flags);
+		if (r != ARCHIVE_OK) {
+			archive_set_error(&a->archive, error_number, "%s", error_string.s);
+			free(linkname_copy);
+			/* EPERM is more appropriate than error_number for our callers */
+			return (EPERM);
+		}
+		r = check_symlinks_fsobj(linkname_copy, &error_number, &error_string, a->flags);
+		if (r != ARCHIVE_OK) {
+			archive_set_error(&a->archive, error_number, "%s", error_string.s);
+			free(linkname_copy);
+			/* EPERM is more appropriate than error_number for our callers */
+			return (EPERM);
+		}
+		free(linkname_copy);
+		r = link(linkname, a->name) ? errno : 0;
+		/*
+		 * New cpio and pax formats allow hardlink entries
+		 * to carry data, so we may have to open the file
+		 * for hardlink entries.
+		 *
+		 * If the hardlink was successfully created and
+		 * the archive doesn't have carry data for it,
+		 * consider it to be non-authoritative for meta data.
+		 * This is consistent with GNU tar and BSD pax.
+		 * If the hardlink does carry data, let the last
+		 * archive entry decide ownership.
+		 */
+		if (r == 0 && a->filesize <= 0) {
+			a->todo = 0;
+			a->deferred = 0;
+		} else if (r == 0 && a->filesize > 0) {
+			a->fd = open(a->name,
+				     O_WRONLY | O_TRUNC | O_BINARY | O_CLOEXEC);
+			__archive_ensure_cloexec_flag(a->fd);
+			if (a->fd < 0)
+				r = errno;
+		}
+		return (r);
+#endif
+	}
+	linkname = archive_entry_symlink(a->entry);
+	if (linkname != NULL) {
+#if HAVE_SYMLINK
+		return symlink(linkname, a->name) ? errno : 0;
+#else
+		return (EPERM);
+#endif
+	}
+
+	/*
+	 * The remaining system calls all set permissions, so let's
+	 * try to take advantage of that to avoid an extra chmod()
+	 * call.  (Recall that umask is set to zero right now!)
+	 */
+
+	/* Mode we want for the final restored object (w/o file type bits). */
+	final_mode = a->mode & 07777;
+	/*
+	 * The mode that will actually be restored in this step.  Note
+	 * that SUID, SGID, etc, require additional work to ensure
+	 * security, so we never restore them at this point.
+	 */
+	mode = final_mode & 0777 & ~a->user_umask;
+
+	switch (a->mode & AE_IFMT) {
+	default:
+		/* POSIX requires that we fall through here. */
+		/* FALLTHROUGH */
+	case AE_IFREG:
+		a->fd = open(a->name,
+		    O_WRONLY | O_CREAT | O_EXCL | O_BINARY | O_CLOEXEC, mode);
+		__archive_ensure_cloexec_flag(a->fd);
+		r = (a->fd < 0);
+		break;
+	case AE_IFCHR:
+#ifdef HAVE_MKNOD
+		/* Note: we use AE_IFCHR for the case label, and
+		 * S_IFCHR for the mknod() call.  This is correct.  */
+		r = mknod(a->name, mode | S_IFCHR,
+		    archive_entry_rdev(a->entry));
+		break;
+#else
+		/* TODO: Find a better way to warn about our inability
+		 * to restore a char device node. */
+		return (EINVAL);
+#endif /* HAVE_MKNOD */
+	case AE_IFBLK:
+#ifdef HAVE_MKNOD
+		r = mknod(a->name, mode | S_IFBLK,
+		    archive_entry_rdev(a->entry));
+		break;
+#else
+		/* TODO: Find a better way to warn about our inability
+		 * to restore a block device node. */
+		return (EINVAL);
+#endif /* HAVE_MKNOD */
+	case AE_IFDIR:
+		mode = (mode | MINIMUM_DIR_MODE) & MAXIMUM_DIR_MODE;
+		r = mkdir(a->name, mode);
+		if (r == 0) {
+			/* Defer setting dir times. */
+			a->deferred |= (a->todo & TODO_TIMES);
+			a->todo &= ~TODO_TIMES;
+			/* Never use an immediate chmod(). */
+			/* We can't avoid the chmod() entirely if EXTRACT_PERM
+			 * because of SysV SGID inheritance. */
+			if ((mode != final_mode)
+			    || (a->flags & ARCHIVE_EXTRACT_PERM))
+				a->deferred |= (a->todo & TODO_MODE);
+			a->todo &= ~TODO_MODE;
+		}
+		break;
+	case AE_IFIFO:
+#ifdef HAVE_MKFIFO
+		r = mkfifo(a->name, mode);
+		break;
+#else
+		/* TODO: Find a better way to warn about our inability
+		 * to restore a fifo. */
+		return (EINVAL);
+#endif /* HAVE_MKFIFO */
+	}
+
+	/* All the system calls above set errno on failure. */
+	if (r)
+		return (errno);
+
+	/* If we managed to set the final mode, we've avoided a chmod(). */
+	if (mode == final_mode)
+		a->todo &= ~TODO_MODE;
+	return (0);
+}
+
+static struct fixup_entry *
+new_fixup(struct archive_write_disk *a, const char *pathname)
+{
+	struct fixup_entry *fe;
+
+	fe = (struct fixup_entry *)calloc(1, sizeof(struct fixup_entry));
+	if (fe == NULL) {
+		archive_set_error(&a->archive, ENOMEM,
+		    "Can't allocate memory for a fixup");
+		return (NULL);
+	}
+	fe->next = a->fixup_list;
+	a->fixup_list = fe;
+	fe->fixup = 0;
+	fe->name = strdup(pathname);
+	return (fe);
+}
+
+static struct fixup_entry *
+current_fixup(struct archive_write_disk *a, const char *pathname)
+{
+	if (a->current_fixup == NULL)
+		a->current_fixup = new_fixup(a, pathname);
+	return (a->current_fixup);
+}
+
+static int
+check_symlinks_fsobj(char *path, int *error_number, struct archive_string *error_string, int flags)
+{
+#if !defined(HAVE_LSTAT)
+	/* Platform doesn't have lstat, so we can't look for symlinks. */
+	(void)a; /* UNUSED */
+	(void)path; /* UNUSED */
+	(void)error_number; /* UNUSED */
+	(void)error_string; /* UNUSED */
+	(void)flags; /* UNUSED */
+	return (ARCHIVE_OK);
+#else
+	int res = ARCHIVE_OK;
+	char *tail;
+	char *head;
+	int last;
+	char c;
+	int r;
+	struct stat st;
+	int restore_pwd;
+
+	/* Nothing to do here if name is empty */
+	if(path[0] == '\0')
+	    return (ARCHIVE_OK);
+
+	/*
+	 * Guard against symlink tricks.  Reject any archive entry whose
+	 * destination would be altered by a symlink.
+	 *
+	 * Walk the filename in chunks separated by '/'.  For each segment:
+	 *  - if it doesn't exist, continue
+	 *  - if it's symlink, abort or remove it
+	 *  - if it's a directory and it's not the last chunk, cd into it
+	 * As we go:
+	 *  head points to the current (relative) path
+	 *  tail points to the temporary \0 terminating the segment we're currently examining
+	 *  c holds what used to be in *tail
+	 *  last is 1 if this is the last tail
+	 */
+	restore_pwd = open(".", O_RDONLY | O_BINARY | O_CLOEXEC);
+	__archive_ensure_cloexec_flag(restore_pwd);
+	if (restore_pwd < 0)
+		return (ARCHIVE_FATAL);
+	head = path;
+	tail = path;
+	last = 0;
+	/* TODO: reintroduce a safe cache here? */
+	/* Skip the root directory if the path is absolute. */
+	if(tail == path && tail[0] == '/')
+		++tail;
+	/* Keep going until we've checked the entire name.
+	 * head, tail, path all alias the same string, which is
+	 * temporarily zeroed at tail, so be careful restoring the
+	 * stashed (c=tail[0]) for error messages.
+	 * Exiting the loop with break is okay; continue is not.
+	 */
+	while (!last) {
+		/* Skip the separator we just consumed, plus any adjacent ones */
+		while (*tail == '/')
+		    ++tail;
+		/* Skip the next path element. */
+		while (*tail != '\0' && *tail != '/')
+			++tail;
+		/* is this the last path component? */
+		last = (tail[0] == '\0') || (tail[0] == '/' && tail[1] == '\0');
+		/* temporarily truncate the string here */
+		c = tail[0];
+		tail[0] = '\0';
+		/* Check that we haven't hit a symlink. */
+		r = lstat(head, &st);
+		if (r != 0) {
+			tail[0] = c;
+			/* We've hit a dir that doesn't exist; stop now. */
+			if (errno == ENOENT) {
+				break;
+			} else {
+				/* Treat any other error as fatal - best to be paranoid here
+				 * Note: This effectively disables deep directory
+				 * support when security checks are enabled.
+				 * Otherwise, very long pathnames that trigger
+				 * an error here could evade the sandbox.
+				 * TODO: We could do better, but it would probably
+			
+
+// ... (4347 more chars)
+```

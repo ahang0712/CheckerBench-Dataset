@@ -1,0 +1,222 @@
+### File: src/media_tools/dash_client.c
+```c
+static GF_Err gf_dash_setup_period(GF_DashClient *dash)
+{
+	GF_MPD_Period *period;
+	u32 rep_i, as_i, group_i, j, nb_groups_ok;
+	u32 retry = 10;
+
+	//solve xlink - if
+	while (retry) {
+		period = gf_list_get(dash->mpd->periods, dash->active_period_index);
+		if (!period) return GF_EOS;
+		if (!period->xlink_href) break;
+		gf_dash_solve_period_xlink(dash, dash->mpd->periods, dash->active_period_index);
+		retry --;
+	}
+	period = gf_list_get(dash->mpd->periods, dash->active_period_index);
+	if (period->xlink_href && (dash->route_clock_state!=1) ) {
+		GF_LOG(GF_LOG_ERROR, GF_LOG_DASH, ("[DASH] Too many xlink indirections on the same period - not supported\n"));
+		return GF_NOT_SUPPORTED;
+	}
+
+	if (!period->duration) {
+		GF_MPD_Period *next_period = gf_list_get(dash->mpd->periods, dash->active_period_index+1);
+		if (next_period && next_period->start)
+			period->duration = next_period->start - period->start;
+	}
+
+	GF_Err e = dash_check_supported_mime(period);
+	if (e) return e;
+
+
+	GF_LOG(GF_LOG_INFO, GF_LOG_DASH, ("[DASH] Setting up period start "LLU" duration "LLU" xlink %s ID %s\n", period->start, period->duration, period->origin_base_url ? period->origin_base_url : "none", period->ID ? period->ID : "none"));
+
+	/*setup all groups*/
+	gf_dash_setup_groups(dash);
+
+	nb_groups_ok = 0;
+	for (group_i=0; group_i<gf_list_count(dash->groups); group_i++) {
+		GF_MPD_Representation *rep_sel;
+		u32 active_rep, nb_rep;
+		const char *mime_type;
+		u32 nb_rep_ok = 0;
+		Bool group_has_video = GF_FALSE;
+		Bool disabled = GF_FALSE;
+		Bool cp_supported = GF_FALSE;
+		GF_DASH_Group *group = gf_list_get(dash->groups, group_i);
+		Bool active_rep_found;
+
+		active_rep = 0;
+		nb_rep = gf_list_count(group->adaptation_set->representations);
+
+		//group already setup
+		if (group->selection != GF_DASH_GROUP_NOT_SETUP) {
+			if (group->selection > GF_DASH_GROUP_NOT_SELECTABLE) nb_groups_ok++;
+			continue;
+		}
+		if (group->pending_rep) {
+			rep_sel = group->pending_rep;
+			goto retry_pending_rep;
+		}
+		if (group->download_sidx_pending) {
+			goto sidx_pending;
+		}
+
+		if (dash->dbg_grps_index) {
+			Bool disable = GF_TRUE;
+			u32 gidx;
+			for (gidx=0; gidx<dash->nb_dbg_grps; gidx++) {
+				if (group_i == dash->dbg_grps_index[gidx]) {
+					disable = GF_FALSE;
+					break;
+				}
+			}
+			if (disable) {
+				group->selection = GF_DASH_GROUP_NOT_SELECTABLE;
+				continue;
+			}
+		}
+
+		//on HLS get rid of audio only adaptation set if not in fMP4 mode
+		if (dash->is_m3u8
+			&& !group->adaptation_set->max_width
+			&& !group->adaptation_set->max_height
+			&& (gf_list_count(dash->groups)>1)
+		) {
+			GF_MPD_Representation *rep = gf_list_get(group->adaptation_set->representations, 0);
+			if ((!rep->segment_template || !rep->segment_template->initialization)
+				&& (!rep->segment_list || (!rep->segment_list->initialization_segment && !rep->segment_list->xlink_href))
+			) {
+				group->selection = GF_DASH_GROUP_NOT_SELECTABLE;
+				continue;
+			}
+		}
+
+		if ((nb_rep>1) && !group->adaptation_set->segment_alignment && !group->adaptation_set->subsegment_alignment) {
+			GF_LOG(GF_LOG_WARNING, GF_LOG_DASH, ("[DASH] AdaptationSet without segmentAlignment flag set - may result in broken adaptation\n"));
+		}
+		if (group->adaptation_set->xlink_href) {
+			GF_LOG(GF_LOG_WARNING, GF_LOG_DASH, ("[DASH] AdaptationSet with xlink:href to %s - ignoring because not supported\n", group->adaptation_set->xlink_href));
+			continue;
+		}
+
+		for (j=0; j<gf_list_count(group->adaptation_set->essential_properties); j++) {
+			GF_MPD_Descriptor *mpd_desc = gf_list_get(group->adaptation_set->essential_properties, j);
+			if (!mpd_desc->scheme_id_uri) {
+				GF_LOG(GF_LOG_WARNING, GF_LOG_DASH, ("[DASH] AdaptationSet with unrecognized EssentialProperty (no uri) - ignoring because not supported\n"));
+				disabled = 1;
+				break;
+			}
+			if (mpd_desc && mpd_desc->scheme_id_uri && !strcmp(mpd_desc->scheme_id_uri, "urn:mpeg:dash:srd:2014") && mpd_desc->value) {
+				u32 id, w, h, res;
+				w = h = 0;
+				res = sscanf(mpd_desc->value, "%d,%d,%d,%d,%d,%d,%d", &id, &group->srd_x, &group->srd_y, &group->srd_w, &group->srd_h, &w, &h);
+				if (res != 7) {
+					res = sscanf(mpd_desc->value, "%d,%d,%d,%d,%d", &id, &group->srd_x, &group->srd_y, &group->srd_w, &group->srd_h);
+					if (res!=5) res=0;
+				}
+				if (res) {
+					group->srd_desc = gf_dash_get_srd_desc(dash, id, GF_TRUE);
+					if (!w) w = group->srd_x + group->srd_w;
+					if (!h) h = group->srd_y + group->srd_h;
+
+					if (w>group->srd_desc->srd_fw)
+						group->srd_desc->srd_fw = w;
+					if (h>group->srd_desc->srd_fh)
+						group->srd_desc->srd_fh = h;
+				}
+
+			} else if (!strcmp(mpd_desc->scheme_id_uri, "http://dashif.org/guidelines/trickmode") ) {
+				continue;
+			} else {
+				//we don't know any defined scheme for now
+				GF_LOG(GF_LOG_WARNING, GF_LOG_DASH, ("[DASH] AdaptationSet with unrecognized EssentialProperty %s - ignoring because not supported\n", mpd_desc->scheme_id_uri));
+				disabled = 1;
+				break;
+			}
+		}
+		if (disabled) {
+			continue;
+		}
+
+		cp_supported = 1;
+		for (j=0; j<gf_list_count(group->adaptation_set->content_protection); j++) {
+			GF_MPD_Descriptor *mpd_desc = gf_list_get(group->adaptation_set->content_protection, j);
+			//we don't know any defined scheme for now
+			if (strcmp(mpd_desc->scheme_id_uri, "urn:mpeg:dash:mp4protection:2011")) {
+				GF_LOG(GF_LOG_INFO, GF_LOG_DASH, ("[DASH] AdaptationSet with unrecognized ContentProtection %s\n", mpd_desc->scheme_id_uri));
+				cp_supported = 0;
+			} else {
+				cp_supported = 1;
+				break;
+			}
+		}
+		if (!cp_supported) {
+			GF_LOG(GF_LOG_WARNING, GF_LOG_DASH, ("[DASH] AdaptationSet with no supported ContentProtection - ignoring\n"));
+			continue;
+		}
+
+		for (j=0; j<gf_list_count(group->adaptation_set->supplemental_properties); j++) {
+			GF_MPD_Descriptor *mpd_desc = gf_list_get(group->adaptation_set->supplemental_properties, j);
+			if (mpd_desc && mpd_desc->scheme_id_uri && !strcmp(mpd_desc->scheme_id_uri, "urn:mpeg:dash:srd:2014") && mpd_desc->value) {
+				u32 id, w, h, res;
+				w = h = 0;
+				res = sscanf(mpd_desc->value, "%d,%d,%d,%d,%d,%d,%d", &id, &group->srd_x, &group->srd_y, &group->srd_w, &group->srd_h, &w, &h);
+				if (res != 7) {
+					res = sscanf(mpd_desc->value, "%d,%d,%d,%d,%d", &id, &group->srd_x, &group->srd_y, &group->srd_w, &group->srd_h);
+					if (res != 5) res=0;
+				}
+				if (res) {
+					group->srd_desc = gf_dash_get_srd_desc(dash, id, GF_TRUE);
+					if (!w) w = group->srd_x + group->srd_w;
+					if (!h) h = group->srd_y + group->srd_h;
+
+					if (w>group->srd_desc->srd_fw)
+						group->srd_desc->srd_fw = w;
+					if (h>group->srd_desc->srd_fh)
+						group->srd_desc->srd_fh = h;
+				}
+			}
+		}
+
+sidx_pending:
+		/*translate from single-indexed file to SegmentList*/
+		gf_dash_setup_single_index_mode(group);
+		if (group->download_sidx_pending) {
+			return GF_NOT_READY;
+		}
+
+		/* Select the appropriate representation in the given period */
+		for (rep_i = 0; rep_i < nb_rep; rep_i++) {
+			GF_MPD_Representation *rep = gf_list_get(group->adaptation_set->representations, rep_i);
+			if (rep->width && rep->height) group_has_video = GF_TRUE;
+		}
+
+		//sort by ascending bandwidth and quality
+		for (rep_i = 1; rep_i < nb_rep; rep_i++) {
+			Bool swap=GF_FALSE;
+			GF_MPD_Representation *r2 = gf_list_get(group->adaptation_set->representations, rep_i);
+			GF_MPD_Representation *r1 = gf_list_get(group->adaptation_set->representations, rep_i-1);
+			if (r1->bandwidth > r2->bandwidth) {
+				swap=GF_TRUE;
+			} else if ((r1->bandwidth == r2->bandwidth) && (r1->quality_ranking<r2->quality_ranking)) {
+				swap=GF_TRUE;
+			}
+			if (swap) {
+				gf_list_rem(group->adaptation_set->representations, rep_i);
+				gf_list_insert(group->adaptation_set->representations, r2, rep_i-1);
+				rep_i=0;
+			}
+		}
+
+select_active_rep:
+		group->min_representation_bitrate = (u32) -1;
+		active_rep_found = GF_FALSE;
+
+		for (rep_i = 0; rep_i < nb_rep; rep_i++) {
+			u32 first_select_mode = dash->first_select_mode;
+			GF_MPD_Representation *rep = gf_list_get(group->adaptation_set->
+
+// ... (7508 more chars)
+```

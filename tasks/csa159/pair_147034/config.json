@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "5bc68bd3826e573f9a83c82c5107536cf616fea8",
+  "after_commit": "f83ac8d30c43fd902af7c84c480f216157b60ef0",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/29d69273fefd0bc2a66b5e22f3a4a4c7a53bfa02/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/29d69273fefd0bc2a66b5e22f3a4a4c7a53bfa02/compile_commands.json",
+  "changed_files": [
+    "drivers/media/test-drivers/vivid/vivid-vid-cap.c"
+  ],
+  "commit_message": "media: vivid: Change the siize of the composing\n\nsyzkaller found a bug:\n\nBUG: KASAN: vmalloc-out-of-bounds in tpg_fill_plane_pattern drivers/media/common/v4l2-tpg/v4l2-tpg-core.c:2608 [inline]\nBUG: KASAN: vmalloc-out-of-bounds in tpg_fill_plane_buffer+0x1a9c/0x5af0 drivers/media/common/v4l2-tpg/v4l2-tpg-core.c:2705\nWrite of size 1440 at addr ffffc9000d0ffda0 by task vivid-000-vid-c/5304\n\nCPU: 0 UID: 0 PID: 5304 Comm: vivid-000-vid-c Not tainted 6.14.0-rc2-syzkaller-00039-g09fbf3d50205 #0\nHardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2~bpo12+1 04/01/2014\n\nCall Trace:\n <TASK>\n __dump_stack lib/dump_stack.c:94 [inline]\n dump_stack_lvl+0x241/0x360 lib/dump_stack.c:120\n print_address_description mm/kasan/report.c:378 [inline]\n print_report+0x169/0x550 mm/kasan/report.c:489\n kasan_report+0x143/0x180 mm/kasan/report.c:602\n kasan_check_range+0x282/0x290 mm/kasan/generic.c:189\n __asan_memcpy+0x40/0x70 mm/kasan/shadow.c:106\n tpg_fill_plane_pattern drivers/media/common/v4l2-tpg/v4l2-tpg-core.c:2608 [inline]\n tpg_fill_plane_buffer+0x1a9c/0x5af0 drivers/media/common/v4l2-tpg/v4l2-tpg-core.c:2705\n vivid_fillbuff drivers/media/test-drivers/vivid/vivid-kthread-cap.c:470 [inline]\n vivid_thread_vid_cap_tick+0xf8e/0x60d0 drivers/media/test-drivers/vivid/vivid-kthread-cap.c:629\n vivid_thread_vid_cap+0x8aa/0xf30 drivers/media/test-drivers/vivid/vivid-kthread-cap.c:767\n kthread+0x7a9/0x920 kernel/kthread.c:464\n ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:148\n ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244\n </TASK>\n\nThe composition size cannot be larger than the size of fmt_cap_rect.\nSo execute v4l2_rect_map_inside() even if has_compose_cap == 0.\n\nFixes: 94a7ad928346 (\"media: vivid: fix compose size exceed boundary\")\nCc: stable@vger.kernel.org\nReported-by: syzbot+365005005522b70a36f2@syzkaller.appspotmail.com\nCloses: https://syzkaller.appspot.com/bug?id=8ed8e8cc30cbe0d86c9a25bd1d6a5775129b8ea3\nSigned-off-by: Denis Arefev <arefev@swemel.ru>\nSigned-off-by: Hans Verkuil <hverkuil@xs4all.nl>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-623c5f3c0558ba463c5a",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-623c5f3c0558ba463c5a",
+    "project_id": "morefixes__pytorch__serve",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "frontend/archive/src/main/java/org/pytorch/serve/archive/utils/ZipUtils.java"
+  ],
+  "patch_units": {
+    "before": [
+      "frontend/archive/src/main/java/org/pytorch/serve/archive/utils/ZipUtils.java"
+    ],
+    "after": [
+      "frontend/archive/src/main/java/org/pytorch/serve/archive/utils/ZipUtils.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/ae38682e9b0b92552efede38b33ff0419221d6b57ea575eaa620cda613d1e362/database",
+      "cache_key": "ae38682e9b0b92552efede38b33ff0419221d6b57ea575eaa620cda613d1e362",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/15267d319847d9372fd5cfd852368c538674b9f06c354235cffecb2d75201e15/database",
+      "cache_key": "15267d319847d9372fd5cfd852368c538674b9f06c354235cffecb2d75201e15",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/bb74f3b896ce40334a40ed3fda3dbe5c52e7a00c77bbb2168157b1a6b72f0f6e/database",
+      "cache_key": "bb74f3b896ce40334a40ed3fda3dbe5c52e7a00c77bbb2168157b1a6b72f0f6e",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-623c5f3c0558ba463c5a/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-623c5f3c0558ba463c5a/ (do not mount into agent)"
+  }
+}

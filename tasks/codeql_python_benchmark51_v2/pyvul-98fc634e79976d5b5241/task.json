@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-98fc634e79976d5b5241",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-98fc634e79976d5b5241",
+    "project_id": "pyvul__matrix-org__sydent",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "sydent/util/emailutils.py"
+  ],
+  "patch_units": {
+    "before": [
+      "function:sendEmail"
+    ],
+    "after": [
+      "function:sendEmail"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/74853a0a5cc1bdb05d7407120da143aafed5c4da0b64d6c66fc57f71f46f8b69/database",
+      "cache_key": "74853a0a5cc1bdb05d7407120da143aafed5c4da0b64d6c66fc57f71f46f8b69",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/424226b73490b89caaa7eef634852ca8334341eb353db9cfb4353d69e4e849f5/database",
+      "cache_key": "424226b73490b89caaa7eef634852ca8334341eb353db9cfb4353d69e4e849f5",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/4dbdf874b1136047637b4f285717d9c0cdcb95b18b366f0039e4cca7927b00a7/database",
+      "cache_key": "4dbdf874b1136047637b4f285717d9c0cdcb95b18b366f0039e4cca7927b00a7",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-98fc634e79976d5b5241/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-98fc634e79976d5b5241/ (do not mount into agent)"
+  }
+}

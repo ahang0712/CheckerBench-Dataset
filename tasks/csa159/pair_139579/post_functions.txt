@@ -1,0 +1,130 @@
+### File: drivers/media/usb/dvb-usb-v2/mxl111sf.c
+```c
+static int mxl111sf_init(struct dvb_usb_device *d)
+{
+	struct mxl111sf_state *state = d_to_priv(d);
+	int ret;
+	static u8 eeprom[256];
+	u8 reg = 0;
+	struct i2c_msg msg[2] = {
+		{ .addr = 0xa0 >> 1, .len = 1, .buf = &reg },
+		{ .addr = 0xa0 >> 1, .flags = I2C_M_RD,
+		  .len = sizeof(eeprom), .buf = eeprom },
+	};
+
+	ret = get_chip_info(state);
+	if (mxl_fail(ret))
+		pr_err("failed to get chip info during probe");
+
+	mutex_init(&state->fe_lock);
+
+	if (state->chip_rev > MXL111SF_V6)
+		mxl111sf_config_pin_mux_modes(state, PIN_MUX_TS_SPI_IN_MODE_1);
+
+	ret = i2c_transfer(&d->i2c_adap, msg, 2);
+	if (mxl_fail(ret))
+		return 0;
+	tveeprom_hauppauge_analog(&state->tv, (0x84 == eeprom[0xa0]) ?
+				  eeprom + 0xa0 : eeprom + 0x80);
+#if 0
+	switch (state->tv.model) {
+	case 117001:
+	case 126001:
+	case 138001:
+		break;
+	default:
+		printk(KERN_WARNING "%s: warning: unknown hauppauge model #%d\n",
+		       __func__, state->tv.model);
+	}
+#endif
+	return 0;
+}
+
+static int mxl111sf_get_stream_config_dvbt(struct dvb_frontend *fe,
+		u8 *ts_type, struct usb_data_stream_properties *stream)
+{
+	pr_debug("%s: fe=%d\n", __func__, fe->id);
+
+	*ts_type = DVB_USB_FE_TS_TYPE_188;
+	if (dvb_usb_mxl111sf_isoc)
+		mxl111sf_stream_config_isoc(stream, 4, 96, 564);
+	else
+		mxl111sf_stream_config_bulk(stream, 4);
+	return 0;
+}
+
+static int mxl111sf_probe(struct dvb_usb_device *dev)
+{
+	struct mxl111sf_state *state = d_to_priv(dev);
+
+	mutex_init(&state->msg_lock);
+	return 0;
+}
+
+static int mxl111sf_get_stream_config_atsc(struct dvb_frontend *fe,
+		u8 *ts_type, struct usb_data_stream_properties *stream)
+{
+	pr_debug("%s: fe=%d\n", __func__, fe->id);
+
+	*ts_type = DVB_USB_FE_TS_TYPE_188;
+	if (dvb_usb_mxl111sf_isoc)
+		mxl111sf_stream_config_isoc(stream, 6, 24, 3072);
+	else
+		mxl111sf_stream_config_bulk(stream, 6);
+	return 0;
+}
+
+static int mxl111sf_get_stream_config_mh(struct dvb_frontend *fe,
+		u8 *ts_type, struct usb_data_stream_properties *stream)
+{
+	pr_debug("%s: fe=%d\n", __func__, fe->id);
+
+	*ts_type = DVB_USB_FE_TS_TYPE_RAW;
+	if (dvb_usb_mxl111sf_isoc)
+		mxl111sf_stream_config_isoc(stream, 5, 96, 200);
+	else
+		mxl111sf_stream_config_bulk(stream, 5);
+	return 0;
+}
+
+static int mxl111sf_streaming_ctrl_atsc_mh(struct dvb_frontend *fe, int onoff)
+{
+	pr_debug("%s: fe=%d onoff=%d\n", __func__, fe->id, onoff);
+
+	if (fe->id == 0)
+		return mxl111sf_ep6_streaming_ctrl(fe, onoff);
+	else if (fe->id == 1)
+		return mxl111sf_ep4_streaming_ctrl(fe, onoff);
+	else if (fe->id == 2)
+		return mxl111sf_ep5_streaming_ctrl(fe, onoff);
+	return 0;
+}
+
+static int mxl111sf_streaming_ctrl_mercury(struct dvb_frontend *fe, int onoff)
+{
+	pr_debug("%s: fe=%d onoff=%d\n", __func__, fe->id, onoff);
+
+	if (fe->id == 0)
+		return mxl111sf_ep6_streaming_ctrl(fe, onoff);
+	else if (fe->id == 1)
+		return mxl111sf_ep4_streaming_ctrl(fe, onoff);
+	else if (fe->id == 2 && dvb_usb_mxl111sf_spi)
+		return mxl111sf_ep5_streaming_ctrl(fe, onoff);
+	else if (fe->id == 2 && !dvb_usb_mxl111sf_spi)
+		return mxl111sf_ep6_streaming_ctrl(fe, onoff);
+	return 0;
+}
+
+static int mxl111sf_streaming_ctrl_mercury_mh(struct dvb_frontend *fe, int onoff)
+{
+	pr_debug("%s: fe=%d onoff=%d\n", __func__, fe->id, onoff);
+
+	if (fe->id == 0)
+		return mxl111sf_ep4_streaming_ctrl(fe, onoff);
+	else if (fe->id == 1  && dvb_usb_mxl111sf_spi)
+		return mxl111sf_ep5_streaming_ctrl(fe, onoff);
+	else if (fe->id == 1 && !dvb_usb_mxl111sf_spi)
+		return mxl111sf_ep6_streaming_ctrl(fe, onoff);
+	return 0;
+}
+```

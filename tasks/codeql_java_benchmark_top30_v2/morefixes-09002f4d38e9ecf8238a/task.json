@@ -1,0 +1,47 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-09002f4d38e9ecf8238a",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-09002f4d38e9ecf8238a",
+    "project_id": "morefixes__wildfly__jboss-ejb-client",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "src/main/java/org/jboss/ejb/protocol/remote/EJBSimpleTransactionControl.java",
+    "src/main/java/org/jboss/ejb/protocol/remote/EJBTransactionOperations.java"
+  ],
+  "patch_units": {
+    "before": [
+      "src/main/java/org/jboss/ejb/protocol/remote/EJBSimpleTransactionControl.java",
+      "src/main/java/org/jboss/ejb/protocol/remote/EJBTransactionOperations.java"
+    ],
+    "after": [
+      "src/main/java/org/jboss/ejb/protocol/remote/EJBSimpleTransactionControl.java",
+      "src/main/java/org/jboss/ejb/protocol/remote/EJBTransactionOperations.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/37bd11eb259d8f36019c5d4bb3b4aec7e0c859870bfa1b0cbf986db2f24ef6f5/database",
+      "cache_key": "37bd11eb259d8f36019c5d4bb3b4aec7e0c859870bfa1b0cbf986db2f24ef6f5",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/9f3dec78c24deb5de9f33e559a2676fd824bf844744ff4ee7c65cedafb37ac2c/database",
+      "cache_key": "9f3dec78c24deb5de9f33e559a2676fd824bf844744ff4ee7c65cedafb37ac2c",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/ebb8190c0c6caa67b6b1e5cd795590f01f18680ef0aaf3a369eeb56ccb9f825c/database",
+      "cache_key": "ebb8190c0c6caa67b6b1e5cd795590f01f18680ef0aaf3a369eeb56ccb9f825c",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-09002f4d38e9ecf8238a/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-09002f4d38e9ecf8238a/ (do not mount into agent)"
+  }
+}

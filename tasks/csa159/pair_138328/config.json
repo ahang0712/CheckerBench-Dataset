@@ -1,0 +1,19 @@
+{
+  "project_id": "libssh2_libssh2",
+  "before_commit": "c07bc647f2b181199561bbccc1a0695caba8822c",
+  "after_commit": "ff1b155731ff8f790f12d980911d9fd84d0e1598",
+  "repo_path": "/workspace/repo/libssh2/libssh2",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/libssh2_libssh2/452517d96c2a636fa0e2f31cfa8b463886de7611/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/libssh2_libssh2/452517d96c2a636fa0e2f31cfa8b463886de7611/compile_commands.json",
+  "changed_files": [
+    "src/misc.c"
+  ],
+  "commit_message": "Simplified _libssh2_check_length (#350)\n\n* Simplified _libssh2_check_length\n\nmisc.c : _libssh2_check_length()\n\nRemoved cast and improved bounds checking and format.\n\nCredit : Yuriy M. Kaminskiy",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

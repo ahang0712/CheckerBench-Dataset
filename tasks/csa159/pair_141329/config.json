@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "bb20da18ce936adda6b48aea79a8797c8eee479f",
+  "after_commit": "448a496f760664d3e2e79466aa1787e6abc922b5",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/88e500affe72fb704c4f201974b5199ca6f51e6c/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/88e500affe72fb704c4f201974b5199ca6f51e6c/compile_commands.json",
+  "changed_files": [
+    "net/bluetooth/hci_sysfs.c"
+  ],
+  "commit_message": "Bluetooth: hci_sysfs: Fix attempting to call device_add multiple times\n\ndevice_add shall not be called multiple times as stated in its\ndocumentation:\n\n 'Do not call this routine or device_register() more than once for\n any device structure'\n\nSyzkaller reports a bug as follows [1]:\n------------[ cut here ]------------\nkernel BUG at lib/list_debug.c:33!\ninvalid opcode: 0000 [#1] PREEMPT SMP KASAN\n[...]\nCall Trace:\n <TASK>\n __list_add include/linux/list.h:69 [inline]\n list_add_tail include/linux/list.h:102 [inline]\n kobj_kset_join lib/kobject.c:164 [inline]\n kobject_add_internal+0x18f/0x8f0 lib/kobject.c:214\n kobject_add_varg lib/kobject.c:358 [inline]\n kobject_add+0x150/0x1c0 lib/kobject.c:410\n device_add+0x368/0x1e90 drivers/base/core.c:3452\n hci_conn_add_sysfs+0x9b/0x1b0 net/bluetooth/hci_sysfs.c:53\n hci_le_cis_estabilished_evt+0x57c/0xae0 net/bluetooth/hci_event.c:6799\n hci_le_meta_evt+0x2b8/0x510 net/bluetooth/hci_event.c:7110\n hci_event_func net/bluetooth/hci_event.c:7440 [inline]\n hci_event_packet+0x63d/0xfd0 net/bluetooth/hci_event.c:7495\n hci_rx_work+0xae7/0x1230 net/bluetooth/hci_core.c:4007\n process_one_work+0x991/0x1610 kernel/workqueue.c:2289\n worker_thread+0x665/0x1080 kernel/workqueue.c:2436\n kthread+0x2e4/0x3a0 kernel/kthread.c:376\n ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:306\n </TASK>\n\nLink: https://syzkaller.appspot.com/bug?id=da3246e2d33afdb92d66bc166a0934c5b146404a\nSigned-off-by: Luiz Augusto von Dentz <luiz.von.dentz@intel.com>\nTested-by: Hawkins Jiawei <yin31149@gmail.com>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

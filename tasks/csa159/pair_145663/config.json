@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "46f2a11cb82b657fd15bab1c47821b635e03838b",
+  "after_commit": "7c4f78cdb8e7501e9f92d291a7d956591bf73be9",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/60b4d49b9621db4b000c9065dd6457c9a0eda80b/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/60b4d49b9621db4b000c9065dd6457c9a0eda80b/compile_commands.json",
+  "changed_files": [
+    "net/bluetooth/l2cap_sock.c"
+  ],
+  "commit_message": "Bluetooth: L2CAP: do not leave dangling sk pointer on error in l2cap_sock_create()\n\nbt_sock_alloc() allocates the sk object and attaches it to the provided\nsock object. On error l2cap_sock_alloc() frees the sk object, but the\ndangling pointer is still attached to the sock object, which may create\nuse-after-free in other code.\n\nSigned-off-by: Ignat Korchagin <ignat@cloudflare.com>\nReviewed-by: Kuniyuki Iwashima <kuniyu@amazon.com>\nReviewed-by: Eric Dumazet <edumazet@google.com>\nLink: https://patch.msgid.link/20241014153808.51894-3-ignat@cloudflare.com\nSigned-off-by: Jakub Kicinski <kuba@kernel.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

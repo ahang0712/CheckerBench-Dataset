@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "f93431c86b631bbca5614c66f966bf3ddb3c2803",
+  "after_commit": "f638a84afef3dfe10554c51820c16e39a278c915",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/cf67838c4422eab826679b076dad99f96152b4de/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/cf67838c4422eab826679b076dad99f96152b4de/compile_commands.json",
+  "changed_files": [
+    "net/l2tp/l2tp_ip6.c"
+  ],
+  "commit_message": "ipv6: Fix signed integer overflow in l2tp_ip6_sendmsg\n\nWhen len >= INT_MAX - transhdrlen, ulen = len + transhdrlen will be\noverflow. To fix, we can follow what udpv6 does and subtract the\ntranshdrlen from the max.\n\nSigned-off-by: Wang Yufen <wangyufen@huawei.com>\nLink: https://lore.kernel.org/r/20220607120028.845916-2-wangyufen@huawei.com\nSigned-off-by: Jakub Kicinski <kuba@kernel.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,19 @@
+{
+  "project_id": "sass_libsass",
+  "before_commit": "c93f0581c6b7794d8c1d5637c5c4dabd591b1d57",
+  "after_commit": "eb15533b07773c30dc03c9d742865604f47120ef",
+  "repo_path": "/workspace/repo/sass/libsass",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/sass_libsass/5c2501eaa115aafafb254fa4f3522efa0ee14edb/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/sass_libsass/5c2501eaa115aafafb254fa4f3522efa0ee14edb/compile_commands.json",
+  "changed_files": [
+    "src/parser.cpp"
+  ],
+  "commit_message": "Fix memory leak in `parse_ie_keyword_arg`\n\n`kwd_arg` would never get freed when there was a parse error in\n`parse_ie_keyword_arg`.\n\nCloses #2656",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

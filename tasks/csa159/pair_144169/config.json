@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "c5b324b1a7628c393f99058d2464592791617cc9",
+  "after_commit": "1b739388aa3f8dfb63a9fca777e6dfa6912d0464",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/31e7f6c015d9eb35e77ae9868801c53ab0ff19ac/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/31e7f6c015d9eb35e77ae9868801c53ab0ff19ac/compile_commands.json",
+  "changed_files": [
+    "drivers/usb/gadget/function/u_audio.c"
+  ],
+  "commit_message": "usb: gadget: u_audio: Fix race condition use of controls after free during gadget unbind.\n\nHang on to the control IDs instead of pointers since those are correctly\nhandled with locks.\n\nFixes: 8fe9a03f4331 (\"usb: gadget: u_audio: Rate ctl notifies about current srate (0=stopped)\")\nFixes: c565ad07ef35 (\"usb: gadget: u_audio: Support multiple sampling rates\")\nFixes: 02de698ca812 (\"usb: gadget: u_audio: add bi-directional volume and mute support\")\nSigned-off-by: Chris Wulff <chris.wulff@biamp.com>\nLink: https://lore.kernel.org/stable/CO1PR17MB5419C2BF44D400E4E620C1ADE1172%40CO1PR17MB5419.namprd17.prod.outlook.com\nLink: https://lore.kernel.org/r/CO1PR17MB5419C2BF44D400E4E620C1ADE1172@CO1PR17MB5419.namprd17.prod.outlook.com\nSigned-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

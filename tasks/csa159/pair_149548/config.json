@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "101ab946b79ad83b36d5cfd47de587492a80acf0",
+  "after_commit": "3fb43a7a5b44713f892c58ead2e5f3a1bc9f4ee7",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/f338e77383789c0cae23ca3d48adcc5e9e137e3c/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/f338e77383789c0cae23ca3d48adcc5e9e137e3c/compile_commands.json",
+  "changed_files": [
+    "drivers/comedi/drivers/me4000.c"
+  ],
+  "commit_message": "comedi: me4000: Fix potential overrun of firmware buffer\n\n`me4000_xilinx_download()` loads the firmware that was requested by\n`request_firmware()`.  It is possible for it to overrun the source\nbuffer because it blindly trusts the file format.  It reads a data\nstream length from the first 4 bytes into variable `file_length` and\nreads the data stream contents of length `file_length` from offset 16\nonwards.\n\nAdd a test to ensure that the supplied firmware is long enough to\ncontain the header and the data stream.  On failure, log an error and\nreturn `-EINVAL`.\n\nNote: The firmware loading was totally broken before commit ac584af59945\n(\"staging: comedi: me4000: fix firmware downloading\"), but that is the\nmost sensible target for this fix.\n\nFixes: ac584af59945 (\"staging: comedi: me4000: fix firmware downloading\")\nCc: stable <stable@kernel.org>\nSigned-off-by: Ian Abbott <abbotti@mev.co.uk>\nLink: https://patch.msgid.link/20260205133949.71722-1-abbotti@mev.co.uk\nSigned-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

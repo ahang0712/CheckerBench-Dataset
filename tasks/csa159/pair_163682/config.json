@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "310731e2f1611d1d13aae237abcf8e66d33345d5",
+  "after_commit": "dd44f04b9214adb68ef5684ae87a81ba03632250",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/88084a3df1672e131ddc1b4e39eeacfd39864acf/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/88084a3df1672e131ddc1b4e39eeacfd39864acf/compile_commands.json",
+  "changed_files": [
+    "net/ipv4/cipso_ipv4.c"
+  ],
+  "commit_message": "cipso: Fix data-races around sysctl.\n\nWhile reading cipso sysctl variables, they can be changed concurrently.\nSo, we need to add READ_ONCE() to avoid data-races.\n\nFixes: 446fda4f2682 (\"[NetLabel]: CIPSOv4 engine\")\nSigned-off-by: Kuniyuki Iwashima <kuniyu@amazon.com>\nAcked-by: Paul Moore <paul@paul-moore.com>\nSigned-off-by: David S. Miller <davem@davemloft.net>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

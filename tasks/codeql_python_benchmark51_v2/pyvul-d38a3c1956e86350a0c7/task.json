@@ -1,0 +1,48 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-d38a3c1956e86350a0c7",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-d38a3c1956e86350a0c7",
+    "project_id": "pyvul__dwisiswant0__apkleaks",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "apkleaks/apkleaks.py"
+  ],
+  "patch_units": {
+    "before": [
+      "class:APKLeaks",
+      "function:APKLeaks.decompile",
+      "module:<module>@5"
+    ],
+    "after": [
+      "class:APKLeaks",
+      "function:APKLeaks.decompile",
+      "module:<module>@5"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/f295840aed3766f2d8a44898871d6f7c5305e1117c7a33e855eb8f16645e1630/database",
+      "cache_key": "f295840aed3766f2d8a44898871d6f7c5305e1117c7a33e855eb8f16645e1630",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/5ee729b1f4b6b69c4605d02f0e31fe0e5adbb8e4237ba0e6d6d12e95ac19554c/database",
+      "cache_key": "5ee729b1f4b6b69c4605d02f0e31fe0e5adbb8e4237ba0e6d6d12e95ac19554c",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/1acec812a6c38893972d7be72d67f086a2de1d062ba9af17ed8ca1e8dc098a4a/database",
+      "cache_key": "1acec812a6c38893972d7be72d67f086a2de1d062ba9af17ed8ca1e8dc098a4a",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-d38a3c1956e86350a0c7/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-d38a3c1956e86350a0c7/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "a47c397bb29fce1751dc755246a2c8deeca5e38f",
+  "after_commit": "7a6b1ab7475fd6478eeaf5c9d1163e7a18125c8f",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/c4681547bcce777daf576925a966ffa824edd09d/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/c4681547bcce777daf576925a966ffa824edd09d/compile_commands.json",
+  "changed_files": [
+    "net/core/neighbour.c"
+  ],
+  "commit_message": "neighbour: allow NUD_NOARP entries to be forced GCed\n\nIFF_POINTOPOINT interfaces use NUD_NOARP entries for IPv6. It's possible to\nfill up the neighbour table with enough entries that it will overflow for\nvalid connections after that.\n\nThis behaviour is more prevalent after commit 58956317c8de (\"neighbor:\nImprove garbage collection\") is applied, as it prevents removal from\nentries that are not NUD_FAILED, unless they are more than 5s old.\n\nFixes: 58956317c8de (neighbor: Improve garbage collection)\nReported-by: Kasper Dupont <kasperd@gjkwv.06.feb.2021.kasperd.net>\nSigned-off-by: Thadeu Lima de Souza Cascardo <cascardo@canonical.com>\nSigned-off-by: David Ahern <dsahern@kernel.org>\nSigned-off-by: David S. Miller <davem@davemloft.net>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,333 @@
+### File: OpenEXR/IlmImf/ImfHeader.cpp
+```c
+///////////////////////////////////////////////////////////////////////////
+//
+// Copyright (c) 2004, Industrial Light & Magic, a division of Lucas
+// Digital Ltd. LLC
+// 
+// All rights reserved.
+// 
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+// *       Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+// *       Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+// *       Neither the name of Industrial Light & Magic nor the names of
+// its contributors may be used to endorse or promote products derived
+// from this software without specific prior written permission. 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+///////////////////////////////////////////////////////////////////////////
+
+
+
+//-----------------------------------------------------------------------------
+//
+//	class Header
+//
+//-----------------------------------------------------------------------------
+
+#include <ImfHeader.h>
+#include <ImfStdIO.h>
+#include <ImfVersion.h>
+#include <ImfCompressor.h>
+#include <ImfMisc.h>
+#include <ImfBoxAttribute.h>
+#include <ImfChannelListAttribute.h>
+#include <ImfChromaticitiesAttribute.h>
+#include <ImfCompressionAttribute.h>
+#include <ImfDeepImageStateAttribute.h>
+#include <ImfDoubleAttribute.h>
+#include <ImfDwaCompressor.h>
+#include <ImfEnvmapAttribute.h>
+#include <ImfFloatAttribute.h>
+#include <ImfFloatVectorAttribute.h>
+#include <ImfIntAttribute.h>
+#include <ImfKeyCodeAttribute.h>
+#include <ImfLineOrderAttribute.h>
+#include <ImfMatrixAttribute.h>
+#include <ImfOpaqueAttribute.h>
+#include <ImfPreviewImageAttribute.h>
+#include <ImfRationalAttribute.h>
+#include <ImfStringAttribute.h>
+#include <ImfStringVectorAttribute.h>
+#include <ImfTileDescriptionAttribute.h>
+#include <ImfTimeCodeAttribute.h>
+#include <ImfVecAttribute.h>
+#include <ImfPartType.h>
+#include "IlmThreadMutex.h"
+#include "Iex.h"
+#include <sstream>
+#include <stdlib.h>
+#include <time.h>
+#include <cmath>
+#include "ImfTiledMisc.h"
+#include "ImfNamespace.h"
+
+OPENEXR_IMF_INTERNAL_NAMESPACE_SOURCE_ENTER
+
+using namespace std;
+using IMATH_NAMESPACE::Box2i;
+using IMATH_NAMESPACE::V2i;
+using IMATH_NAMESPACE::V2f;
+using ILMTHREAD_NAMESPACE::Mutex;
+using ILMTHREAD_NAMESPACE::Lock;
+
+
+namespace {
+
+int maxImageWidth = 0;
+int maxImageHeight = 0;
+int maxTileWidth = 0;
+int maxTileHeight = 0;
+
+
+void
+initialize (Header &header,
+	    const Box2i &displayWindow,
+	    const Box2i &dataWindow,
+	    float pixelAspectRatio,
+	    const V2f &screenWindowCenter,
+	    float screenWindowWidth,
+	    LineOrder lineOrder,
+	    Compression compression)
+{
+    header.insert ("displayWindow", Box2iAttribute (displayWindow));
+    header.insert ("dataWindow", Box2iAttribute (dataWindow));
+    if ( !std::isnormal (pixelAspectRatio) || pixelAspectRatio < 0.f)
+        THROW (IEX_NAMESPACE::ArgExc, "Invalid pixel aspect ratio");
+    header.insert ("pixelAspectRatio", FloatAttribute (pixelAspectRatio));
+    header.insert ("screenWindowCenter", V2fAttribute (screenWindowCenter));
+    header.insert ("screenWindowWidth", FloatAttribute (screenWindowWidth));
+    header.insert ("lineOrder", LineOrderAttribute (lineOrder));
+    header.insert ("compression", CompressionAttribute (compression));
+    header.insert ("channels", ChannelListAttribute ());
+}
+
+template <size_t N>
+void checkIsNullTerminated (const char (&str)[N], const char *what)
+{
+	for (size_t i = 0; i < N; ++i) {
+		if (str[i] == '\0')
+			return;
+	}
+	std::stringstream s;
+	s << "Invalid " << what << ": it is more than " << (N - 1) 
+		<< " characters long.";
+	throw IEX_NAMESPACE::InputExc(s);
+}
+
+} // namespace
+
+
+Header::Header (int width,
+		int height,
+		float pixelAspectRatio,
+		const V2f &screenWindowCenter,
+		float screenWindowWidth,
+		LineOrder lineOrder,
+		Compression compression)
+:
+    _map()
+{
+    staticInitialize();
+
+    Box2i displayWindow (V2i (0, 0), V2i (width - 1, height - 1));
+
+    initialize (*this,
+		displayWindow,
+		displayWindow,
+		pixelAspectRatio,
+		screenWindowCenter,
+		screenWindowWidth,
+		lineOrder,
+		compression);
+}
+
+
+Header::Header (int width,
+		int height,
+		const Box2i &dataWindow,
+		float pixelAspectRatio,
+		const V2f &screenWindowCenter,
+		float screenWindowWidth,
+		LineOrder lineOrder,
+		Compression compression)
+:
+    _map()
+{
+    staticInitialize();
+
+    Box2i displayWindow (V2i (0, 0), V2i (width - 1, height - 1));
+
+    initialize (*this,
+		displayWindow,
+		dataWindow,
+		pixelAspectRatio,
+		screenWindowCenter,
+		screenWindowWidth,
+		lineOrder,
+		compression);
+}
+
+
+Header::Header (const Box2i &displayWindow,
+		const Box2i &dataWindow,
+		float pixelAspectRatio,
+		const V2f &screenWindowCenter,
+		float screenWindowWidth,
+		LineOrder lineOrder,
+		Compression compression)
+:
+    _map()
+{
+    staticInitialize();
+
+    initialize (*this,
+		displayWindow,
+		dataWindow,
+		pixelAspectRatio,
+		screenWindowCenter,
+		screenWindowWidth,
+		lineOrder,
+		compression);
+}
+
+
+Header::Header (const Header &other): _map()
+{
+    for (AttributeMap::const_iterator i = other._map.begin();
+	 i != other._map.end();
+	 ++i)
+    {
+	insert (*i->first, *i->second);
+    }
+}
+
+
+Header::~Header ()
+{
+    for (AttributeMap::iterator i = _map.begin();
+	 i != _map.end();
+	 ++i)
+    {
+	 delete i->second;
+    }
+}
+
+
+Header &		
+Header::operator = (const Header &other)
+{
+    if (this != &other)
+    {
+	for (AttributeMap::iterator i = _map.begin();
+	     i != _map.end();
+	     ++i)
+	{
+	     delete i->second;
+	}
+
+	_map.erase (_map.begin(), _map.end());
+
+	for (AttributeMap::const_iterator i = other._map.begin();
+	     i != other._map.end();
+	     ++i)
+	{
+	    insert (*i->first, *i->second);
+	}
+    }
+
+    return *this;
+}
+
+
+void
+Header::erase (const char name[])
+{
+    if (name[0] == 0)
+        THROW (IEX_NAMESPACE::ArgExc, "Image attribute name cannot be an empty string.");
+    
+    
+    AttributeMap::iterator i = _map.find (name);
+    if (i != _map.end())
+        _map.erase (i);
+
+}
+
+
+void
+Header::erase (const string &name)
+{
+    erase (name.c_str());
+}
+    
+    
+void
+Header::insert (const char name[], const Attribute &attribute)
+{
+    if (name[0] == 0)
+	THROW (IEX_NAMESPACE::ArgExc, "Image attribute name cannot be an empty string.");
+
+    AttributeMap::iterator i = _map.find (name);
+
+    if (i == _map.end())
+    {
+	Attribute *tmp = attribute.copy();
+
+	try
+	{
+	    _map[name] = tmp;
+	}
+	catch (...)
+	{
+	    delete tmp;
+	    throw;
+	}
+    }
+    else
+    {
+	if (strcmp (i->second->typeName(), attribute.typeName()))
+	    THROW (IEX_NAMESPACE::TypeExc, "Cannot assign a value of "
+				 "type \"" << attribute.typeName() << "\" "
+				 "to image attribute \"" << name << "\" of "
+				 "type \"" << i->second->typeName() << "\".");
+
+	Attribute *tmp = attribute.copy();
+	delete i->second;
+	i->second = tmp;
+    }
+}
+
+
+void
+Header::insert (const string &name, const Attribute &attribute)
+{
+    insert (name.c_str(), attribute);
+}
+
+
+Attribute &		
+Header::operator [] (const char name[])
+{
+    AttributeMap::iterator i = _map.find (name);
+
+    if (i =
+
+// ... (22606 more chars)
+```

@@ -1,0 +1,51 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-c4ca067f7fd871d25376",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-c4ca067f7fd871d25376",
+    "project_id": "pyvul__nltk__nltk",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "nltk/tokenize/punkt.py"
+  ],
+  "patch_units": {
+    "before": [
+      "class:PunktLanguageVars",
+      "class:PunktSentenceTokenizer",
+      "function:PunktSentenceTokenizer.debug_decisions",
+      "function:PunktSentenceTokenizer._slices_from_text"
+    ],
+    "after": [
+      "class:PunktLanguageVars",
+      "class:PunktSentenceTokenizer",
+      "function:PunktSentenceTokenizer.debug_decisions",
+      "function:PunktSentenceTokenizer._match_potential_end_contexts",
+      "function:PunktSentenceTokenizer._slices_from_text"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/9901612cc127b3c906d04b484c87fd01474c1f5e7b9a4e0d91eb5ae3e3a77bb6/database",
+      "cache_key": "9901612cc127b3c906d04b484c87fd01474c1f5e7b9a4e0d91eb5ae3e3a77bb6",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/1253f8fc7c8d63a799f044ff9b3b36fa32e8f781c7ed2ed5205970fc469d7db8/database",
+      "cache_key": "1253f8fc7c8d63a799f044ff9b3b36fa32e8f781c7ed2ed5205970fc469d7db8",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/21d7eb9a5eb34814a348edb20d658a2784a90c48b02f7325f0b22d3e91b3f5eb/database",
+      "cache_key": "21d7eb9a5eb34814a348edb20d658a2784a90c48b02f7325f0b22d3e91b3f5eb",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-c4ca067f7fd871d25376/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-c4ca067f7fd871d25376/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-8297e406660c92268ba5",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-8297e406660c92268ba5",
+    "project_id": "pyvul__ansible__ansible",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "lib/ansible/playbook/__init__.py"
+  ],
+  "patch_units": {
+    "before": [
+      "class:PlayBook",
+      "function:PlayBook.generate_retry_inventory"
+    ],
+    "after": [
+      "class:PlayBook",
+      "function:PlayBook.generate_retry_inventory"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/8835f0be96caf32557cbd8b197d1de683ee844fc5c212541e104e56fd57e97dc/database",
+      "cache_key": "8835f0be96caf32557cbd8b197d1de683ee844fc5c212541e104e56fd57e97dc",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/198ce26be62a9436b8c93c4cdb0709eb344b0bbf7df38bb5b2efaa75d0630f62/database",
+      "cache_key": "198ce26be62a9436b8c93c4cdb0709eb344b0bbf7df38bb5b2efaa75d0630f62",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/0036cb822aa8ee3f626108ddc4ec6c098537ac1d2b9ab726b5f447bab9d79275/database",
+      "cache_key": "0036cb822aa8ee3f626108ddc4ec6c098537ac1d2b9ab726b5f447bab9d79275",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-8297e406660c92268ba5/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-8297e406660c92268ba5/ (do not mount into agent)"
+  }
+}

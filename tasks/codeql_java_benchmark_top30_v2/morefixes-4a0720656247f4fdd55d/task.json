@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-4a0720656247f4fdd55d",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-4a0720656247f4fdd55d",
+    "project_id": "morefixes__bonitasoft__bonita-connector-webservice",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "src/main/java/org/bonitasoft/connectors/ws/SecureWSConnector.java"
+  ],
+  "patch_units": {
+    "before": [
+      "src/main/java/org/bonitasoft/connectors/ws/SecureWSConnector.java"
+    ],
+    "after": [
+      "src/main/java/org/bonitasoft/connectors/ws/SecureWSConnector.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/a6220bd2fea87e15b4912db4ada882fbae5047781726d14e11870bba49914bab/database",
+      "cache_key": "a6220bd2fea87e15b4912db4ada882fbae5047781726d14e11870bba49914bab",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/4841a06cbb3ca54c1994b8f70f4798f698806cbdaef5a1117433734b40799961/database",
+      "cache_key": "4841a06cbb3ca54c1994b8f70f4798f698806cbdaef5a1117433734b40799961",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/6c653e272bc69d6720e474ff78f5f7e8dc636692f97f0200686443f8b03ff178/database",
+      "cache_key": "6c653e272bc69d6720e474ff78f5f7e8dc636692f97f0200686443f8b03ff178",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-4a0720656247f4fdd55d/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-4a0720656247f4fdd55d/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "project_id": "libarchive_libarchive",
+  "before_commit": "50952acd22df3326c49771f5e5ba48630899468c",
+  "after_commit": "dfd6b54ce33960e420fb206d8872fb759b577ad9",
+  "repo_path": "/workspace/repo/libarchive/libarchive",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/libarchive_libarchive/b4099917d6893ed77af24caff1156e044ebd4fa5/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/libarchive_libarchive/b4099917d6893ed77af24caff1156e044ebd4fa5/compile_commands.json",
+  "changed_files": [
+    "libarchive/archive_write_disk_posix.c"
+  ],
+  "commit_message": "Fixes for Issue #745 and Issue #746 from Doran Moppert.",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

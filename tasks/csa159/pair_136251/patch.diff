@@ -1,0 +1,1071 @@
+diff --git a/OpenEXR/IlmImf/ImfCompositeDeepScanLine.cpp b/OpenEXR/IlmImf/ImfCompositeDeepScanLine.cpp
+index 7e0dac09..fac7fc43 100644
+--- a/OpenEXR/IlmImf/ImfCompositeDeepScanLine.cpp
++++ b/OpenEXR/IlmImf/ImfCompositeDeepScanLine.cpp
+@@ -44,6 +44,7 @@
+ 
+ #include <Iex.h>
+ #include <vector>
++#include <stddef.h>
+ OPENEXR_IMF_INTERNAL_NAMESPACE_SOURCE_ENTER
+ 
+ using std::vector;
+@@ -179,7 +180,7 @@ CompositeDeepScanLine::Data::handleDeepFrameBuffer (DeepFrameBuffer& buf,
+                                                     int start,
+                                                     int end)
+ {
+-    int width=_dataWindow.size().x+1;
++    ptrdiff_t width=_dataWindow.size().x+1;
+     size_t pixelcount = width * (end-start+1);
+     pointers.resize(_channels.size());
+     counts.resize(pixelcount);
+diff --git a/OpenEXR/IlmImf/ImfDeepScanLineInputFile.cpp b/OpenEXR/IlmImf/ImfDeepScanLineInputFile.cpp
+index 5371d7d5..4989fd7a 100644
+--- a/OpenEXR/IlmImf/ImfDeepScanLineInputFile.cpp
++++ b/OpenEXR/IlmImf/ImfDeepScanLineInputFile.cpp
+@@ -914,8 +914,7 @@ void DeepScanLineInputFile::initialize(const Header& header)
+     }
+     catch (...)
+     {
+-        delete _data;
+-        _data=NULL;
++        // Don't delete _data here, leave that to caller
+         throw;
+     }
+ }
+@@ -931,8 +930,15 @@ DeepScanLineInputFile::DeepScanLineInputFile(InputPartData* part)
+     _data->memoryMapped = _data->_streamData->is->isMemoryMapped();
+     _data->version = part->version;
+ 
+-    initialize(part->header);
+-
++    try
++    {
++       initialize(part->header);
++    }
++    catch(...)
++    {
++        delete _data;
++        throw;
++    }
+     _data->lineOffsets = part->chunkOffsets;
+ 
+     _data->partNumber = part->partNumber;
+@@ -944,7 +950,6 @@ DeepScanLineInputFile::DeepScanLineInputFile
+ :
+      _data (new Data (numThreads))
+ {
+-    _data->_streamData = new InputStreamMutex();
+     _data->_deleteStream = true;
+     OPENEXR_IMF_INTERNAL_NAMESPACE::IStream* is = 0;
+ 
+@@ -954,12 +959,29 @@ DeepScanLineInputFile::DeepScanLineInputFile
+         readMagicNumberAndVersionField(*is, _data->version);
+         //
+         // Backward compatibility to read multpart file.
+-        //
++        // multiPartInitialize will create _streamData
+         if (isMultiPart(_data->version))
+         {
+             compatibilityInitialize(*is);
+             return;
+         }
++    }
++    catch (IEX_NAMESPACE::BaseExc &e)
++    {
++        if (is)          delete is;
++        if (_data)       delete _data;
++
++        REPLACE_EXC (e, "Cannot read image file "
++                     "\"" << fileName << "\". " << e.what());
++        throw;
++    }
++
++    // 
++    // not multiPart - allocate stream data and intialise as normal
++    //
++    try
++    { 
++        _data->_streamData = new InputStreamMutex();
+         _data->_streamData->is = is;
+         _data->memoryMapped = is->isMemoryMapped();
+         _data->header.readFrom (*_data->_streamData->is, _data->version);
+@@ -975,7 +997,10 @@ DeepScanLineInputFile::DeepScanLineInputFile
+     catch (IEX_NAMESPACE::BaseExc &e)
+     {
+         if (is)          delete is;
+-        if (_data && _data->_streamData) delete _data->_streamData;
++        if (_data && _data->_streamData)
++        {
++            delete _data->_streamData;
++        }
+         if (_data)       delete _data;
+ 
+         REPLACE_EXC (e, "Cannot read image file "
+@@ -985,7 +1010,10 @@ DeepScanLineInputFile::DeepScanLineInputFile
+     catch (...)
+     {
+         if (is)          delete is;
+-        if (_data && _data->_streamData) delete _data->_streamData;
++        if (_data && _data->_streamData)
++        {
++            delete _data->_streamData;
++        }
+         if (_data)       delete _data;
+ 
+         throw;
+@@ -1009,7 +1037,18 @@ DeepScanLineInputFile::DeepScanLineInputFile
+ 
+     _data->version =version;
+     
+-    initialize (header);
++    try
++    {
++        initialize (header);
++    }
++    catch (...)
++    {
++        if (_data && _data->_streamData)
++        {
++            delete _data->_streamData;
++        }
++        if (_data)       delete _data;
++   }
+ 
+     readLineOffsets (*_data->_streamData->is,
+                      _data->lineOrder,
+@@ -1041,8 +1080,9 @@ DeepScanLineInputFile::~DeepScanLineInputFile ()
+         //
+ 
+         if (_data->partNumber == -1 && _data->_streamData)
++        {
+             delete _data->_streamData;
+-
++        }
+         delete _data;
+     }
+ }
+diff --git a/OpenEXR/IlmImf/ImfDeepTiledInputFile.cpp b/OpenEXR/IlmImf/ImfDeepTiledInputFile.cpp
+index 916717f7..38ea33cd 100644
+--- a/OpenEXR/IlmImf/ImfDeepTiledInputFile.cpp
++++ b/OpenEXR/IlmImf/ImfDeepTiledInputFile.cpp
+@@ -283,7 +283,8 @@ DeepTiledInputFile::Data::Data (int numThreads):
+     multiPartBackwardSupport(false),
+     numThreads(numThreads),
+     memoryMapped(false),
+-    _streamData(NULL),
++    sampleCountTableComp(nullptr),
++    _streamData(nullptr),
+     _deleteStream(false)
+ {
+     //
+@@ -308,6 +309,8 @@ DeepTiledInputFile::Data::~Data ()
+ 
+     for (size_t i = 0; i < slices.size(); i++)
+         delete slices[i];
++
++    delete sampleCountTableComp;
+ }
+ 
+ 
+@@ -878,7 +881,15 @@ DeepTiledInputFile::DeepTiledInputFile (InputPartData* part) :
+     _data (new Data (part->numThreads))
+ {
+     _data->_deleteStream=false;
+-    multiPartInitialize(part);
++    try
++    {
++       multiPartInitialize(part);
++    }
++    catch(...)
++    {
++        delete _data;
++        throw;
++    }
+ }
+ 
+ 
+diff --git a/OpenEXR/IlmImf/ImfDwaCompressor.cpp b/OpenEXR/IlmImf/ImfDwaCompressor.cpp
+index d029121d..872c8c7d 100644
+--- a/OpenEXR/IlmImf/ImfDwaCompressor.cpp
++++ b/OpenEXR/IlmImf/ImfDwaCompressor.cpp
+@@ -266,8 +266,9 @@ struct DwaCompressor::Classifier
+                                 " (truncated rule).");
+             
+         {
+-            char suffix[Name::SIZE];
+-            memset (suffix, 0, Name::SIZE);
++            // maximum length of string plus one byte for terminating NULL
++            char suffix[Name::SIZE+1];
++            memset (suffix, 0, Name::SIZE+1);
+             Xdr::read<CharPtrIO> (ptr, std::min(size, Name::SIZE-1), suffix);
+             _suffix = std::string(suffix);
+         }
+@@ -2419,7 +2420,7 @@ DwaCompressor::uncompress
+         unsigned short ruleSize = 0;
+         Xdr::read<CharPtrIO>(dataPtr, ruleSize);
+ 
+-        if (ruleSize < 0) 
++        if (ruleSize < Xdr::size<unsigned short>() ) 
+             throw IEX_NAMESPACE::InputExc("Error uncompressing DWA data"
+                                 " (corrupt header file).");
+ 
+@@ -2814,6 +2815,14 @@ DwaCompressor::uncompress
+                     if (IMATH_NAMESPACE::modp (y, cd->ySampling) != 0)
+                         continue;
+ 
++                    //
++                    // sanity check for buffer data lying within range
++                    //
++                    if (cd->planarUncBufferEnd + dstScanlineSize - _planarUncBuffer[UNKNOWN] > _planarUncBufferSize[UNKNOWN] )
++                    {
++                        throw Iex::InputExc("DWA data corrupt");
++                    }
++
+                     memcpy (rowPtrs[chan][row],
+                             cd->planarUncBufferEnd,
+                             dstScanlineSize);
+diff --git a/OpenEXR/IlmImf/ImfFastHuf.cpp b/OpenEXR/IlmImf/ImfFastHuf.cpp
+index 3e00bdd7..9ccf2e15 100644
+--- a/OpenEXR/IlmImf/ImfFastHuf.cpp
++++ b/OpenEXR/IlmImf/ImfFastHuf.cpp
+@@ -256,14 +256,29 @@ FastHufDecoder::FastHufDecoder
+         int symbol  = *i >> 6;
+ 
+         if (mapping[codeLen] >= static_cast<Int64>(_numSymbols))
++        {
++            delete[] _idToSymbol;
++            _idToSymbol = NULL;
+             throw IEX_NAMESPACE::InputExc ("Huffman decode error "
+                                            "(Invalid symbol in header).");
+-        
++        }
+         _idToSymbol[mapping[codeLen]] = symbol;
+         mapping[codeLen]++;
+     }
+ 
+-    buildTables(base, offset);
++    //
++    // exceptions can be thrown whilst building tables. Delete
++    // _idToSynmbol before re-throwing to prevent memory leak
++    //
++    try
++    {
++      buildTables(base, offset);
++    }catch(...)
++    {
++            delete[] _idToSymbol;
++            _idToSymbol = NULL;
++            throw;
++    }
+ }
+ 
+ 
+diff --git a/OpenEXR/IlmImf/ImfHeader.cpp b/OpenEXR/IlmImf/ImfHeader.cpp
+index e29ec421..6d63cd2e 100644
+--- a/OpenEXR/IlmImf/ImfHeader.cpp
++++ b/OpenEXR/IlmImf/ImfHeader.cpp
+@@ -873,6 +873,7 @@ Header::sanityCheck (bool isTiled, bool isMultipartFile) const
+     }
+     
+     const std::string & part_type=hasType() ? type() : "";
++
+     
+     if(part_type!="" && !isSupportedType(part_type))
+     {
+@@ -882,6 +883,7 @@ Header::sanityCheck (bool isTiled, bool isMultipartFile) const
+         return;
+     }
+     
++    bool isDeep = isDeepData(part_type);
+    
+     //
+     // If the file is tiled, verify that the tile description has reasonable
+@@ -902,7 +904,7 @@ Header::sanityCheck (bool isTiled, bool isMultipartFile) const
+ 
+ 	const TileDescription &tileDesc = tileDescription();
+ 
+-	if (tileDesc.xSize <= 0 || tileDesc.ySize <= 0)
++	if (tileDesc.xSize <= 0 || tileDesc.ySize <= 0 || tileDesc.xSize > INT_MAX || tileDesc.ySize > INT_MAX )
+ 	    throw IEX_NAMESPACE::ArgExc ("Invalid tile size in image header.");
+ 
+ 	if (maxTileWidth > 0 &&
+@@ -953,7 +955,8 @@ Header::sanityCheck (bool isTiled, bool isMultipartFile) const
+     if (!isValidCompression (this->compression()))
+   	throw IEX_NAMESPACE::ArgExc ("Unknown compression type in image header.");
+     
+-    if(isDeepData(part_type))
++    
++    if( isDeep )
+     {
+         if (!isValidDeepCompression (this->compression()))
+             throw IEX_NAMESPACE::ArgExc ("Compression type in header not valid for deep data");
+@@ -965,6 +968,8 @@ Header::sanityCheck (bool isTiled, bool isMultipartFile) const
+     // If the file is tiled then for each channel, the type must be one of the
+     // predefined values, and the x and y sampling must both be 1.
+     //
++    // x and y sampling must currently also be 1 for deep scanline images
++    //
+     // If the file is not tiled then for each channel, the type must be one
+     // of the predefined values, the x and y coordinates of the data window's
+     // upper left corner must be divisible by the x and y subsampling factors,
+@@ -974,7 +979,7 @@ Header::sanityCheck (bool isTiled, bool isMultipartFile) const
+ 
+     const ChannelList &channels = this->channels();
+     
+-    if (isTiled)
++    if (isTiled || isDeep)
+     {
+ 	for (ChannelList::ConstIterator i = channels.begin();
+ 	     i != channels.end();
+diff --git a/OpenEXR/IlmImf/ImfHuf.cpp b/OpenEXR/IlmImf/ImfHuf.cpp
+index 97909a5b..fabb5faa 100644
+--- a/OpenEXR/IlmImf/ImfHuf.cpp
++++ b/OpenEXR/IlmImf/ImfHuf.cpp
+@@ -1052,7 +1052,10 @@ hufUncompress (const char compressed[],
+ 	       unsigned short raw[],
+ 	       int nRaw)
+ {
+-    if (nCompressed == 0)
++    //
++    // need at least 20 bytes for header
++    //
++    if (nCompressed < 20 )
+     {
+ 	if (nRaw != 0)
+ 	    notEnoughData();
+@@ -1070,6 +1073,12 @@ hufUncompress (const char compressed[],
+ 
+     const char *ptr = compressed + 20;
+ 
++    if ( ptr + (nBits+7 )/8 > compressed+nCompressed)
++    {
++        notEnoughData();
++        return;
++    }
++
+     // 
+     // Fast decoder needs at least 2x64-bits of compressed data, and
+     // needs to be run-able on this platform. Otherwise, fall back
+diff --git a/OpenEXR/IlmImf/ImfInputFile.cpp b/OpenEXR/IlmImf/ImfInputFile.cpp
+index 8661c104..74c1a353 100644
+--- a/OpenEXR/IlmImf/ImfInputFile.cpp
++++ b/OpenEXR/IlmImf/ImfInputFile.cpp
+@@ -475,7 +475,15 @@ InputFile::InputFile (InputPartData* part) :
+     _data (new Data (part->numThreads))
+ {
+     _data->_deleteStream=false;
+-    multiPartInitialize (part);
++    try
++    {
++       multiPartInitialize (part);
++    }
++    catch(...)
++    {
++        delete _data;
++        throw;
++    }
+ }
+ 
+ 
+diff --git a/OpenEXR/IlmImf/ImfMisc.cpp b/OpenEXR/IlmImf/ImfMisc.cpp
+index 27755432..d0b6fb26 100644
+--- a/OpenEXR/IlmImf/ImfMisc.cpp
++++ b/OpenEXR/IlmImf/ImfMisc.cpp
+@@ -114,9 +114,9 @@ bytesPerLineTable (const Header &header,
+ 	 c != channels.end();
+ 	 ++c)
+     {
+-	int nBytes = pixelTypeSize (c.channel().type) *
+-		     (dataWindow.max.x - dataWindow.min.x + 1) /
+-		     c.channel().xSampling;
++	size_t nBytes = size_t(pixelTypeSize (c.channel().type)) *
++		     size_t(dataWindow.max.x - dataWindow.min.x + 1) /
++		     size_t(c.channel().xSampling);
+ 
+ 	for (int y = dataWindow.min.y, i = 0; y <= dataWindow.max.y; ++y, ++i)
+ 	    if (modp (y, c.channel().ySampling) == 0)
+@@ -269,6 +269,7 @@ defaultFormat (Compressor * compressor)
+ }
+ 
+ 
++//obsolete
+ int
+ numLinesInBuffer (Compressor * compressor)
+ {
+@@ -1842,6 +1843,39 @@ usesLongNames (const Header &header)
+     return false;
+ }
+ 
++namespace
++{
++// for a given compression type, return the number of scanlines
++// compressed into a single chunk
++// TODO add to API and move to ImfCompressor.cpp
++int
++numLinesInBuffer(Compression comp)
++{
++    switch(comp)
++    {
++        case NO_COMPRESSION :
++        case RLE_COMPRESSION:
++        case ZIPS_COMPRESSION:
++            return 1;
++        case ZIP_COMPRESSION:
++            return 16;
++        case PIZ_COMPRESSION:
++            return 32;
++        case PXR24_COMPRESSION:
++            return 16;
++        case B44_COMPRESSION:
++        case B44A_COMPRESSION:
++        case DWAA_COMPRESSION:
++            return 32;
++        case DWAB_COMPRESSION:
++            return 256;
++
++        default:
++	        throw IEX_NAMESPACE::ArgExc ("Unknown compression type");
++    }
++}
++}
++
+ int
+ getScanlineChunkOffsetTableSize(const Header& header)
+ {
+@@ -1851,17 +1885,11 @@ getScanlineChunkOffsetTableSize(const Header& header)
+     size_t maxBytesPerLine = bytesPerLineTable (header,
+                                                 bytesPerLine);
+ 
+-    Compressor* compressor = newCompressor(header.compression(),
+-                                           maxBytesPerLine,
+-                                           header);
+-
+-    int linesInBuffer = numLinesInBuffer (compressor);
++    int linesInBuffer = numLinesInBuffer ( header.compression() );
+ 
+     int lineOffsetSize = (dataWindow.max.y - dataWindow.min.y +
+                           linesInBuffer) / linesInBuffer;
+ 
+-    delete compressor;
+-
+     return lineOffsetSize;
+ }
+ 
+diff --git a/OpenEXR/IlmImf/ImfPizCompressor.cpp b/OpenEXR/IlmImf/ImfPizCompressor.cpp
+index 7a49d42d..edc141ad 100644
+--- a/OpenEXR/IlmImf/ImfPizCompressor.cpp
++++ b/OpenEXR/IlmImf/ImfPizCompressor.cpp
+@@ -492,7 +492,9 @@ PizCompressor::uncompress (const char *inPtr,
+     // This is the cunompress function which is used by both the tiled and
+     // scanline decompression routines.
+     //
+-    
++   
++    const char* inputEnd=inPtr+inSize;
++
+     //
+     // Special case - empty input buffer
+     //
+@@ -503,6 +505,7 @@ PizCompressor::uncompress (const char *inPtr,
+ 	return 0;
+     }
+ 
++
+     //
+     // Determine the layout of the compressed pixel data
+     //
+@@ -549,6 +552,12 @@ PizCompressor::uncompress (const char *inPtr,
+     AutoArray <unsigned char, BITMAP_SIZE> bitmap;
+     memset (bitmap, 0, sizeof (unsigned char) * BITMAP_SIZE);
+ 
++
++    if(inPtr + sizeof(unsigned short)*2 > inputEnd)
++    {
++   	   throw InputExc ("PIZ compressed data too short");
++    }
++
+     Xdr::read <CharPtrIO> (inPtr, minNonZero);
+     Xdr::read <CharPtrIO> (inPtr, maxNonZero);
+ 
+@@ -560,8 +569,14 @@ PizCompressor::uncompress (const char *inPtr,
+ 
+     if (minNonZero <= maxNonZero)
+     {
+-	Xdr::read <CharPtrIO> (inPtr, (char *) &bitmap[0] + minNonZero,
+-			       maxNonZero - minNonZero + 1);
++        size_t bytesToRead = maxNonZero - minNonZero + 1;
++	    if(inPtr + bytesToRead > inputEnd)
++        {
++   	      throw InputExc ("PIZ compressed data too short");
++        }
++
++Xdr::read <CharPtrIO> (inPtr, (char *) &bitmap[0] + minNonZero,
++			       bytesToRead);
+     }
+ 
+     AutoArray <unsigned short, USHORT_RANGE> lut;
+@@ -570,6 +585,11 @@ PizCompressor::uncompress (const char *inPtr,
+     //
+     // Huffman decoding
+     //
++   if(inPtr + sizeof(int)> inputEnd)
++   {
++       throw InputExc ("PIZ compressed data too short");
++   }
++
+ 
+     int length;
+     Xdr::read <CharPtrIO> (inPtr, length);
+diff --git a/OpenEXR/IlmImf/ImfRle.cpp b/OpenEXR/IlmImf/ImfRle.cpp
+index 7be6ac44..f6992fa5 100644
+--- a/OpenEXR/IlmImf/ImfRle.cpp
++++ b/OpenEXR/IlmImf/ImfRle.cpp
+@@ -129,6 +129,11 @@ rleUncompress (int inLength, int maxLength, const signed char in[], char out[])
+ 	    if (0 > (maxLength -= count))
+ 		return 0;
+ 
++        // check the input buffer is big enough to contain
++        // 'count' bytes of remaining data
++        if (inLength < 0)
++          return 0;
++
+         memcpy(out, in, count);
+         out += count;
+         in  += count;
+diff --git a/OpenEXR/IlmImf/ImfScanLineInputFile.cpp b/OpenEXR/IlmImf/ImfScanLineInputFile.cpp
+index 9d7404f3..2a559654 100644
+--- a/OpenEXR/IlmImf/ImfScanLineInputFile.cpp
++++ b/OpenEXR/IlmImf/ImfScanLineInputFile.cpp
+@@ -1097,8 +1097,6 @@ newLineBufferTask (TaskGroup *group,
+ 
+ void ScanLineInputFile::initialize(const Header& header)
+ {
+-    try
+-    {
+         _data->header = header;
+ 
+         _data->lineOrder = _data->header.lineOrder();
+@@ -1112,6 +1110,12 @@ void ScanLineInputFile::initialize(const Header& header)
+ 
+         size_t maxBytesPerLine = bytesPerLineTable (_data->header,
+                                                     _data->bytesPerLine);
++        
++        if(maxBytesPerLine > INT_MAX)
++        {
++            throw IEX_NAMESPACE::InputExc("maximum bytes per scanline exceeds maximum permissible size");
++        }
++
+ 
+         for (size_t i = 0; i < _data->lineBuffers.size(); i++)
+         {
+@@ -1143,13 +1147,6 @@ void ScanLineInputFile::initialize(const Header& header)
+                               _data->linesInBuffer) / _data->linesInBuffer;
+ 
+         _data->lineOffsets.resize (lineOffsetSize);
+-    }
+-    catch (...)
+-    {
+-        delete _data;
+-        _data=NULL;
+-        throw;
+-    }
+ }
+ 
+ 
+@@ -1164,8 +1161,27 @@ ScanLineInputFile::ScanLineInputFile(InputPartData* part)
+ 
+     _data->version = part->version;
+ 
+-    initialize(part->header);
+-
++    try
++    {
++       initialize(part->header);
++    }
++    catch(...)
++    {
++        if (!_data->memoryMapped)
++        {
++            for (size_t i = 0; i < _data->lineBuffers.size(); i++)
++            {
++                if( _data->lineBuffers[i] )
++                {
++                   EXRFreeAligned(_data->lineBuffers[i]->buffer);
++                   _data->lineBuffers[i]->buffer=nullptr;
++                }
++            }
++        }
++        
++        delete _data;
++        throw;
++    }
+     _data->lineOffsets = part->chunkOffsets;
+ 
+     _data->partNumber = part->partNumber;
+@@ -1188,19 +1204,43 @@ ScanLineInputFile::ScanLineInputFile
+     _streamData->is = is;
+     _data->memoryMapped = is->isMemoryMapped();
+ 
+-    initialize(header);
+-    
+-    //
+-    // (TODO) this is nasty - we need a better way of working out what type of file has been used.
+-    // in any case I believe this constructor only gets used with single part files
+-    // and 'version' currently only tracks multipart state, so setting to 0 (not multipart) works for us
+-    //
+-    
+-    _data->version=0;
+-    readLineOffsets (*_streamData->is,
+-                     _data->lineOrder,
+-                     _data->lineOffsets,
+-                     _data->fileIsComplete);
++    try
++    {
++
++        initialize(header);
++        
++        //
++        // (TODO) this is nasty - we need a better way of working out what type of file has been used.
++        // in any case I believe this constructor only gets used with single part files
++        // and 'version' currently only tracks multipart state, so setting to 0 (not multipart) works for us
++        //
++        
++        _data->version=0;
++        readLineOffsets (*_streamData->is,
++                        _data->lineOrder,
++                        _data->lineOffsets,
++                        _data->fileIsComplete);
++    }
++    catch(...)
++    {
++        if(_data)
++        {
++           if (!_data->memoryMapped)
++           {
++              for (size_t i = 0; i < _data->lineBuffers.size(); i++)
++              {
++                 if( _data->lineBuffers[i] )
++                 {
++                   EXRFreeAligned(_data->lineBuffers[i]->buffer);
++                   _data->lineBuffers[i]->buffer=nullptr;
++                 }
++              }
++           }
++        }
++        delete _streamData;
++        delete _data;
++        throw;
++    }
+ }
+ 
+ 
+@@ -1422,6 +1462,14 @@ ScanLineInputFile::setFrameBuffer (const FrameBuffer &frameBuffer)
+                       // not possible.
+                       break;
+               }
++
++              //
++              // optimization mode cannot currently skip subsampled channels
++              //
++              if (i.channel().xSampling!=1 || i.channel().ySampling!=1)
++              {
++                  optimizationPossible = false;
++              }
+               ++i;
+ 	}
+ 
+diff --git a/OpenEXR/IlmImf/ImfTiledInputFile.cpp b/OpenEXR/IlmImf/ImfTiledInputFile.cpp
+index bda7bad5..e6936d53 100644
+--- a/OpenEXR/IlmImf/ImfTiledInputFile.cpp
++++ b/OpenEXR/IlmImf/ImfTiledInputFile.cpp
+@@ -703,61 +703,56 @@ TiledInputFile::TiledInputFile (const char fileName[], int numThreads):
+     IStream* is = 0;
+     try
+     {
+-        is = new StdIFStream (fileName);
+-	readMagicNumberAndVersionField(*is, _data->version);
+-
+-	//
+-        // Backward compatibility to read multpart file.
+-        //
+-	if (isMultiPart(_data->version))
+-	{
+-	    compatibilityInitialize(*is);
+-	    return;
+-	}
+-
+-	_data->_streamData = new InputStreamMutex();
+-	_data->_streamData->is = is;
+-	_data->header.readFrom (*_data->_streamData->is, _data->version);
+-	initialize();
+-        //read tile offsets - we are not multipart or deep
+-        _data->tileOffsets.readFrom (*(_data->_streamData->is), _data->fileIsComplete,false,false);
+-	_data->_streamData->currentPosition = _data->_streamData->is->tellg();
+-    }
+-    catch (IEX_NAMESPACE::BaseExc &e)
+-    {
+-        if (_data->_streamData != 0)
++        try
+         {
+-            if (_data->_streamData->is != 0)
++            is = new StdIFStream (fileName);
++            readMagicNumberAndVersionField(*is, _data->version);
++
++            //
++            // Backward compatibility to read multpart file.
++            //
++            if (isMultiPart(_data->version))
+             {
+-                delete _data->_streamData->is;
+-                _data->_streamData->is = is = 0;
++                compatibilityInitialize(*is);
++                return;
+             }
+ 
+-            delete _data->_streamData;
++            _data->_streamData = new InputStreamMutex();
++            _data->_streamData->is = is;
++            _data->header.readFrom (*_data->_streamData->is, _data->version);
++            initialize();
++            //read tile offsets - we are not multipart or deep
++            _data->tileOffsets.readFrom (*(_data->_streamData->is), _data->fileIsComplete,false,false);
++            _data->_streamData->currentPosition = _data->_streamData->is->tellg();
++        }
++        catch (IEX_NAMESPACE::BaseExc &e)
++        {
++            REPLACE_EXC (e, "Cannot open image file "
++                    "\"" << fileName << "\". " << e.what());
++            throw;
+         }
+-
+-        if (is != 0)
+-            delete is;
+-
+-	REPLACE_EXC (e, "Cannot open image file "
+-                 "\"" << fileName << "\". " << e.what());
+-	throw;
+     }
+     catch (...)
+     {
+-        if ( _data->_streamData != 0)
++        if (!_data->memoryMapped)
+         {
+-            if ( _data->_streamData->is != 0)
++            for (size_t i = 0; i < _data->tileBuffers.size(); i++)
+             {
+-                delete _data->_streamData->is;
+-                _data->_streamData->is = is = 0;
++                if(_data->tileBuffers[i])
++                {
++                   delete [] _data->tileBuffers[i]->buffer;
++                }
+             }
+-
++        }
++        if ( _data->_streamData != 0)
++        {
++            delete _data->_streamData->is;
++            _data->_streamData->is = is = 0;
+             delete _data->_streamData;
+         }
+ 
+-        if (is != 0)
+-            delete is;
++        delete is;
++        delete _data;
+         throw;
+     }
+ }
+@@ -776,38 +771,45 @@ TiledInputFile::TiledInputFile (OPENEXR_IMF_INTERNAL_NAMESPACE::IStream &is, int
+ 
+     try
+     {
+-	readMagicNumberAndVersionField(is, _data->version);
+-
+-	//
+-	// Backward compatibility to read multpart file.
+-	//
+-	if (isMultiPart(_data->version))
++        try
+         {
+-	    compatibilityInitialize(is);
+-            return;
+-        }
++            readMagicNumberAndVersionField(is, _data->version);
+ 
+-	streamDataCreated = true;
+-	_data->_streamData = new InputStreamMutex();
+-	_data->_streamData->is = &is;
+-	_data->header.readFrom (*_data->_streamData->is, _data->version);
+-	initialize();
+-        // file is guaranteed to be single part, regular image
+-        _data->tileOffsets.readFrom (*(_data->_streamData->is), _data->fileIsComplete,false,false);
+-	_data->memoryMapped = _data->_streamData->is->isMemoryMapped();
+-	_data->_streamData->currentPosition = _data->_streamData->is->tellg();
+-    }
+-    catch (IEX_NAMESPACE::BaseExc &e)
+-    {
+-        if (streamDataCreated) delete _data->_streamData;
+-	delete _data;
++            //
++            // Backward compatibility to read multpart file.
++            //
++            if (isMultiPart(_data->version))
++            {
++                compatibilityInitialize(is);
++                return;
++            }
+ 
+-	REPLACE_EXC (e, "Cannot open image file "
+-                 "\"" << is.fileName() << "\". " << e.what());
+-	throw;
++            streamDataCreated = true;
++            _data->_streamData = new InputStreamMutex();
++            _data->_streamData->is = &is;
++            _data->header.readFrom (*_data->_streamData->is, _data->version);
++            initialize();
++            // file is guaranteed to be single part, regular image
++            _data->tileOffsets.readFrom (*(_data->_streamData->is), _data->fileIsComplete,false,false);
++            _data->memoryMapped = _data->_streamData->is->isMemoryMapped();
++            _data->_streamData->currentPosition = _data->_streamData->is->tellg();
++        }
++        catch (IEX_NAMESPACE::BaseExc &e)
++        {
++            REPLACE_EXC (e, "Cannot open image file "
++                    "\"" << is.fileName() << "\". " << e.what());
++            throw;
++        }
+     }
+     catch (...)
+     {
++        if (!_data->memoryMapped)
++        {
++            for (size_t i = 0; i < _data->tileBuffers.size(); i++)
++            {
++                delete [] _data->tileBuffers[i]->buffer;
++            }
++        }
+         if (streamDataCreated) delete _data->_streamData;
+ 	delete _data;
+         throw;
+@@ -831,13 +833,29 @@ TiledInputFile::TiledInputFile (const Header &header,
+     // we have somehow got the header.
+     //
+ 
+-    _data->_streamData->is = is;
+-    _data->header = header;
+-    _data->version = version;
+-    initialize();
+-    _data->tileOffsets.readFrom (*(_data->_streamData->is),_data->fileIsComplete,false,false);
+-    _data->memoryMapped = is->isMemoryMapped();
+-    _data->_streamData->currentPosition = _data->_streamData->is->tellg();
++    try
++    {
++        _data->_streamData->is = is;
++        _data->header = header;
++        _data->version = version;
++        initialize();
++        _data->tileOffsets.readFrom (*(_data->_streamData->is),_data->fileIsComplete,false,false);
++        _data->memoryMapped = is->isMemoryMapped();
++        _data->_streamData->currentPosition = _data->_streamData->is->tellg();
++    }
++    catch(...)
++    {
++        if (!_data->memoryMapped)
++        {
++            for (size_t i = 0; i < _data->tileBuffers.size(); i++)
++            {
++                delete [] _data->tileBuffers[i]->buffer;
++            }
++        }
++        delete _data->_streamData;
++	delete _data;
++        throw; 
++    }
+ }
+ 
+ 
+@@ -845,7 +863,15 @@ TiledInputFile::TiledInputFile (InputPartData* part)
+ {
+     _data = new Data (part->numThreads);
+     _data->_deleteStream=false;
+-    multiPartInitialize(part);
++    try
++    {
++      multiPartInitialize(part);
++    }
++    catch(...)
++    {
++        if (_data) delete _data;
++        throw;
++    }
+ }
+ 
+ 
+diff --git a/OpenEXR/IlmImf/ImfTiledMisc.cpp b/OpenEXR/IlmImf/ImfTiledMisc.cpp
+index d262f734..8552ada2 100644
+--- a/OpenEXR/IlmImf/ImfTiledMisc.cpp
++++ b/OpenEXR/IlmImf/ImfTiledMisc.cpp
+@@ -363,40 +363,51 @@ getTiledChunkOffsetTableSize(const Header& header)
+     //
+     Int64 lineOffsetSize = 0;
+     const TileDescription &desc = header.tileDescription();
+-    switch (desc.mode)
++    try
+     {
+-        case ONE_LEVEL:
+-        case MIPMAP_LEVELS:
+-            for (int i = 0; i < numXLevels; i++)
+-            {
+-                lineOffsetSize += static_cast<Int64>(numXTiles[i]) * static_cast<Int64>(numYTiles[i]);
+-                if ( lineOffsetSize > static_cast<Int64>(std::numeric_limits<int>::max()) )
++        switch (desc.mode)
++        {
++            case ONE_LEVEL:
++            case MIPMAP_LEVELS:
++                for (int i = 0; i < numXLevels; i++)
+                 {
+-                    throw IEX_NAMESPACE::LogicExc("Maximum number of tiles exceeded");
++                    lineOffsetSize += static_cast<Int64>(numXTiles[i]) * static_cast<Int64>(numYTiles[i]);
++                    if ( lineOffsetSize > static_cast<Int64>(std::numeric_limits<int>::max()) )
++                    {
++                        throw IEX_NAMESPACE::LogicExc("Maximum number of tiles exceeded");
++                    }
+                 }
+-            }
+-           break;
+-        case RIPMAP_LEVELS:
+-            for (int i = 0; i < numXLevels; i++)
+-            {
+-                for (int j = 0; j < numYLevels; j++)
++            break;
++            case RIPMAP_LEVELS:
++                for (int i = 0; i < numXLevels; i++)
+                 {
+-                     lineOffsetSize += static_cast<Int64>(numXTiles[i]) * static_cast<Int64>(numYTiles[j]);
+-                     if ( lineOffsetSize > static_cast<Int64>(std::numeric_limits<int>::max()) )
+-                     {
+-                        throw IEX_NAMESPACE::LogicExc("Maximum number of tiles exceeded");
+-                     }
++                    for (int j = 0; j < numYLevels; j++)
++                    {
++                        lineOffsetSize += static_cast<Int64>(numXTiles[i]) * static_cast<Int64>(numYTiles[j]);
++                        if ( lineOffsetSize > static_cast<Int64>(std::numeric_limits<int>::max()) )
++                        {
++                            throw IEX_NAMESPACE::LogicExc("Maximum number of tiles exceeded");
++                        }
++                    }
+                 }
+-            }
+-           break;
+-        case NUM_LEVELMODES :
+-            throw IEX_NAMESPACE::LogicExc("Bad level mode getting chunk offset table size");
++            break;
++            case NUM_LEVELMODES :
++                throw IEX_NAMESPACE::LogicExc("Bad level mode getting chunk offset table size");
++        }
++        delete[] numXTiles;
++        delete[] numYTiles;
++
++        return static_cast<int>(lineOffsetSize);
++
+     }
++    catch(...)
++    {
++        delete[] numXTiles;
++        delete[] numYTiles;
+ 
+-    delete[] numXTiles;
+-    delete[] numYTiles;
++        throw;
++    }
+ 
+-    return static_cast<int>(lineOffsetSize);
+ }
+ 
+ 
+diff --git a/OpenEXR/IlmImfTest/testDeepTiledBasic.cpp b/OpenEXR/IlmImfTest/testDeepTiledBasic.cpp
+index e81b56a7..9fab3553 100644
+--- a/OpenEXR/IlmImfTest/testDeepTiledBasic.cpp
++++ b/OpenEXR/IlmImfTest/testDeepTiledBasic.cpp
+@@ -754,15 +754,12 @@ void readFile (int channelCount,
+                     {
+                         for (int k = 0; k < channelCount; k++)
+                         {
+-                            if( !randomChannels || read_channel[k]==1)
+-                            {
+                                 if (channelTypes[k] == 0)
+                                     delete[] (unsigned int*) data[k][i][j];
+                                 if (channelTypes[k] == 1)
+                                     delete[] (half*) data[k][i][j];
+                                 if (channelTypes[k] == 2)
+                                     delete[] (float*) data[k][i][j];
+-                            }
+                         }
+                         for( int f = 0 ; f < fillChannels ; ++f )
+                         {
+diff --git a/OpenEXR/IlmImfTest/testMultiPartApi.cpp b/OpenEXR/IlmImfTest/testMultiPartApi.cpp
+index c6265b88..c0bfb688 100644
+--- a/OpenEXR/IlmImfTest/testMultiPartApi.cpp
++++ b/OpenEXR/IlmImfTest/testMultiPartApi.cpp
+@@ -463,6 +463,21 @@ generateRandomFile (int partCount, const std::string & fn)
+         }
+     }
+ 
++    for (size_t i = 0 ; i < parts.size() ; ++i )
++    {
++        int partType = partTypes[i];
++
++        if (partType == 0)
++        {
++            delete (OutputPart*) parts[i];
++        }
++        else
++        {
++            delete (TiledOutputPart*) parts[i];
++        }
++
++    }
++
+     delete[] tiledHalfData;
+     delete[] tiledUintData;
+     delete[] tiledFloatData;
+diff --git a/OpenEXR/IlmImfTest/testMultiPartThreading.cpp b/OpenEXR/IlmImfTest/testMultiPartThreading.cpp
+index 68eb8fa9..c4e05704 100644
+--- a/OpenEXR/IlmImfTest/testMultiPartThreading.cpp
++++ b/OpenEXR/IlmImfTest/testMultiPartThreading.cpp
+@@ -625,6 +625,18 @@ generateRandomFile (int partCount, const std::string & fn)
+         }
+     }
+ 
++    for (int i = 0; i < partCount; i++)
++    {
++        if (partTypes[i] == 0)
++        {
++            delete (OutputPart*) parts[i];
++        }
++        else
++        {
++            delete (TiledOutputPart*) parts[i];
++        }
++    }
++ 
+     delete threadPool;
+ 
+     delete[] tiledHalfData;
+diff --git a/OpenEXR/exrmakepreview/makePreview.cpp b/OpenEXR/exrmakepreview/makePreview.cpp
+index e2d08798..28205aa0 100644
+--- a/OpenEXR/exrmakepreview/makePreview.cpp
++++ b/OpenEXR/exrmakepreview/makePreview.cpp
+@@ -120,8 +120,8 @@ generatePreview (const char inFileName[],
+     previewHeight = max (int (h / (w * a) * previewWidth + .5f), 1);
+     previewPixels.resizeErase (previewHeight, previewWidth);
+ 
+-    float fx = (previewWidth  > 1)? (float (w - 1) / (previewWidth  - 1)): 1;
+-    float fy = (previewHeight > 1)? (float (h - 1) / (previewHeight - 1)): 1;
++    double fx = (previewWidth  > 1)? (double (w - 1) / (previewWidth  - 1)): 1;
++    double fy = (previewHeight > 1)? (double (h - 1) / (previewHeight - 1)): 1;
+     float m  = Math<float>::pow (2.f, IMATH_NAMESPACE::clamp (exposure + 2.47393f, -20.f, 20.f));
+ 
+     for (int y = 0; y < previewHeight; ++y)

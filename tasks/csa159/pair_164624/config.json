@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "8adc718881e0a70127f8843dd70e69a80de39352",
+  "after_commit": "78a033433a5ae4fee85511ee075bc9a48312c79e",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/f0e2f00c49db0cba1feff7ce5a5f163d2152056f/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/f0e2f00c49db0cba1feff7ce5a5f163d2152056f/compile_commands.json",
+  "changed_files": [
+    "drivers/gpu/drm/i915/gt/intel_engine_cs.c"
+  ],
+  "commit_message": "drm/i915/gt: Cleanup partial engine discovery failures\n\nIf we abort driver initialisation in the middle of gt/engine discovery,\nsome engines will be fully setup and some not. Those incompletely setup\nengines only have 'engine->release == NULL' and so will leak any of the\ncommon objects allocated.\n\nv2:\n - Drop the destroy_pinned_context() helper for now.  It's not really\n   worth it with just a single callsite at the moment.  (Janusz)\n\nSigned-off-by: Chris Wilson <chris.p.wilson@intel.com>\nCc: Janusz Krzysztofik <janusz.krzysztofik@linux.intel.com>\nSigned-off-by: Matt Roper <matthew.d.roper@intel.com>\nReviewed-by: Janusz Krzysztofik <janusz.krzysztofik@linux.intel.com>\nLink: https://patchwork.freedesktop.org/patch/msgid/20220915232654.3283095-2-matthew.d.roper@intel.com",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,47 @@
+diff --git a/lib/js/test/server_http.js b/lib/js/test/server_http.js
+index d04f578ae..8380c3a77 100644
+--- a/lib/js/test/server_http.js
++++ b/lib/js/test/server_http.js
+@@ -42,7 +42,7 @@ const ThriftTestSvcOpt = {
+ };
+ 
+ const ThriftWebServerOptions = {
+-	files: '.',
++	files: __dirname,
+ 	services: {
+ 		'/service': ThriftTestSvcOpt
+ 	}
+diff --git a/lib/js/test/server_https.js b/lib/js/test/server_https.js
+index 504f3b5c4..1a171dde6 100644
+--- a/lib/js/test/server_https.js
++++ b/lib/js/test/server_https.js
+@@ -42,7 +42,7 @@ const ThriftTestSvcOpt = {
+ };
+ 
+ const ThriftWebServerOptions = {
+-  files: '.',
++  files: __dirname,
+   tls: {
+      key: fs.readFileSync('../../../test/keys/server.key'),
+      cert: fs.readFileSync('../../../test/keys/server.crt')
+diff --git a/lib/nodejs/lib/thrift/web_server.js b/lib/nodejs/lib/thrift/web_server.js
+index 0093c8a08..a33f47aed 100644
+--- a/lib/nodejs/lib/thrift/web_server.js
++++ b/lib/nodejs/lib/thrift/web_server.js
+@@ -415,7 +415,15 @@ exports.createWebServer = function(options) {
+ 
+     //Locate the file requested and send it
+     var uri = url.parse(request.url).pathname;
+-    var filename = path.join(baseDir, uri);
++    var filename = path.resolve(path.join(baseDir, uri));
++
++    //Ensure the basedir path is not able to be escaped
++    if (filename.indexOf(baseDir) != 0) {
++      response.writeHead(400, "Invalid request path", {});
++      response.end();
++      return;
++    }
++
+     fs.exists(filename, function(exists) {
+       if(!exists) {
+         response.writeHead(404);

@@ -1,0 +1,242 @@
+### File: drivers/net/ethernet/broadcom/bnxt/bnxt.c
+```c
+static int bnxt_set_xps_mapping(struct bnxt *bp)
+{
+	int numa_node = dev_to_node(&bp->pdev->dev);
+	unsigned int q_idx, map_idx, cpu, i;
+	const struct cpumask *cpu_mask_ptr;
+	int nr_cpus = num_online_cpus();
+	cpumask_t *q_map;
+	int rc = 0;
+
+	q_map = kcalloc(bp->tx_nr_rings_per_tc, sizeof(*q_map), GFP_KERNEL);
+	if (!q_map)
+		return -ENOMEM;
+
+	/* Create CPU mask for all TX queues across MQPRIO traffic classes.
+	 * Each TC has the same number of TX queues. The nth TX queue for each
+	 * TC will have the same CPU mask.
+	 */
+	for (i = 0; i < nr_cpus; i++) {
+		map_idx = i % bp->tx_nr_rings_per_tc;
+		cpu = cpumask_local_spread(i, numa_node);
+		cpu_mask_ptr = get_cpu_mask(cpu);
+		cpumask_or(&q_map[map_idx], &q_map[map_idx], cpu_mask_ptr);
+	}
+
+	/* Register CPU mask for each TX queue except the ones marked for XDP */
+	for (q_idx = 0; q_idx < bp->dev->real_num_tx_queues; q_idx++) {
+		map_idx = q_idx % bp->tx_nr_rings_per_tc;
+		rc = netif_set_xps_queue(bp->dev, &q_map[map_idx], q_idx);
+		if (rc) {
+			netdev_warn(bp->dev, "Error setting XPS for q:%d\n",
+				    q_idx);
+			break;
+		}
+	}
+
+	kfree(q_map);
+
+	return rc;
+}
+
+static int __bnxt_open_nic(struct bnxt *bp, bool irq_re_init, bool link_re_init)
+{
+	int rc = 0;
+
+	netif_carrier_off(bp->dev);
+	if (irq_re_init) {
+		/* Reserve rings now if none were reserved at driver probe. */
+		rc = bnxt_init_dflt_ring_mode(bp);
+		if (rc) {
+			netdev_err(bp->dev, "Failed to reserve default rings at open\n");
+			return rc;
+		}
+	}
+	rc = bnxt_reserve_rings(bp, irq_re_init);
+	if (rc)
+		return rc;
+
+	rc = bnxt_alloc_mem(bp, irq_re_init);
+	if (rc) {
+		netdev_err(bp->dev, "bnxt_alloc_mem err: %x\n", rc);
+		goto open_err_free_mem;
+	}
+
+	if (irq_re_init) {
+		bnxt_init_napi(bp);
+		rc = bnxt_request_irq(bp);
+		if (rc) {
+			netdev_err(bp->dev, "bnxt_request_irq err: %x\n", rc);
+			goto open_err_irq;
+		}
+	}
+
+	rc = bnxt_init_nic(bp, irq_re_init);
+	if (rc) {
+		netdev_err(bp->dev, "bnxt_init_nic err: %x\n", rc);
+		goto open_err_irq;
+	}
+
+	bnxt_enable_napi(bp);
+	bnxt_debug_dev_init(bp);
+
+	if (link_re_init) {
+		mutex_lock(&bp->link_lock);
+		rc = bnxt_update_phy_setting(bp);
+		mutex_unlock(&bp->link_lock);
+		if (rc) {
+			netdev_warn(bp->dev, "failed to update phy settings\n");
+			if (BNXT_SINGLE_PF(bp)) {
+				bp->link_info.phy_retry = true;
+				bp->link_info.phy_retry_expires =
+					jiffies + 5 * HZ;
+			}
+		}
+	}
+
+	if (irq_re_init) {
+		udp_tunnel_nic_reset_ntf(bp->dev);
+		rc = bnxt_set_xps_mapping(bp);
+		if (rc)
+			netdev_warn(bp->dev, "failed to set xps mapping\n");
+	}
+
+	if (bp->tx_nr_rings_xdp < num_possible_cpus()) {
+		if (!static_key_enabled(&bnxt_xdp_locking_key))
+			static_branch_enable(&bnxt_xdp_locking_key);
+	} else if (static_key_enabled(&bnxt_xdp_locking_key)) {
+		static_branch_disable(&bnxt_xdp_locking_key);
+	}
+	set_bit(BNXT_STATE_OPEN, &bp->state);
+	bnxt_enable_int(bp);
+	/* Enable TX queues */
+	bnxt_tx_enable(bp);
+	mod_timer(&bp->timer, jiffies + bp->current_interval);
+	/* Poll link status and check for SFP+ module status */
+	mutex_lock(&bp->link_lock);
+	bnxt_get_port_module_status(bp);
+	mutex_unlock(&bp->link_lock);
+
+	/* VF-reps may need to be re-opened after the PF is re-opened */
+	if (BNXT_PF(bp))
+		bnxt_vf_reps_open(bp);
+	bnxt_ptp_init_rtc(bp, true);
+	bnxt_ptp_cfg_tstamp_filters(bp);
+	if (BNXT_SUPPORTS_MULTI_RSS_CTX(bp))
+		bnxt_hwrm_realloc_rss_ctx_vnic(bp);
+	bnxt_cfg_usr_fltrs(bp);
+	return 0;
+
+open_err_irq:
+	bnxt_del_napi(bp);
+
+open_err_free_mem:
+	bnxt_free_skbs(bp);
+	bnxt_free_irq(bp);
+	bnxt_free_mem(bp, true);
+	return rc;
+}
+
+static void bnxt_trim_dflt_sh_rings(struct bnxt *bp)
+{
+	bp->cp_nr_rings = min_t(int, bp->tx_nr_rings_per_tc, bp->rx_nr_rings);
+	bp->rx_nr_rings = bp->cp_nr_rings;
+	bp->tx_nr_rings_per_tc = bp->cp_nr_rings;
+	bp->tx_nr_rings = bp->tx_nr_rings_per_tc;
+}
+
+static int bnxt_set_dflt_rings(struct bnxt *bp, bool sh)
+{
+	int dflt_rings, max_rx_rings, max_tx_rings, rc;
+	int avail_msix;
+
+	if (!bnxt_can_reserve_rings(bp))
+		return 0;
+
+	if (sh)
+		bp->flags |= BNXT_FLAG_SHARED_RINGS;
+	dflt_rings = is_kdump_kernel() ? 1 : netif_get_num_default_rss_queues();
+	/* Reduce default rings on multi-port cards so that total default
+	 * rings do not exceed CPU count.
+	 */
+	if (bp->port_count > 1) {
+		int max_rings =
+			max_t(int, num_online_cpus() / bp->port_count, 1);
+
+		dflt_rings = min_t(int, dflt_rings, max_rings);
+	}
+	rc = bnxt_get_dflt_rings(bp, &max_rx_rings, &max_tx_rings, sh);
+	if (rc)
+		return rc;
+	bp->rx_nr_rings = min_t(int, dflt_rings, max_rx_rings);
+	bp->tx_nr_rings_per_tc = min_t(int, dflt_rings, max_tx_rings);
+	if (sh)
+		bnxt_trim_dflt_sh_rings(bp);
+	else
+		bp->cp_nr_rings = bp->tx_nr_rings_per_tc + bp->rx_nr_rings;
+	bp->tx_nr_rings = bp->tx_nr_rings_per_tc;
+
+	avail_msix = bnxt_get_max_func_irqs(bp) - bp->cp_nr_rings;
+	if (avail_msix >= BNXT_MIN_ROCE_CP_RINGS) {
+		int ulp_num_msix = min(avail_msix, bp->ulp_num_msix_want);
+
+		bnxt_set_ulp_msix_num(bp, ulp_num_msix);
+		bnxt_set_dflt_ulp_stat_ctxs(bp);
+	}
+
+	rc = __bnxt_reserve_rings(bp);
+	if (rc && rc != -ENODEV)
+		netdev_warn(bp->dev, "Unable to reserve tx rings\n");
+	bp->tx_nr_rings_per_tc = bp->tx_nr_rings;
+	if (sh)
+		bnxt_trim_dflt_sh_rings(bp);
+
+	/* Rings may have been trimmed, re-reserve the trimmed rings. */
+	if (bnxt_need_reserve_rings(bp)) {
+		rc = __bnxt_reserve_rings(bp);
+		if (rc && rc != -ENODEV)
+			netdev_warn(bp->dev, "2nd rings reservation failed.\n");
+		bp->tx_nr_rings_per_tc = bp->tx_nr_rings;
+	}
+	if (BNXT_CHIP_TYPE_NITRO_A0(bp)) {
+		bp->rx_nr_rings++;
+		bp->cp_nr_rings++;
+	}
+	if (rc) {
+		bp->tx_nr_rings = 0;
+		bp->rx_nr_rings = 0;
+	}
+	return rc;
+}
+
+static int bnxt_init_dflt_ring_mode(struct bnxt *bp)
+{
+	int rc;
+
+	if (bp->tx_nr_rings)
+		return 0;
+
+	bnxt_ulp_irq_stop(bp);
+	bnxt_clear_int_mode(bp);
+	rc = bnxt_set_dflt_rings(bp, true);
+	if (rc) {
+		if (BNXT_VF(bp) && rc == -ENODEV)
+			netdev_err(bp->dev, "Cannot configure VF rings while PF is unavailable.\n");
+		else
+			netdev_err(bp->dev, "Not enough rings available.\n");
+		goto init_dflt_ring_err;
+	}
+	rc = bnxt_init_int_mode(bp);
+	if (rc)
+		goto init_dflt_ring_err;
+
+	bp->tx_nr_rings_per_tc = bp->tx_nr_rings;
+
+	bnxt_set_dflt_rfs(bp);
+
+init_dflt_ring_err:
+	bnxt_ulp_irq_restart(bp, rc);
+	return rc;
+}
+```

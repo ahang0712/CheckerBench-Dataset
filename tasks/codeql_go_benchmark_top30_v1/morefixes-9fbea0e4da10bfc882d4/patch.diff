@@ -1,0 +1,15 @@
+diff --git a/router/server_normal.go b/router/server_normal.go
+index b63c542..e882110 100644
+--- a/router/server_normal.go
++++ b/router/server_normal.go
+@@ -41,9 +41,8 @@ func RunHTTPServer(ctx context.Context, cfg *config.ConfYaml, q *queue.Queue, s
+ 	if cfg.Core.AutoTLS.Enabled {
+ 		return startServer(ctx, autoTLSServer(cfg, q), cfg)
+ 	} else if cfg.Core.SSL {
+-		//nolint
+ 		config := &tls.Config{
+-			MinVersion: tls.VersionTLS10,
++			MinVersion: tls.VersionTLS12,
+ 		}
+ 
+ 		if config.NextProtos == nil {

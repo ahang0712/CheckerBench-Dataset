@@ -1,0 +1,77 @@
+### File: net/switchdev/switchdev.c
+```c
+bool switchdev_port_obj_act_is_deferred(struct net_device *dev,
+					enum switchdev_notifier_type nt,
+					const struct switchdev_obj *obj)
+{
+	struct switchdev_deferred_item *dfitem;
+	bool found = false;
+
+	ASSERT_RTNL();
+
+	spin_lock_bh(&deferred_lock);
+
+	list_for_each_entry(dfitem, &deferred, list) {
+		if (dfitem->dev != dev)
+			continue;
+
+		if ((dfitem->func == switchdev_port_obj_add_deferred &&
+		     nt == SWITCHDEV_PORT_OBJ_ADD) ||
+		    (dfitem->func == switchdev_port_obj_del_deferred &&
+		     nt == SWITCHDEV_PORT_OBJ_DEL)) {
+			if (switchdev_obj_eq((const void *)dfitem->data, obj)) {
+				found = true;
+				break;
+			}
+		}
+	}
+
+	spin_unlock_bh(&deferred_lock);
+
+	return found;
+}
+
+int call_switchdev_notifiers(unsigned long val, struct net_device *dev,
+			     struct switchdev_notifier_info *info,
+			     struct netlink_ext_ack *extack)
+{
+	info->dev = dev;
+	info->extack = extack;
+	return atomic_notifier_call_chain(&switchdev_notif_chain, val, info);
+}
+
+int register_switchdev_blocking_notifier(struct notifier_block *nb)
+{
+	struct raw_notifier_head *chain = &switchdev_blocking_notif_chain;
+	int err;
+
+	rtnl_lock();
+	err = raw_notifier_chain_register(chain, nb);
+	rtnl_unlock();
+
+	return err;
+}
+
+int unregister_switchdev_blocking_notifier(struct notifier_block *nb)
+{
+	struct raw_notifier_head *chain = &switchdev_blocking_notif_chain;
+	int err;
+
+	rtnl_lock();
+	err = raw_notifier_chain_unregister(chain, nb);
+	rtnl_unlock();
+
+	return err;
+}
+
+int call_switchdev_blocking_notifiers(unsigned long val, struct net_device *dev,
+				      struct switchdev_notifier_info *info,
+				      struct netlink_ext_ack *extack)
+{
+	ASSERT_RTNL();
+	info->dev = dev;
+	info->extack = extack;
+	return raw_notifier_call_chain(&switchdev_blocking_notif_chain,
+				       val, info);
+}
+```

@@ -1,0 +1,54 @@
+### File: drivers/net/wireless/mediatek/mt7601u/dma.c
+```c
+static u16 mt7601u_rx_next_seg_len(u8 *data, u32 data_len)
+{
+	u32 min_seg_len = MT_DMA_HDR_LEN + MT_RX_INFO_LEN +
+		sizeof(struct mt7601u_rxwi) + MT_FCE_INFO_LEN;
+	u16 dma_len = get_unaligned_le16(data);
+
+	if (data_len < min_seg_len ||
+	    WARN_ON_ONCE(!dma_len) ||
+	    WARN_ON_ONCE(dma_len + MT_DMA_HDRS > data_len) ||
+	    WARN_ON_ONCE(dma_len & 0x3))
+		return 0;
+
+	return MT_DMA_HDRS + dma_len;
+}
+
+static void
+mt7601u_rx_process_entry(struct mt7601u_dev *dev, struct mt7601u_dma_buf_rx *e)
+{
+	u32 seg_len, data_len = e->urb->actual_length;
+	u8 *data = page_address(e->p);
+	struct page *new_p = NULL;
+	LIST_HEAD(list);
+	int cnt = 0;
+
+	if (!test_bit(MT7601U_STATE_INITIALIZED, &dev->state))
+		return;
+
+	/* Copy if there is very little data in the buffer. */
+	if (data_len > 512)
+		new_p = dev_alloc_pages(MT_RX_ORDER);
+
+	while ((seg_len = mt7601u_rx_next_seg_len(data, data_len))) {
+		mt7601u_rx_process_seg(dev, data, seg_len,
+				       new_p ? e->p : NULL, &list);
+
+		data_len -= seg_len;
+		data += seg_len;
+		cnt++;
+	}
+
+	if (cnt > 1)
+		trace_mt_rx_dma_aggr(dev, cnt, !!new_p);
+
+	netif_receive_skb_list(&list);
+
+	if (new_p) {
+		/* we have one extra ref from the allocator */
+		put_page(e->p);
+		e->p = new_p;
+	}
+}
+```

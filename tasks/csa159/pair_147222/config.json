@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "fe6f600c43e0931f4fb5e1debb2311b7a6ebabd8",
+  "after_commit": "734aa85390ea693bb7eaf2240623d41b03705c84",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/82f2b0b97b36ee3fcddf0f0780a9a0825d52fec3/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/82f2b0b97b36ee3fcddf0f0780a9a0825d52fec3/compile_commands.json",
+  "changed_files": [
+    "fs/squashfs/super.c"
+  ],
+  "commit_message": "Squashfs: check return result of sb_min_blocksize\n\nSyzkaller reports an \"UBSAN: shift-out-of-bounds in squashfs_bio_read\" bug.\n\nSyzkaller forks multiple processes which after mounting the Squashfs\nfilesystem, issues an ioctl(\"/dev/loop0\", LOOP_SET_BLOCK_SIZE, 0x8000). \nNow if this ioctl occurs at the same time another process is in the\nprocess of mounting a Squashfs filesystem on /dev/loop0, the failure\noccurs.  When this happens the following code in squashfs_fill_super()\nfails.\n\n----\nmsblk->devblksize = sb_min_blocksize(sb, SQUASHFS_DEVBLK_SIZE);\nmsblk->devblksize_log2 = ffz(~msblk->devblksize);\n----\n\nsb_min_blocksize() returns 0, which means msblk->devblksize is set to 0.\n\nAs a result, ffz(~msblk->devblksize) returns 64, and msblk->devblksize_log2\nis set to 64.\n\nThis subsequently causes the\n\nUBSAN: shift-out-of-bounds in fs/squashfs/block.c:195:36\nshift exponent 64 is too large for 64-bit type 'u64' (aka\n'unsigned long long')\n\nThis commit adds a check for a 0 return by sb_min_blocksize().\n\nLink: https://lkml.kernel.org/r/20250409024747.876480-1-phillip@squashfs.org.uk\nFixes: 0aa666190509 (\"Squashfs: super block operations\")\nReported-by: syzbot+65761fc25a137b9c8c6e@syzkaller.appspotmail.com\nCloses: https://lore.kernel.org/all/67f0dd7a.050a0220.0a13.0230.GAE@google.com/\nSigned-off-by: Phillip Lougher <phillip@squashfs.org.uk>\nSigned-off-by: Andrew Morton <akpm@linux-foundation.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "d9b0ca1334d8a9a03bef45e95825564c56ca3367",
+  "after_commit": "2747328ba2714f1a7454208dbbc1dc0631990b4a",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/c17b750b3ad9f45f2b6f7e6f7f4679844244f0b9/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/c17b750b3ad9f45f2b6f7e6f7f4679844244f0b9/compile_commands.json",
+  "changed_files": [
+    "drivers/net/ethernet/broadcom/bnxt/bnxt.c"
+  ],
+  "commit_message": "bnxt_en: Fix memory corruption when FW resources change during ifdown\n\nbnxt_set_dflt_rings() assumes that it is always called before any TC has\nbeen created.  So it doesn't take bp->num_tc into account and assumes\nthat it is always 0 or 1.\n\nIn the FW resource or capability change scenario, the FW will return\nflags in bnxt_hwrm_if_change() that will cause the driver to\nreinitialize and call bnxt_cancel_reservations().  This will lead to\nbnxt_init_dflt_ring_mode() calling bnxt_set_dflt_rings() and bp->num_tc\nmay be greater than 1.  This will cause bp->tx_ring[] to be sized too\nsmall and cause memory corruption in bnxt_alloc_cp_rings().\n\nFix it by properly scaling the TX rings by bp->num_tc in the code\npaths mentioned above.  Add 2 helper functions to determine\nbp->tx_nr_rings and bp->tx_nr_rings_per_tc.\n\nFixes: ec5d31e3c15d (\"bnxt_en: Handle firmware reset status during IF_UP.\")\nReviewed-by: Kalesh AP <kalesh-anakkur.purayil@broadcom.com>\nReviewed-by: Andy Gospodarek <andrew.gospodarek@broadcom.com>\nSigned-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>\nSigned-off-by: Michael Chan <michael.chan@broadcom.com>\nLink: https://patch.msgid.link/20250825175927.459987-2-michael.chan@broadcom.com\nSigned-off-by: Jakub Kicinski <kuba@kernel.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

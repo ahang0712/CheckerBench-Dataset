@@ -1,0 +1,19 @@
+{
+  "project_id": "FFmpeg_FFmpeg",
+  "before_commit": "1dac4d554734b16757b36a0adc71642c5ef2c4e6",
+  "after_commit": "8312e3fc9041027a33c8bc667bb99740fdf41dd5",
+  "repo_path": "/workspace/repo/FFmpeg/FFmpeg",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/FFmpeg_FFmpeg/bfaefd87dc5c46a4d422cebcff7a9a6dbaad046f/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/FFmpeg_FFmpeg/bfaefd87dc5c46a4d422cebcff7a9a6dbaad046f/compile_commands.json",
+  "changed_files": [
+    "libavformat/ape.c"
+  ],
+  "commit_message": "Do not attempt to decode APE file with no frames\n\nThis fixes invalid reads/writes with this sample:\nhttp://packetstorm.linuxsecurity.com/1103-exploits/vlc105-dos.txt",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-99aea6539029d3ab985e",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-99aea6539029d3ab985e",
+    "project_id": "morefixes__churchcrm__crm",
+    "language": "javascript",
+    "backend": "codeql"
+  },
+  "changed_javascript_files": [
+    "locale/scripts/locale-branch-manager.js"
+  ],
+  "patch_units": {
+    "before": [
+      "locale/scripts/locale-branch-manager.js"
+    ],
+    "after": [
+      "locale/scripts/locale-branch-manager.js"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/b6da0763f427b1c7e44b647d7796c8d94ff4f486a638cd4cd1fd029d982c6c11/database",
+      "cache_key": "b6da0763f427b1c7e44b647d7796c8d94ff4f486a638cd4cd1fd029d982c6c11",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/d9671c88f4081b27ef1cbeae23308324b099c7fb2dce3784659f68538634b778/database",
+      "cache_key": "d9671c88f4081b27ef1cbeae23308324b099c7fb2dce3784659f68538634b778",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/392905b62f862de10fdf28b73116ce605a5ece4c24406b29e920cf7f4f0d7764/database",
+      "cache_key": "392905b62f862de10fdf28b73116ce605a5ece4c24406b29e920cf7f4f0d7764",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-99aea6539029d3ab985e/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-99aea6539029d3ab985e/ (do not mount into agent)"
+  }
+}

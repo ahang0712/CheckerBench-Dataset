@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-35510b21cf51a9acf072",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-35510b21cf51a9acf072",
+    "project_id": "morefixes__tdunning__pig-vector",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "src/main/java/org/apache/mahout/pig/LogisticRegression.java"
+  ],
+  "patch_units": {
+    "before": [
+      "src/main/java/org/apache/mahout/pig/LogisticRegression.java"
+    ],
+    "after": [
+      "src/main/java/org/apache/mahout/pig/LogisticRegression.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/581d1418f445d29534e12e7d56acd5ce5913fdd5bf35ece653a2c7424432349a/database",
+      "cache_key": "581d1418f445d29534e12e7d56acd5ce5913fdd5bf35ece653a2c7424432349a",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/e1730c32b0be3ab71f9726f620140ac8e0e77343b4dedd4a290c36443bfd71df/database",
+      "cache_key": "e1730c32b0be3ab71f9726f620140ac8e0e77343b4dedd4a290c36443bfd71df",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/050b72f2c8224f24848206192335371c5baf643390b4f254a61ecb4b952e04ce/database",
+      "cache_key": "050b72f2c8224f24848206192335371c5baf643390b4f254a61ecb4b952e04ce",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-35510b21cf51a9acf072/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-35510b21cf51a9acf072/ (do not mount into agent)"
+  }
+}

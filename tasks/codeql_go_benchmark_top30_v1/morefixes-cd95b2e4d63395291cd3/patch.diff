@@ -1,0 +1,26 @@
+diff --git a/oauthproxy.go b/oauthproxy.go
+index 115e562..75fbc9f 100644
+--- a/oauthproxy.go
++++ b/oauthproxy.go
+@@ -490,7 +490,7 @@ func (p *OAuthProxy) OAuthCallback(rw http.ResponseWriter, req *http.Request) {
+ 	}
+ 
+ 	redirect := req.Form.Get("state")
+-	if !strings.HasPrefix(redirect, "/") {
++	if !strings.HasPrefix(redirect, "/")  || strings.HasPrefix(redirect, "//") {
+ 		redirect = "/"
+ 	}
+ 
+diff --git a/providers/provider_default.go b/providers/provider_default.go
+index 82b73ec..6b8ec40 100644
+--- a/providers/provider_default.go
++++ b/providers/provider_default.go
+@@ -88,7 +88,7 @@ func (p *ProviderData) GetLoginURL(redirectURI, finalRedirect string) string {
+ 	params.Add("scope", p.Scope)
+ 	params.Set("client_id", p.ClientID)
+ 	params.Set("response_type", "code")
+-	if strings.HasPrefix(finalRedirect, "/") {
++	if strings.HasPrefix(finalRedirect, "/") && !strings.HasPrefix(finalRedirect,"//") {
+ 		params.Add("state", finalRedirect)
+ 	}
+ 	a.RawQuery = params.Encode()

@@ -1,0 +1,47 @@
+diff --git a/CHANGELOG.rst b/CHANGELOG.rst
+index 7d3cf09..886ab24 100644
+--- a/CHANGELOG.rst
++++ b/CHANGELOG.rst
+@@ -10,6 +10,7 @@ Unreleased
+ - fixed references to <defs> content when placed middle or end of
+   SVG documents (#225)
+ - fixed elliptic arcs reading when arc flags are condensed (#232)
++- disabled external entity loading by default (#229 - CVE-2020-10799)
+ 
+ 0.9.3 (2019-11-02)
+ ------------------
+diff --git a/svglib/svglib.py b/svglib/svglib.py
+index 66b2fa6..aa50fab 100755
+--- a/svglib/svglib.py
++++ b/svglib/svglib.py
+@@ -1403,7 +1403,7 @@ class Svg2RlgShapeConverter(SvgShapeConverter):
+             shape.fillColor.alpha = shape.fillOpacity
+ 
+ 
+-def svg2rlg(path, **kwargs):
++def svg2rlg(path, resolve_entities=False, **kwargs):
+     "Convert an SVG file to an RLG Drawing object."
+ 
+     # unzip .svgz file into .svg
+@@ -1414,7 +1414,7 @@ def svg2rlg(path, **kwargs):
+         path = path[:-1]
+         unzipped = True
+ 
+-    svg_root = load_svg_file(path)
++    svg_root = load_svg_file(path, resolve_entities=resolve_entities)
+     if svg_root is None:
+         return
+ 
+@@ -1429,8 +1429,10 @@ def svg2rlg(path, **kwargs):
+     return drawing
+ 
+ 
+-def load_svg_file(path):
+-    parser = etree.XMLParser(remove_comments=True, recover=True)
++def load_svg_file(path, resolve_entities=False):
++    parser = etree.XMLParser(
++        remove_comments=True, recover=True, resolve_entities=resolve_entities
++    )
+     try:
+         doc = etree.parse(path, parser=parser)
+         svg_root = doc.getroot()

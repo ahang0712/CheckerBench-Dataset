@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "e46de99c91de2eb1c6517a9be6934086cefb85b8",
+  "after_commit": "414f65d6736342c77d4ec5e7373039f4a09250dd",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/6b367741e01430947f66ad863bfc1e57ad42b7bc/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/6b367741e01430947f66ad863bfc1e57ad42b7bc/compile_commands.json",
+  "changed_files": [
+    "drivers/mfd/macsmc.c"
+  ],
+  "commit_message": "mfd: macsmc: Initialize mutex\n\nInitialize struct apple_smc's mutex in apple_smc_probe(). Using the\nmutex uninitialized surprisingly resulted only in occasional NULL\npointer dereferences in apple_smc_read() calls from the probe()\nfunctions of sub devices.\n\nCc: stable@vger.kernel.org\nFixes: e038d985c9823 (\"mfd: Add Apple Silicon System Management Controller\")\nSigned-off-by: Janne Grunau <j@jannau.net>\nReviewed-by: Sven Peter <sven@kernel.org>\nReviewed-by: Neal Gompa <neal@gompa.dev>\nLink: https://patch.msgid.link/20251231-macsmc-mutex_init-v2-1-5818c9dc9b29@jannau.net\nSigned-off-by: Lee Jones <lee@kernel.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

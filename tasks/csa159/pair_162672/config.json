@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "ebee7885bb12a8fe2c2f9bac87dbd87a05b645f9",
+  "after_commit": "7dcf3c04f0aca746517a77433b33d40868ca4749",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/a38fd8748464831584a19438cbb3082b5a2dab15/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/a38fd8748464831584a19438cbb3082b5a2dab15/compile_commands.json",
+  "changed_files": [
+    "drivers/net/wireless/mediatek/mt76/mt7915/mac.c"
+  ],
+  "commit_message": "mt76: mt7915: fix tx skb dma unmap\n\nThe first pointer in the txp needs to be unmapped as well, otherwise it will\nleak DMA mapping entries\n\nReported-by: Ben Greear <greearb@candelatech.com>\nFixes: 27d5c528a7ca (\"mt76: fix double DMA unmap of the first buffer on 7615/7915\")\nSigned-off-by: Felix Fietkau <nbd@nbd.name>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

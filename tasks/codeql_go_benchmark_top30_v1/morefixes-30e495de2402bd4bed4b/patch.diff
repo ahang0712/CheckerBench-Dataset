@@ -1,0 +1,16 @@
+diff --git a/html/smartypants.go b/html/smartypants.go
+index 706e4ff..dec784e 100644
+--- a/html/smartypants.go
++++ b/html/smartypants.go
+@@ -371,7 +371,10 @@ func (r *SPRenderer) smartLeftAngle(out *bytes.Buffer, previousChar byte, text [
+ 		i++
+ 	}
+ 
+-	out.Write(text[:i+1])
++	if i == len(text) { // No > found until the end of the text
++		return i
++	}
++	out.Write(text[:i+1]) // include the '>'
+ 	return i
+ }
+ 

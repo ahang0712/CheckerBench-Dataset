@@ -1,0 +1,13 @@
+diff --git a/js/functions.js b/js/functions.js
+index a970a81584..bcdead8e17 100644
+--- a/js/functions.js
++++ b/js/functions.js
+@@ -2692,7 +2692,7 @@ AJAX.registerOnload('functions.js', function () {
+         } else {
+             title = PMA_messages.enum_columnVals.replace(
+                 /%s/,
+-                '"' + decodeURIComponent(colname) + '"'
++                '"' + escapeHtml(decodeURIComponent(colname)) + '"'
+             );
+         }
+         // Get the values as a string

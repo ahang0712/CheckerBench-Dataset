@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "4c612826bec1441214816827979b62f84a097e91",
+  "after_commit": "2e9ceb6728f1dc2fa4b5d08f37d88cbc49a20a62",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/1c23f9e627a7b412978b4e852793c5e3c3efc555/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/1c23f9e627a7b412978b4e852793c5e3c3efc555/compile_commands.json",
+  "changed_files": [
+    "fs/exfat/fatent.c"
+  ],
+  "commit_message": "exfat: fix overflow for large capacity partition\n\nUsing int type for sector index, there will be overflow in a large\ncapacity partition.\n\nFor example, if storage with sector size of 512 bytes and partition\ncapacity is larger than 2TB, there will be overflow.\n\nFixes: 1b6138385499 (\"exfat: reduce block requests when zeroing a cluster\")\nCc: stable@vger.kernel.org # v5.19+\nSigned-off-by: Yuezhang Mo <Yuezhang.Mo@sony.com>\nReviewed-by: Andy Wu <Andy.Wu@sony.com>\nReviewed-by: Aoyama Wataru <wataru.aoyama@sony.com>\nAcked-by: Sungjong Seo <sj1557.seo@samsung.com>\nSigned-off-by: Namjae Jeon <linkinjeon@kernel.org>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

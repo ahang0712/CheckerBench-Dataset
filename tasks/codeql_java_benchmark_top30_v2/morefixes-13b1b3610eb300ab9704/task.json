@@ -1,0 +1,53 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-13b1b3610eb300ab9704",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-13b1b3610eb300ab9704",
+    "project_id": "morefixes__rweather__noise-java",
+    "language": "java",
+    "backend": "codeql"
+  },
+  "changed_java_files": [
+    "src/main/java/com/southernstorm/noise/protocol/AESGCMFallbackCipherState.java",
+    "src/main/java/com/southernstorm/noise/protocol/AESGCMOnCtrCipherState.java",
+    "src/main/java/com/southernstorm/noise/protocol/ChaChaPolyCipherState.java",
+    "src/main/java/com/southernstorm/noise/protocol/CipherState.java"
+  ],
+  "patch_units": {
+    "before": [
+      "src/main/java/com/southernstorm/noise/protocol/AESGCMFallbackCipherState.java",
+      "src/main/java/com/southernstorm/noise/protocol/AESGCMOnCtrCipherState.java",
+      "src/main/java/com/southernstorm/noise/protocol/ChaChaPolyCipherState.java",
+      "src/main/java/com/southernstorm/noise/protocol/CipherState.java"
+    ],
+    "after": [
+      "src/main/java/com/southernstorm/noise/protocol/AESGCMFallbackCipherState.java",
+      "src/main/java/com/southernstorm/noise/protocol/AESGCMOnCtrCipherState.java",
+      "src/main/java/com/southernstorm/noise/protocol/ChaChaPolyCipherState.java",
+      "src/main/java/com/southernstorm/noise/protocol/CipherState.java"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/ee2f778534422dec17fbdad0e762e6abfde77ed184d8a089d11db18f570b08e8/database",
+      "cache_key": "ee2f778534422dec17fbdad0e762e6abfde77ed184d8a089d11db18f570b08e8",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/3dc1daf8fb7439a252126b4f9324699559bd3bc6425dd8b366245e4b18fdcf72/database",
+      "cache_key": "3dc1daf8fb7439a252126b4f9324699559bd3bc6425dd8b366245e4b18fdcf72",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/4c263a54c66ea2f20b42a1955c6d1854523ded76aaddd393ca8a8f94f211b130/database",
+      "cache_key": "4c263a54c66ea2f20b42a1955c6d1854523ded76aaddd393ca8a8f94f211b130",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-13b1b3610eb300ab9704/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-13b1b3610eb300ab9704/ (do not mount into agent)"
+  }
+}

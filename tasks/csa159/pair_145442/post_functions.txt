@@ -1,0 +1,115 @@
+### File: net/vmw_vsock/virtio_transport_common.c
+```c
+static int virtio_transport_send_pkt_info(struct vsock_sock *vsk,
+					  struct virtio_vsock_pkt_info *info)
+{
+	u32 max_skb_len = VIRTIO_VSOCK_MAX_PKT_BUF_SIZE;
+	u32 src_cid, src_port, dst_cid, dst_port;
+	const struct virtio_transport *t_ops;
+	struct virtio_vsock_sock *vvs;
+	u32 pkt_len = info->pkt_len;
+	bool can_zcopy = false;
+	u32 rest_len;
+	int ret;
+
+	info->type = virtio_transport_get_type(sk_vsock(vsk));
+
+	t_ops = virtio_transport_get_ops(vsk);
+	if (unlikely(!t_ops))
+		return -EFAULT;
+
+	src_cid = t_ops->transport.get_local_cid();
+	src_port = vsk->local_addr.svm_port;
+	if (!info->remote_cid) {
+		dst_cid	= vsk->remote_addr.svm_cid;
+		dst_port = vsk->remote_addr.svm_port;
+	} else {
+		dst_cid = info->remote_cid;
+		dst_port = info->remote_port;
+	}
+
+	vvs = vsk->trans;
+
+	/* virtio_transport_get_credit might return less than pkt_len credit */
+	pkt_len = virtio_transport_get_credit(vvs, pkt_len);
+
+	/* Do not send zero length OP_RW pkt */
+	if (pkt_len == 0 && info->op == VIRTIO_VSOCK_OP_RW)
+		return pkt_len;
+
+	if (info->msg) {
+		/* If zerocopy is not enabled by 'setsockopt()', we behave as
+		 * there is no MSG_ZEROCOPY flag set.
+		 */
+		if (!sock_flag(sk_vsock(vsk), SOCK_ZEROCOPY))
+			info->msg->msg_flags &= ~MSG_ZEROCOPY;
+
+		if (info->msg->msg_flags & MSG_ZEROCOPY)
+			can_zcopy = virtio_transport_can_zcopy(t_ops, info, pkt_len);
+
+		if (can_zcopy)
+			max_skb_len = min_t(u32, VIRTIO_VSOCK_MAX_PKT_BUF_SIZE,
+					    (MAX_SKB_FRAGS * PAGE_SIZE));
+	}
+
+	rest_len = pkt_len;
+
+	do {
+		struct sk_buff *skb;
+		size_t skb_len;
+
+		skb_len = min(max_skb_len, rest_len);
+
+		skb = virtio_transport_alloc_skb(info, skb_len, can_zcopy,
+						 src_cid, src_port,
+						 dst_cid, dst_port);
+		if (!skb) {
+			ret = -ENOMEM;
+			break;
+		}
+
+		/* We process buffer part by part, allocating skb on
+		 * each iteration. If this is last skb for this buffer
+		 * and MSG_ZEROCOPY mode is in use - we must allocate
+		 * completion for the current syscall.
+		 */
+		if (info->msg && info->msg->msg_flags & MSG_ZEROCOPY &&
+		    skb_len == rest_len && info->op == VIRTIO_VSOCK_OP_RW) {
+			if (virtio_transport_init_zcopy_skb(vsk, skb,
+							    info->msg,
+							    can_zcopy)) {
+				kfree_skb(skb);
+				ret = -ENOMEM;
+				break;
+			}
+		}
+
+		virtio_transport_inc_tx_pkt(vvs, skb);
+
+		ret = t_ops->send_pkt(skb);
+		if (ret < 0)
+			break;
+
+		/* Both virtio and vhost 'send_pkt()' returns 'skb_len',
+		 * but for reliability use 'ret' instead of 'skb_len'.
+		 * Also if partial send happens (e.g. 'ret' != 'skb_len')
+		 * somehow, we break this loop, but account such returned
+		 * value in 'virtio_transport_put_credit()'.
+		 */
+		rest_len -= ret;
+
+		if (WARN_ONCE(ret != skb_len,
+			      "'send_pkt()' returns %i, but %zu expected\n",
+			      ret, skb_len))
+			break;
+	} while (rest_len);
+
+	virtio_transport_put_credit(vvs, rest_len);
+
+	/* Return number of bytes, if any data has been sent. */
+	if (rest_len != pkt_len)
+		ret = pkt_len - rest_len;
+
+	return ret;
+}
+```

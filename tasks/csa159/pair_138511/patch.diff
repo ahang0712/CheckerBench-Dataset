@@ -1,0 +1,29 @@
+diff --git a/libde265/image.cc b/libde265/image.cc
+index d388901..204faa5 100644
+--- a/libde265/image.cc
++++ b/libde265/image.cc
+@@ -452,8 +452,9 @@ de265_error de265_image::alloc_image(int w,int h, enum de265_chroma c,
+ 
+     // CTB info
+ 
+-    if (ctb_info.width_in_units != sps->PicWidthInCtbsY ||
+-        ctb_info.height_in_units != sps->PicHeightInCtbsY)
++    if (ctb_info.width_in_units  != sps->PicWidthInCtbsY  ||
++        ctb_info.height_in_units != sps->PicHeightInCtbsY ||
++        ctb_info.log2unitSize    != sps->Log2CtbSizeY)
+       {
+         delete[] ctb_progress;
+ 
+diff --git a/libde265/image.h b/libde265/image.h
+index 2bbe34b..e062fd3 100644
+--- a/libde265/image.h
++++ b/libde265/image.h
+@@ -149,7 +149,7 @@ template <class DataUnit> class MetaDataArray
+   // private:
+   DataUnit* data;
+   int data_size;
+-  int log2unitSize;
++  uint8_t log2unitSize;
+   int width_in_units;
+   int height_in_units;
+ };

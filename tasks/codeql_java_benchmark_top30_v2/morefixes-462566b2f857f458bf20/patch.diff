@@ -1,0 +1,33 @@
+diff --git a/src/main/java/io/airlift/compress/snappy/SnappyRawDecompressor.java b/src/main/java/io/airlift/compress/snappy/SnappyRawDecompressor.java
+index 2871b9a..b11907b 100644
+--- a/src/main/java/io/airlift/compress/snappy/SnappyRawDecompressor.java
++++ b/src/main/java/io/airlift/compress/snappy/SnappyRawDecompressor.java
+@@ -306,6 +306,9 @@ public final class SnappyRawDecompressor
+                 }
+             }
+         }
++        if (result < 0) {
++            throw new MalformedInputException(compressedAddress, "negative compressed length");
++        }
+         return new int[] {result, bytesRead};
+     }
+ 
+diff --git a/src/test/java/io/airlift/compress/snappy/TestSnappy.java b/src/test/java/io/airlift/compress/snappy/TestSnappy.java
+index b2e92d7..36f39fe 100644
+--- a/src/test/java/io/airlift/compress/snappy/TestSnappy.java
++++ b/src/test/java/io/airlift/compress/snappy/TestSnappy.java
+@@ -67,4 +67,14 @@ public class TestSnappy
+         assertThatThrownBy(() -> new SnappyDecompressor().decompress(data, 0, data.length, new byte[1024], 0, 1024))
+                 .isInstanceOf(MalformedInputException.class);
+     }
++
++    @Test
++    public void testNegativeLength()
++    {
++        byte[] data = {(byte) 255, (byte) 255, (byte) 255, (byte) 255, 0b0000_1000};
++
++        assertThatThrownBy(() -> SnappyDecompressor.getUncompressedLength(data, 0))
++                .isInstanceOf(MalformedInputException.class)
++                .hasMessageStartingWith("negative compressed length");
++    }
+ }

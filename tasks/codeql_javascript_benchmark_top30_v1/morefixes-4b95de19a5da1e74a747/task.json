@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-4b95de19a5da1e74a747",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-4b95de19a5da1e74a747",
+    "project_id": "morefixes__meetecho__janus-gateway",
+    "language": "javascript",
+    "backend": "codeql"
+  },
+  "changed_javascript_files": [
+    "html/textroomtest.js"
+  ],
+  "patch_units": {
+    "before": [
+      "html/textroomtest.js"
+    ],
+    "after": [
+      "html/textroomtest.js"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/b0d7b7de8e7dd3dfcb7f5c83d1446198d930948ef8ce23433801a81eea9ed7f1/database",
+      "cache_key": "b0d7b7de8e7dd3dfcb7f5c83d1446198d930948ef8ce23433801a81eea9ed7f1",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/c735c34fa58a41f3d1838c42fc119f9ca28129de1ad6ba04fd8e1632839a8d57/database",
+      "cache_key": "c735c34fa58a41f3d1838c42fc119f9ca28129de1ad6ba04fd8e1632839a8d57",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/78796f6e5c83913956ff4df8beb57592fd0eb993c7f4574ac73610565b7f8cfe/database",
+      "cache_key": "78796f6e5c83913956ff4df8beb57592fd0eb993c7f4574ac73610565b7f8cfe",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-4b95de19a5da1e74a747/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-4b95de19a5da1e74a747/ (do not mount into agent)"
+  }
+}

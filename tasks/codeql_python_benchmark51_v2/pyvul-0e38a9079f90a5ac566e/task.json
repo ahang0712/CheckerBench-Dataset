@@ -1,0 +1,93 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "pyvul-0e38a9079f90a5ac566e",
+    "dataset_id": "PyVul",
+    "dataset_item_id": "pyvul-0e38a9079f90a5ac566e",
+    "project_id": "pyvul__misp__misp-maltego",
+    "language": "python",
+    "backend": "codeql"
+  },
+  "changed_python_files": [
+    "src/MISP_maltego/transforms/attributetoevent.py",
+    "src/MISP_maltego/transforms/common/util.py",
+    "src/MISP_maltego/transforms/eventtoattributes.py",
+    "src/MISP_maltego/transforms/galaxytoevent.py"
+  ],
+  "patch_units": {
+    "before": [
+      "class:SearchInMISP",
+      "function:SearchInMISP.do_transform",
+      "class:AttributeToEvent",
+      "function:AttributeToEvent.do_transform",
+      "module:<module>@4",
+      "module:<module>@5",
+      "function:get_misp_connection",
+      "function:object_to_entity",
+      "function:object_to_relations",
+      "module:<module>@21",
+      "class:EventToTransform",
+      "function:EventToTransform.__init__",
+      "function:EventToTransform.do_transform",
+      "function:EventToTransform.gen_response_objects",
+      "class:ObjectToAttributes",
+      "function:ObjectToAttributes.do_transform",
+      "class:ObjectToRelations",
+      "function:ObjectToRelations.do_transform",
+      "module:<module>@4",
+      "module:<module>@5",
+      "class:GalaxyToEvents",
+      "function:GalaxyToEvents.do_transform",
+      "module:<module>@3",
+      "module:<module>@4"
+    ],
+    "after": [
+      "class:SearchInMISP",
+      "function:SearchInMISP.do_transform",
+      "class:AttributeToEvent",
+      "function:AttributeToEvent.do_transform",
+      "module:<module>@4",
+      "class:MISPConnection",
+      "function:MISPConnection.__init__",
+      "function:MISPConnection.object_to_entity",
+      "function:MISPConnection.object_to_relations",
+      "function:object_to_attributes",
+      "function:get_object_in_event",
+      "module:<module>@21",
+      "class:EventToTransform",
+      "function:EventToTransform.__init__",
+      "function:EventToTransform.do_transform",
+      "function:EventToTransform.gen_response_objects",
+      "class:ObjectToAttributes",
+      "function:ObjectToAttributes.do_transform",
+      "class:ObjectToRelations",
+      "function:ObjectToRelations.do_transform",
+      "module:<module>@4",
+      "class:GalaxyToEvents",
+      "function:GalaxyToEvents.do_transform",
+      "module:<module>@3"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/009dacf5f0f20a1cdf2f2332b5a210122c70d1a6081b10df7102b8845493ea74/database",
+      "cache_key": "009dacf5f0f20a1cdf2f2332b5a210122c70d1a6081b10df7102b8845493ea74",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/85a04adc7e960fe43412198775ed267114f053798c3935777a9b53ea8df4e46b/database",
+      "cache_key": "85a04adc7e960fe43412198775ed267114f053798c3935777a9b53ea8df4e46b",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/345c4069fbf8dae9ad9cc7ca141ce3bb33458718a16d9c47ff59352d2b2366da/database",
+      "cache_key": "345c4069fbf8dae9ad9cc7ca141ce3bb33458718a16d9c47ff59352d2b2366da",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/pyvul-0e38a9079f90a5ac566e/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/pyvul-0e38a9079f90a5ac566e/ (do not mount into agent)"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "c57ca512f3b68ddcd62bda9cc24a8f5584ab01b1",
+  "after_commit": "aec7961916f3f9e88766e2688992da6980f11b8d",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/54be6c6c5ae8e0d93a6c4641cb7528eb0b6ba478/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/54be6c6c5ae8e0d93a6c4641cb7528eb0b6ba478/compile_commands.json",
+  "changed_files": [
+    "net/tls/tls_sw.c"
+  ],
+  "commit_message": "tls: fix race between async notify and socket close\n\nThe submitting thread (one which called recvmsg/sendmsg)\nmay exit as soon as the async crypto handler calls complete()\nso any code past that point risks touching already freed data.\n\nTry to avoid the locking and extra flags altogether.\nHave the main thread hold an extra reference, this way\nwe can depend solely on the atomic ref counter for\nsynchronization.\n\nDon't futz with reiniting the completion, either, we are now\ntightly controlling when completion fires.\n\nReported-by: valis <sec@valis.email>\nFixes: 0cada33241d9 (\"net/tls: fix race condition causing kernel panic\")\nSigned-off-by: Jakub Kicinski <kuba@kernel.org>\nReviewed-by: Simon Horman <horms@kernel.org>\nReviewed-by: Eric Dumazet <edumazet@google.com>\nReviewed-by: Sabrina Dubroca <sd@queasysnail.net>\nSigned-off-by: David S. Miller <davem@davemloft.net>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

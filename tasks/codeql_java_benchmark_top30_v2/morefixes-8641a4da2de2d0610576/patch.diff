@@ -1,0 +1,110 @@
+diff --git a/implementation/src/main/java/io/smallrye/config/SecuritySupport.java b/implementation/src/main/java/io/smallrye/config/SecuritySupport.java
+index c3bfe66..0f9e1e4 100644
+--- a/implementation/src/main/java/io/smallrye/config/SecuritySupport.java
++++ b/implementation/src/main/java/io/smallrye/config/SecuritySupport.java
+@@ -24,22 +24,26 @@ import org.jboss.logging.Logger;
+ /**
+  * @author <a href="http://jmesnil.net/">Jeff Mesnil</a> (c) 2018 Red Hat inc.
+  */
+-public class SecuritySupport {
++class SecuritySupport {
+     private static final Logger LOG = Logger.getLogger("io.smallrye.config");
+ 
+     private SecuritySupport() {
+     }
+ 
+-    public static ClassLoader getContextClassLoader() {
+-        return AccessController.doPrivileged((PrivilegedAction<ClassLoader>) () -> {
+-            ClassLoader tccl = null;
+-            try {
+-                tccl = Thread.currentThread().getContextClassLoader();
+-            } catch (SecurityException ex) {
+-                LOG.warn("Unable to get context classloader instance.", ex);
+-            }
+-            return tccl;
+-        });
++    static ClassLoader getContextClassLoader() {
++        if (System.getSecurityManager() == null) {
++            return Thread.currentThread().getContextClassLoader();
++        } else {
++            return AccessController.doPrivileged((PrivilegedAction<ClassLoader>) () -> {
++                ClassLoader tccl = null;
++                try {
++                    tccl = Thread.currentThread().getContextClassLoader();
++                } catch (SecurityException ex) {
++                    LOG.warn("Unable to get context classloader instance.", ex);
++                }
++                return tccl;
++            });
++        }
+     }
+ 
+ }
+diff --git a/implementation/src/main/java/io/smallrye/config/inject/ConfigProducer.java b/implementation/src/main/java/io/smallrye/config/inject/ConfigProducer.java
+index 7fe216b..aedf0ea 100644
+--- a/implementation/src/main/java/io/smallrye/config/inject/ConfigProducer.java
++++ b/implementation/src/main/java/io/smallrye/config/inject/ConfigProducer.java
+@@ -16,7 +16,7 @@
+ 
+ package io.smallrye.config.inject;
+ 
+-import static io.smallrye.config.SecuritySupport.getContextClassLoader;
++import static io.smallrye.config.inject.SecuritySupport.getContextClassLoader;
+ 
+ import java.io.Serializable;
+ import java.util.*;
+diff --git a/implementation/src/main/java/io/smallrye/config/inject/SecuritySupport.java b/implementation/src/main/java/io/smallrye/config/inject/SecuritySupport.java
+new file mode 100644
+index 0000000..70334ee
+--- /dev/null
++++ b/implementation/src/main/java/io/smallrye/config/inject/SecuritySupport.java
+@@ -0,0 +1,49 @@
++/*
++ * Copyright 2018 Red Hat, Inc.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *   http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package io.smallrye.config.inject;
++
++import java.security.AccessController;
++import java.security.PrivilegedAction;
++
++import org.jboss.logging.Logger;
++
++/**
++ * @author <a href="http://jmesnil.net/">Jeff Mesnil</a> (c) 2018 Red Hat inc.
++ */
++class SecuritySupport {
++    private static final Logger LOG = Logger.getLogger("io.smallrye.config");
++
++    private SecuritySupport() {
++    }
++
++    static ClassLoader getContextClassLoader() {
++        if (System.getSecurityManager() == null) {
++            return Thread.currentThread().getContextClassLoader();
++        } else {
++            return AccessController.doPrivileged((PrivilegedAction<ClassLoader>) () -> {
++                ClassLoader tccl = null;
++                try {
++                    tccl = Thread.currentThread().getContextClassLoader();
++                } catch (SecurityException ex) {
++                    LOG.warn("Unable to get context classloader instance.", ex);
++                }
++                return tccl;
++            });
++        }
++    }
++
++}

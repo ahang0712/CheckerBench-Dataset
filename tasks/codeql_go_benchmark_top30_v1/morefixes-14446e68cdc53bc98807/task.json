@@ -1,0 +1,44 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-14446e68cdc53bc98807",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-14446e68cdc53bc98807",
+    "project_id": "morefixes__pomerium__pomerium",
+    "language": "go",
+    "backend": "codeql"
+  },
+  "changed_go_files": [
+    "internal/handlers/userinfo.go"
+  ],
+  "patch_units": {
+    "before": [
+      "internal/handlers/userinfo.go"
+    ],
+    "after": [
+      "internal/handlers/userinfo.go"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/30b12dbc66d88a2240ac17aa6df9b1cbbf0c42289f5a9f28161e54298bf0d075/database",
+      "cache_key": "30b12dbc66d88a2240ac17aa6df9b1cbbf0c42289f5a9f28161e54298bf0d075",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/d93afcca831fd8d8766c03cbbe6eb9cc10ef6a719beccd51eb47d9adab12a43c/database",
+      "cache_key": "d93afcca831fd8d8766c03cbbe6eb9cc10ef6a719beccd51eb47d9adab12a43c",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/51bdadbf5e05ed9db6f1f8d5de305f1c0d8b5d798275295665fd59f953daf756/database",
+      "cache_key": "51bdadbf5e05ed9db6f1f8d5de305f1c0d8b5d798275295665fd59f953daf756",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-14446e68cdc53bc98807/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-14446e68cdc53bc98807/ (do not mount into agent)"
+  }
+}

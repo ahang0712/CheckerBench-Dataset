@@ -1,0 +1,47 @@
+{
+  "schema_version": "synthesis-task-v1",
+  "task": {
+    "pair_id": "morefixes-d3400ed5292d19661685",
+    "dataset_id": "morefixes",
+    "dataset_item_id": "morefixes-d3400ed5292d19661685",
+    "project_id": "morefixes__containernetworking__plugins",
+    "language": "go",
+    "backend": "codeql"
+  },
+  "changed_go_files": [
+    "plugins/meta/portmap/portmap_nftables.go",
+    "plugins/meta/portmap/portmap_nftables_test.go"
+  ],
+  "patch_units": {
+    "before": [
+      "plugins/meta/portmap/portmap_nftables.go",
+      "plugins/meta/portmap/portmap_nftables_test.go"
+    ],
+    "after": [
+      "plugins/meta/portmap/portmap_nftables.go",
+      "plugins/meta/portmap/portmap_nftables_test.go"
+    ]
+  },
+  "runtime_assets": {
+    "before": {
+      "database": "assets/bc27e7b41f22c5c800322fd6768a190167ea6037b14168e883eba707ccc1bfbb/database",
+      "cache_key": "bc27e7b41f22c5c800322fd6768a190167ea6037b14168e883eba707ccc1bfbb",
+      "codeql_version": "2.26.4"
+    },
+    "after": {
+      "database": "assets/05492d20e83f91cf68642fded2aee70aef733bee2c069c12ae0215728017527c/database",
+      "cache_key": "05492d20e83f91cf68642fded2aee70aef733bee2c069c12ae0215728017527c",
+      "codeql_version": "2.26.4"
+    },
+    "refine": {
+      "database": "assets/452f57c39821d863e96566f4a06f9c05d72c0c249a9d9df5ab56bd46fe3b01e0/database",
+      "cache_key": "452f57c39821d863e96566f4a06f9c05d72c0c249a9d9df5ab56bd46fe3b01e0",
+      "codeql_version": "2.26.4"
+    }
+  },
+  "benchmark_contract": {
+    "agent_visible": true,
+    "reference_query_location": "references/morefixes-d3400ed5292d19661685/query/ (do not mount into agent)",
+    "evaluator_location": "evaluator/morefixes-d3400ed5292d19661685/ (do not mount into agent)"
+  }
+}

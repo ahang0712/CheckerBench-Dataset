@@ -1,0 +1,19 @@
+{
+  "project_id": "torvalds_linux",
+  "before_commit": "029aa4624a7fe35233bdd3d1354dc7be260380bf",
+  "after_commit": "9714061423b8b24b8afb31b8eb4df977c63f19c4",
+  "repo_path": "/workspace/repo/torvalds/linux",
+  "llvm_build_dir": "/opt/llvm",
+  "before_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/af88d3c109aa5edfaa11c9a26d9c0ff21ddf501c/compile_commands.json",
+  "after_compile_commands": "/workspace/benchmark/data-pipeline/snapshots/torvalds_linux/af88d3c109aa5edfaa11c9a26d9c0ff21ddf501c/compile_commands.json",
+  "changed_files": [
+    "drivers/crypto/qat/qat_common/qat_asym_algs.c"
+  ],
+  "commit_message": "crypto: qat - add param check for RSA\n\nReject requests with a source buffer that is bigger than the size of the\nkey. This is to prevent a possible integer underflow that might happen\nwhen copying the source scatterlist into a linear buffer.\n\nCc: stable@vger.kernel.org\nSigned-off-by: Giovanni Cabiddu <giovanni.cabiddu@intel.com>\nReviewed-by: Adam Guerin <adam.guerin@intel.com>\nReviewed-by: Wojciech Ziemba <wojciech.ziemba@intel.com>\nSigned-off-by: Herbert Xu <herbert@gondor.apana.org.au>",
+  "t_valid": 50,
+  "t_plausible": 20,
+  "triage_sample_size": 10,
+  "max_synthesis_retry": 0,
+  "max_in_session_redesigns": 1,
+  "max_refinement_iter": 3
+}

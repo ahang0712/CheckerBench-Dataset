@@ -1,0 +1,36 @@
+### File: net/bluetooth/hci_sync.c
+```c
+static int hci_init1_sync(struct hci_dev *hdev)
+{
+	int err;
+
+	bt_dev_dbg(hdev, "");
+
+	/* Reset */
+	if (!test_bit(HCI_QUIRK_RESET_ON_CLOSE, &hdev->quirks)) {
+		err = hci_reset_sync(hdev);
+		if (err)
+			return err;
+	}
+
+	switch (hdev->dev_type) {
+	case HCI_PRIMARY:
+		hdev->flow_ctl_mode = HCI_FLOW_CTL_MODE_PACKET_BASED;
+		return hci_init_stage_sync(hdev, br_init1);
+	case HCI_AMP:
+		hdev->flow_ctl_mode = HCI_FLOW_CTL_MODE_BLOCK_BASED;
+		return hci_init_stage_sync(hdev, amp_init1);
+	default:
+		bt_dev_err(hdev, "Unknown device type %d", hdev->dev_type);
+		break;
+	}
+
+	return 0;
+}
+
+static int hci_read_buffer_size_sync(struct hci_dev *hdev)
+{
+	return __hci_cmd_sync_status(hdev, HCI_OP_READ_BUFFER_SIZE,
+				     0, NULL, HCI_CMD_TIMEOUT);
+}
+```

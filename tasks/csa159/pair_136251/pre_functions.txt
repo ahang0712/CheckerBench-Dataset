@@ -1,0 +1,2527 @@
+### File: OpenEXR/IlmImf/ImfCompositeDeepScanLine.cpp
+```c
+void 
+CompositeDeepScanLine::Data::handleDeepFrameBuffer (DeepFrameBuffer& buf,
+                                                    std::vector< unsigned int > & counts,
+                                                    vector< std::vector< float* > > & pointers,
+                                                    const Header& header,
+                                                    int start,
+                                                    int end)
+{
+    int width=_dataWindow.size().x+1;
+    size_t pixelcount = width * (end-start+1);
+    pointers.resize(_channels.size());
+    counts.resize(pixelcount);
+    buf.insertSampleCountSlice (Slice (OPENEXR_IMF_INTERNAL_NAMESPACE::UINT,
+                                (char *) (&counts[0]-_dataWindow.min.x-start*width),
+                                sizeof(unsigned int),
+                                sizeof(unsigned int)*width));
+
+    pointers[0].resize(pixelcount);
+    buf.insert ("Z", DeepSlice (OPENEXR_IMF_INTERNAL_NAMESPACE::FLOAT,
+                                (char *)(&pointers[0][0]-_dataWindow.min.x-start*width),
+                                sizeof(float *),
+                                sizeof(float *)*width,
+                                sizeof(float) ));
+
+    if(_zback)
+    {
+        pointers[1].resize(pixelcount);
+        buf.insert ("ZBack", DeepSlice (OPENEXR_IMF_INTERNAL_NAMESPACE::FLOAT,
+                                        (char *)(&pointers[1][0]-_dataWindow.min.x-start*width),
+                                        sizeof(float *),
+                                        sizeof(float *)*width,
+                                        sizeof(float) ));
+    }
+
+    pointers[2].resize(pixelcount);
+    buf.insert ("A", DeepSlice (OPENEXR_IMF_INTERNAL_NAMESPACE::FLOAT,
+                                (char *)(&pointers[2][0]-_dataWindow.min.x-start*width),
+                                sizeof(float *),
+                                sizeof(float *)*width,
+                                sizeof(float) ));
+
+
+    size_t i =0;
+    for(FrameBuffer::ConstIterator qt  = _outputFrameBuffer.begin();
+                                   qt != _outputFrameBuffer.end();
+                                   qt++)
+    {
+        int channel_in_source = _bufferMap[i];
+        if(channel_in_source>2)
+        {
+            // not dealt with yet (0,1,2 previously inserted)
+            pointers[channel_in_source].resize(pixelcount);
+            buf.insert (qt.name(),
+                        DeepSlice (OPENEXR_IMF_INTERNAL_NAMESPACE::FLOAT,
+                                   (char *)(&pointers[channel_in_source][0]-_dataWindow.min.x-start*width),
+                                   sizeof(float *),
+                                   sizeof(float *)*width,
+                                   sizeof(float) ));
+        }
+
+        i++;
+    }
+
+}
+```
+
+### File: OpenEXR/IlmImf/ImfDeepScanLineInputFile.cpp
+```c
+void DeepScanLineInputFile::initialize(const Header& header)
+{
+    try
+    {
+        if (header.type() != DEEPSCANLINE)
+            throw IEX_NAMESPACE::ArgExc("Can't build a DeepScanLineInputFile from "
+            "a type-mismatched part.");
+        
+        if(header.version()!=1)
+        {
+            THROW(IEX_NAMESPACE::ArgExc, "Version " << header.version() << " not supported for deepscanline images in this version of the library");
+        }
+        
+        _data->header = header;
+
+        _data->lineOrder = _data->header.lineOrder();
+
+        const Box2i &dataWindow = _data->header.dataWindow();
+
+        _data->minX = dataWindow.min.x;
+        _data->maxX = dataWindow.max.x;
+        _data->minY = dataWindow.min.y;
+        _data->maxY = dataWindow.max.y;
+
+        _data->sampleCount.resizeErase(_data->maxY - _data->minY + 1,
+                                       _data->maxX - _data->minX + 1);
+        _data->lineSampleCount.resizeErase(_data->maxY - _data->minY + 1);
+
+        Compressor* compressor = newCompressor(_data->header.compression(),
+                                               0,
+                                               _data->header);
+
+        _data->linesInBuffer = numLinesInBuffer (compressor);
+
+        delete compressor;
+
+        _data->nextLineBufferMinY = _data->minY - 1;
+
+        int lineOffsetSize = (dataWindow.max.y - dataWindow.min.y +
+                              _data->linesInBuffer) / _data->linesInBuffer;
+
+        _data->lineOffsets.resize (lineOffsetSize);
+
+        for (size_t i = 0; i < _data->lineBuffers.size(); i++)
+            _data->lineBuffers[i] = new LineBuffer ();
+
+        _data->gotSampleCount.resizeErase(_data->maxY - _data->minY + 1);
+        for (int i = 0; i < _data->maxY - _data->minY + 1; i++)
+            _data->gotSampleCount[i] = false;
+
+        _data->maxSampleCountTableSize = min(_data->linesInBuffer, _data->maxY - _data->minY + 1) *
+                                        (_data->maxX - _data->minX + 1) *
+                                        sizeof(unsigned int);
+
+        _data->sampleCountTableBuffer.resizeErase(_data->maxSampleCountTableSize);
+
+        _data->sampleCountTableComp = newCompressor(_data->header.compression(),
+                                                    _data->maxSampleCountTableSize,
+                                                    _data->header);
+
+        _data->bytesPerLine.resize (_data->maxY - _data->minY + 1);
+        
+        const ChannelList & c=header.channels();
+        
+        _data->combinedSampleSize=0;
+        for(ChannelList::ConstIterator i=c.begin();i!=c.end();i++)
+        {
+            switch(i.channel().type)
+            {
+                case OPENEXR_IMF_INTERNAL_NAMESPACE::HALF  :
+                    _data->combinedSampleSize+=Xdr::size<half>();
+                    break;
+                case OPENEXR_IMF_INTERNAL_NAMESPACE::FLOAT :
+                    _data->combinedSampleSize+=Xdr::size<float>();
+                    break;
+                case OPENEXR_IMF_INTERNAL_NAMESPACE::UINT  :
+                    _data->combinedSampleSize+=Xdr::size<unsigned int>();
+                    break;
+                default :
+                    THROW(IEX_NAMESPACE::ArgExc, "Bad type for channel " << i.name() << " initializing deepscanline reader");
+                    
+            }
+        }
+        
+    }
+    catch (...)
+    {
+        delete _data;
+        _data=NULL;
+        throw;
+    }
+}
+
+void
+DeepScanLineInputFile::compatibilityInitialize(OPENEXR_IMF_INTERNAL_NAMESPACE::IStream& is)
+{
+    is.seekg(0);
+    //
+    // Construct a MultiPartInputFile, initialize TiledInputFile
+    // with the part 0 data.
+    // (TODO) maybe change the third parameter of the constructor of MultiPartInputFile later.
+    //
+    _data->multiPartBackwardSupport = true;
+    _data->multiPartFile = new MultiPartInputFile(is, _data->numThreads);
+    InputPartData* part = _data->multiPartFile->getPart(0);
+    
+    multiPartInitialize(part);
+}
+```
+
+### File: OpenEXR/IlmImf/ImfDeepTiledInputFile.cpp
+```c
+void
+DeepTiledInputFile::compatibilityInitialize(OPENEXR_IMF_INTERNAL_NAMESPACE::IStream& is)
+{
+    is.seekg(0);
+    //
+    // Construct a MultiPartInputFile, initialize TiledInputFile
+    // with the part 0 data.
+    // (TODO) maybe change the third parameter of the constructor of MultiPartInputFile later.
+    //
+    _data->multiPartFile = new MultiPartInputFile(is, _data->numThreads);
+    _data->multiPartBackwardSupport = true;
+    InputPartData* part = _data->multiPartFile->getPart(0);
+
+    multiPartInitialize(part);
+}
+```
+
+### File: OpenEXR/IlmImf/ImfDwaCompressor.cpp
+```c
+struct DwaCompressor::Classifier
+{
+    Classifier (std::string suffix,
+                CompressorScheme scheme,
+                PixelType type,
+                int cscIdx,
+                bool caseInsensitive):
+        _suffix(suffix),
+        _scheme(scheme),
+        _type(type),
+        _cscIdx(cscIdx),
+        _caseInsensitive(caseInsensitive)
+    {
+        if (caseInsensitive) 
+            std::transform(_suffix.begin(), _suffix.end(), _suffix.begin(), tolower);
+    }
+
+    Classifier (const char *&ptr, int size)
+    {
+        if (size <= 0) 
+            throw IEX_NAMESPACE::InputExc("Error uncompressing DWA data"
+                                " (truncated rule).");
+            
+        {
+            char suffix[Name::SIZE];
+            memset (suffix, 0, Name::SIZE);
+            Xdr::read<CharPtrIO> (ptr, std::min(size, Name::SIZE-1), suffix);
+            _suffix = std::string(suffix);
+        }
+
+        if (static_cast<size_t>(size) < _suffix.length() + 1 + 2*Xdr::size<char>()) 
+            throw IEX_NAMESPACE::InputExc("Error uncompressing DWA data"
+                                " (truncated rule).");
+
+        char value;
+        Xdr::read<CharPtrIO> (ptr, value);
+
+        _cscIdx = (int)(value >> 4) - 1;
+        if (_cscIdx < -1 || _cscIdx >= 3) 
+            throw IEX_NAMESPACE::InputExc("Error uncompressing DWA data"
+                                " (corrupt cscIdx rule).");
+
+        _scheme = (CompressorScheme)((value >> 2) & 3);
+        if (_scheme < 0 || _scheme >= NUM_COMPRESSOR_SCHEMES) 
+            throw IEX_NAMESPACE::InputExc("Error uncompressing DWA data"
+                                " (corrupt scheme rule).");
+
+        _caseInsensitive = (value & 1 ? true : false);
+
+        Xdr::read<CharPtrIO> (ptr, value);
+        if (value < 0 || value >= NUM_PIXELTYPES) 
+            throw IEX_NAMESPACE::InputExc("Error uncompressing DWA data"
+                                " (corrupt rule).");
+        _type = (PixelType)value;
+    }
+```
+
+### File: OpenEXR/IlmImf/ImfFastHuf.cpp
+```c
+///////////////////////////////////////////////////////////////////////////
+//
+// Copyright (c) 2009-2014 DreamWorks Animation LLC. 
+//
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+// *       Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+// *       Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+// *       Neither the name of DreamWorks Animation nor the names of
+// its contributors may be used to endorse or promote products derived
+// from this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+///////////////////////////////////////////////////////////////////////////
+
+#include "ImfFastHuf.h"
+#include <Iex.h>
+
+#include <string.h>
+#include <assert.h>
+#include <math.h>
+#include <vector>
+
+OPENEXR_IMF_INTERNAL_NAMESPACE_SOURCE_ENTER
+
+//
+// Adapted from hufUnpackEncTable - 
+// We don't need to reconstruct the code book, just the encoded
+// lengths for each symbol. From the lengths, we can build the
+// base + offset tables. This should be a bit more efficient
+// for sparse code books.
+// 
+//   table     - ptr to the start of the code length data. Will be
+//               updated as we decode data
+//
+//   numBytes  - size of the encoded table (I think)?
+//
+//   minSymbol - smallest symbol in the code book
+//
+//   maxSymbol - largest symbol in the code book. 
+//
+//   rleSymbol - the symbol to trigger RLE in the encoded bitstream
+//
+
+FastHufDecoder::FastHufDecoder
+    (const char *&table,
+     int numBytes,
+     int minSymbol,
+     int maxSymbol,
+     int rleSymbol)
+:
+    _rleSymbol (rleSymbol),
+    _numSymbols (0),
+    _minCodeLength (255),
+    _maxCodeLength (0),
+    _idToSymbol (0)
+{
+    //
+    // List of symbols that we find with non-zero code lengths
+    // (listed in the order we find them). Store these in the
+    // same format as the code book stores codes + lengths - 
+    // low 6 bits are the length, everything above that is
+    // the symbol.
+    //
+
+    std::vector<Int64> symbols;
+
+    //
+    // The 'base' table is the minimum code at each code length. base[i]
+    // is the smallest code (numerically) of length i.
+    //
+
+    Int64 base[MAX_CODE_LEN + 1];     
+
+    //
+    // The 'offset' table is the position (in sorted order) of the first id
+    // of a given code lenght. Array is indexed by code length, like base.  
+    //
+
+    Int64 offset[MAX_CODE_LEN + 1];   
+
+    //
+    // Count of how many codes at each length there are. Array is 
+    // indexed by code length, like base and offset.
+    //
+
+    size_t codeCount[MAX_CODE_LEN + 1];    
+
+    for (int i = 0; i <= MAX_CODE_LEN; ++i)
+    {
+        codeCount[i] = 0;
+        base[i]      = 0xffffffffffffffffULL;
+        offset[i]    = 0;
+    }
+
+    //
+    // Count the number of codes, the min/max code lengths, the number of
+    // codes with each length, and record symbols with non-zero code
+    // length as we find them.
+    //
+
+    const char *currByte     = table;
+    Int64       currBits     = 0;
+    int         currBitCount = 0;
+
+    const int SHORT_ZEROCODE_RUN = 59;
+    const int LONG_ZEROCODE_RUN  = 63;
+    const int SHORTEST_LONG_RUN  = 2 + LONG_ZEROCODE_RUN - SHORT_ZEROCODE_RUN;
+
+    for (Int64 symbol = static_cast<Int64>(minSymbol); symbol <= static_cast<Int64>(maxSymbol); symbol++)
+    {
+        if (currByte - table > numBytes)
+        {
+            throw IEX_NAMESPACE::InputExc ("Error decoding Huffman table "
+                                           "(Truncated table data).");
+        }
+
+        //
+        // Next code length - either:
+        //       0-58  (literal code length)
+        //       59-62 (various lengths runs of 0)
+        //       63    (run of n 0's, with n is the next 8 bits)
+        //
+
+        Int64 codeLen = readBits (6, currBits, currBitCount, currByte);
+
+        if (codeLen == (Int64) LONG_ZEROCODE_RUN)
+        {
+            if (currByte - table > numBytes)
+            {
+                throw IEX_NAMESPACE::InputExc ("Error decoding Huffman table "
+                                               "(Truncated table data).");
+            }
+
+            int runLen = readBits (8, currBits, currBitCount, currByte) +
+                         SHORTEST_LONG_RUN;
+
+            if (symbol + runLen > static_cast<Int64>(maxSymbol + 1))
+            {
+                throw IEX_NAMESPACE::InputExc ("Error decoding Huffman table "
+                                               "(Run beyond end of table).");
+            }
+            
+            symbol += runLen - 1;
+
+        }
+        else if (codeLen >= static_cast<Int64>(SHORT_ZEROCODE_RUN))
+        {
+            int runLen = codeLen - SHORT_ZEROCODE_RUN + 2;
+
+            if (symbol + runLen > static_cast<Int64>(maxSymbol + 1))
+            {
+                throw IEX_NAMESPACE::InputExc ("Error decoding Huffman table "
+                                               "(Run beyond end of table).");
+            }
+
+            symbol += runLen - 1;
+
+        }
+        else if (codeLen != 0)
+        {
+            symbols.push_back ((symbol << 6) | (codeLen & 63));
+
+            if (codeLen < _minCodeLength)
+                _minCodeLength = codeLen;
+
+            if (codeLen > _maxCodeLength)
+                _maxCodeLength = codeLen;
+
+            codeCount[codeLen]++;
+        }
+    }
+
+    for (int i = 0; i < MAX_CODE_LEN; ++i)
+        _numSymbols += codeCount[i];
+
+    table = currByte;
+
+    //
+    // Compute base - once we have the code length counts, there
+    //                is a closed form solution for this
+    //
+
+    {
+        double* countTmp = new double[_maxCodeLength+1];
+
+        for (int l = _minCodeLength; l <= _maxCodeLength; ++l)
+        {
+            countTmp[l] = (double)codeCount[l] * 
+                          (double)(2 << (_maxCodeLength-l));
+        }
+    
+        for (int l = _minCodeLength; l <= _maxCodeLength; ++l)
+        {
+            double tmp = 0;
+
+            for (int k =l + 1; k <= _maxCodeLength; ++k)
+                tmp += countTmp[k];
+            
+            tmp /= (double)(2 << (_maxCodeLength - l));
+
+            base[l] = (Int64)ceil (tmp);
+        }
+
+        delete [] countTmp;
+    }
+   
+    //
+    // Compute offset - these are the positions of the first
+    //                  id (not symbol) that has length [i]
+    //
+
+    offset[_maxCodeLength] = 0;
+
+    for (int i= _maxCodeLength - 1; i >= _minCodeLength; i--)
+        offset[i] = offset[i + 1] + codeCount[i + 1];
+
+    //
+    // Allocate and fill the symbol-to-id mapping. Smaller Ids should be
+    // mapped to less-frequent symbols (which have longer codes). Use
+    // the offset table to tell us where the id's for a given code 
+    // length start off.
+    //
+
+    _idToSymbol = new int[_numSymbols];
+
+    Int64 mapping[MAX_CODE_LEN + 1];
+    for (int i = 0; i < MAX_CODE_LEN + 1; ++i) 
+        mapping[i] = -1;
+    for (int i = _minCodeLength; i <= _maxCodeLength; ++i)
+        mapping[i] =
+
+// ... (14845 more chars)
+```
+
+### File: OpenEXR/IlmImf/ImfHeader.cpp
+```c
+///////////////////////////////////////////////////////////////////////////
+//
+// Copyright (c) 2004, Industrial Light & Magic, a division of Lucas
+// Digital Ltd. LLC
+// 
+// All rights reserved.
+// 
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+// *       Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+// *       Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+// *       Neither the name of Industrial Light & Magic nor the names of
+// its contributors may be used to endorse or promote products derived
+// from this software without specific prior written permission. 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+///////////////////////////////////////////////////////////////////////////
+
+
+
+//-----------------------------------------------------------------------------
+//
+//	class Header
+//
+//-----------------------------------------------------------------------------
+
+#include <ImfHeader.h>
+#include <ImfStdIO.h>
+#include <ImfVersion.h>
+#include <ImfCompressor.h>
+#include <ImfMisc.h>
+#include <ImfBoxAttribute.h>
+#include <ImfChannelListAttribute.h>
+#include <ImfChromaticitiesAttribute.h>
+#include <ImfCompressionAttribute.h>
+#include <ImfDeepImageStateAttribute.h>
+#include <ImfDoubleAttribute.h>
+#include <ImfDwaCompressor.h>
+#include <ImfEnvmapAttribute.h>
+#include <ImfFloatAttribute.h>
+#include <ImfFloatVectorAttribute.h>
+#include <ImfIntAttribute.h>
+#include <ImfKeyCodeAttribute.h>
+#include <ImfLineOrderAttribute.h>
+#include <ImfMatrixAttribute.h>
+#include <ImfOpaqueAttribute.h>
+#include <ImfPreviewImageAttribute.h>
+#include <ImfRationalAttribute.h>
+#include <ImfStringAttribute.h>
+#include <ImfStringVectorAttribute.h>
+#include <ImfTileDescriptionAttribute.h>
+#include <ImfTimeCodeAttribute.h>
+#include <ImfVecAttribute.h>
+#include <ImfPartType.h>
+#include "IlmThreadMutex.h"
+#include "Iex.h"
+#include <sstream>
+#include <stdlib.h>
+#include <time.h>
+#include <cmath>
+#include "ImfTiledMisc.h"
+#include "ImfNamespace.h"
+
+OPENEXR_IMF_INTERNAL_NAMESPACE_SOURCE_ENTER
+
+using namespace std;
+using IMATH_NAMESPACE::Box2i;
+using IMATH_NAMESPACE::V2i;
+using IMATH_NAMESPACE::V2f;
+using ILMTHREAD_NAMESPACE::Mutex;
+using ILMTHREAD_NAMESPACE::Lock;
+
+
+namespace {
+
+int maxImageWidth = 0;
+int maxImageHeight = 0;
+int maxTileWidth = 0;
+int maxTileHeight = 0;
+
+
+void
+initialize (Header &header,
+	    const Box2i &displayWindow,
+	    const Box2i &dataWindow,
+	    float pixelAspectRatio,
+	    const V2f &screenWindowCenter,
+	    float screenWindowWidth,
+	    LineOrder lineOrder,
+	    Compression compression)
+{
+    header.insert ("displayWindow", Box2iAttribute (displayWindow));
+    header.insert ("dataWindow", Box2iAttribute (dataWindow));
+    if ( !std::isnormal (pixelAspectRatio) || pixelAspectRatio < 0.f)
+        THROW (IEX_NAMESPACE::ArgExc, "Invalid pixel aspect ratio");
+    header.insert ("pixelAspectRatio", FloatAttribute (pixelAspectRatio));
+    header.insert ("screenWindowCenter", V2fAttribute (screenWindowCenter));
+    header.insert ("screenWindowWidth", FloatAttribute (screenWindowWidth));
+    header.insert ("lineOrder", LineOrderAttribute (lineOrder));
+    header.insert ("compression", CompressionAttribute (compression));
+    header.insert ("channels", ChannelListAttribute ());
+}
+
+template <size_t N>
+void checkIsNullTerminated (const char (&str)[N], const char *what)
+{
+	for (size_t i = 0; i < N; ++i) {
+		if (str[i] == '\0')
+			return;
+	}
+	std::stringstream s;
+	s << "Invalid " << what << ": it is more than " << (N - 1) 
+		<< " characters long.";
+	throw IEX_NAMESPACE::InputExc(s);
+}
+
+} // namespace
+
+
+Header::Header (int width,
+		int height,
+		float pixelAspectRatio,
+		const V2f &screenWindowCenter,
+		float screenWindowWidth,
+		LineOrder lineOrder,
+		Compression compression)
+:
+    _map()
+{
+    staticInitialize();
+
+    Box2i displayWindow (V2i (0, 0), V2i (width - 1, height - 1));
+
+    initialize (*this,
+		displayWindow,
+		displayWindow,
+		pixelAspectRatio,
+		screenWindowCenter,
+		screenWindowWidth,
+		lineOrder,
+		compression);
+}
+
+
+Header::Header (int width,
+		int height,
+		const Box2i &dataWindow,
+		float pixelAspectRatio,
+		const V2f &screenWindowCenter,
+		float screenWindowWidth,
+		LineOrder lineOrder,
+		Compression compression)
+:
+    _map()
+{
+    staticInitialize();
+
+    Box2i displayWindow (V2i (0, 0), V2i (width - 1, height - 1));
+
+    initialize (*this,
+		displayWindow,
+		dataWindow,
+		pixelAspectRatio,
+		screenWindowCenter,
+		screenWindowWidth,
+		lineOrder,
+		compression);
+}
+
+
+Header::Header (const Box2i &displayWindow,
+		const Box2i &dataWindow,
+		float pixelAspectRatio,
+		const V2f &screenWindowCenter,
+		float screenWindowWidth,
+		LineOrder lineOrder,
+		Compression compression)
+:
+    _map()
+{
+    staticInitialize();
+
+    initialize (*this,
+		displayWindow,
+		dataWindow,
+		pixelAspectRatio,
+		screenWindowCenter,
+		screenWindowWidth,
+		lineOrder,
+		compression);
+}
+
+
+Header::Header (const Header &other): _map()
+{
+    for (AttributeMap::const_iterator i = other._map.begin();
+	 i != other._map.end();
+	 ++i)
+    {
+	insert (*i->first, *i->second);
+    }
+}
+
+
+Header::~Header ()
+{
+    for (AttributeMap::iterator i = _map.begin();
+	 i != _map.end();
+	 ++i)
+    {
+	 delete i->second;
+    }
+}
+
+
+Header &		
+Header::operator = (const Header &other)
+{
+    if (this != &other)
+    {
+	for (AttributeMap::iterator i = _map.begin();
+	     i != _map.end();
+	     ++i)
+	{
+	     delete i->second;
+	}
+
+	_map.erase (_map.begin(), _map.end());
+
+	for (AttributeMap::const_iterator i = other._map.begin();
+	     i != other._map.end();
+	     ++i)
+	{
+	    insert (*i->first, *i->second);
+	}
+    }
+
+    return *this;
+}
+
+
+void
+Header::erase (const char name[])
+{
+    if (name[0] == 0)
+        THROW (IEX_NAMESPACE::ArgExc, "Image attribute name cannot be an empty string.");
+    
+    
+    AttributeMap::iterator i = _map.find (name);
+    if (i != _map.end())
+        _map.erase (i);
+
+}
+
+
+void
+Header::erase (const string &name)
+{
+    erase (name.c_str());
+}
+    
+    
+void
+Header::insert (const char name[], const Attribute &attribute)
+{
+    if (name[0] == 0)
+	THROW (IEX_NAMESPACE::ArgExc, "Image attribute name cannot be an empty string.");
+
+    AttributeMap::iterator i = _map.find (name);
+
+    if (i == _map.end())
+    {
+	Attribute *tmp = attribute.copy();
+
+	try
+	{
+	    _map[name] = tmp;
+	}
+	catch (...)
+	{
+	    delete tmp;
+	    throw;
+	}
+    }
+    else
+    {
+	if (strcmp (i->second->typeName(), attribute.typeName()))
+	    THROW (IEX_NAMESPACE::TypeExc, "Cannot assign a value of "
+				 "type \"" << attribute.typeName() << "\" "
+				 "to image attribute \"" << name << "\" of "
+				 "type \"" << i->second->typeName() << "\".");
+
+	Attribute *tmp = attribute.copy();
+	delete i->second;
+	i->second = tmp;
+    }
+}
+
+
+void
+Header::insert (const string &name, const Attribute &attribute)
+{
+    insert (name.c_str(), attribute);
+}
+
+
+Attribute &		
+Header::operator [] (const char name[])
+{
+    AttributeMap::iterator i = _map.find (name);
+
+    if (i =
+
+// ... (22549 more chars)
+```
+
+### File: OpenEXR/IlmImf/ImfHuf.cpp
+```c
+void
+hufUncompress (const char compressed[],
+	       int nCompressed,
+	       unsigned short raw[],
+	       int nRaw)
+{
+    if (nCompressed == 0)
+    {
+	if (nRaw != 0)
+	    notEnoughData();
+
+	return;
+    }
+
+    int im = readUInt (compressed);
+    int iM = readUInt (compressed + 4);
+    // int tableLength = readUInt (compressed + 8);
+    int nBits = readUInt (compressed + 12);
+
+    if (im < 0 || im >= HUF_ENCSIZE || iM < 0 || iM >= HUF_ENCSIZE)
+	invalidTableSize();
+
+    const char *ptr = compressed + 20;
+
+    // 
+    // Fast decoder needs at least 2x64-bits of compressed data, and
+    // needs to be run-able on this platform. Otherwise, fall back
+    // to the original decoder
+    //
+
+    if (FastHufDecoder::enabled() && nBits > 128)
+    {
+        FastHufDecoder fhd (ptr, nCompressed - (ptr - compressed), im, iM, iM);
+        fhd.decode ((unsigned char*)ptr, nBits, raw, nRaw);
+    }
+    else
+    {
+        AutoArray <Int64, HUF_ENCSIZE> freq;
+        AutoArray <HufDec, HUF_DECSIZE> hdec;
+
+        hufClearDecTable (hdec);
+
+        hufUnpackEncTable (&ptr,
+                           nCompressed - (ptr - compressed),
+                           im,
+                           iM,
+                           freq);
+
+        try
+        {
+            if (nBits > 8 * (nCompressed - (ptr - compressed)))
+                invalidNBits();
+
+            hufBuildDecTable (freq, im, iM, hdec);
+            hufDecode (freq, hdec, ptr, nBits, iM, nRaw, raw);
+        }
+        catch (...)
+        {
+            hufFreeDecTable (hdec);
+            throw;
+        }
+
+        hufFreeDecTable (hdec);
+    }
+}
+```
+
+### File: OpenEXR/IlmImf/ImfInputFile.cpp
+```c
+void
+InputFile::compatibilityInitialize (OPENEXR_IMF_INTERNAL_NAMESPACE::IStream& is)
+{
+    is.seekg(0);
+
+    //
+    // Construct a MultiPartInputFile, initialize InputFile
+    // with the part 0 data.
+    // (TODO) may want to have a way to set the reconstruction flag.
+    //
+    _data->multiPartBackwardSupport = true;
+    _data->multiPartFile = new MultiPartInputFile(is, _data->numThreads);
+    InputPartData* part = _data->multiPartFile->getPart(0);
+
+    multiPartInitialize (part);
+}
+```
+
+### File: OpenEXR/IlmImf/ImfMisc.cpp
+```c
+size_t
+bytesPerLineTable (const Header &header,
+		   vector<size_t> &bytesPerLine)
+{
+    const Box2i &dataWindow = header.dataWindow();
+    const ChannelList &channels = header.channels();
+
+    bytesPerLine.resize (dataWindow.max.y - dataWindow.min.y + 1);
+
+    for (ChannelList::ConstIterator c = channels.begin();
+	 c != channels.end();
+	 ++c)
+    {
+	int nBytes = pixelTypeSize (c.channel().type) *
+		     (dataWindow.max.x - dataWindow.min.x + 1) /
+		     c.channel().xSampling;
+
+	for (int y = dataWindow.min.y, i = 0; y <= dataWindow.max.y; ++y, ++i)
+	    if (modp (y, c.channel().ySampling) == 0)
+		bytesPerLine[i] += nBytes;
+    }
+
+    size_t maxBytesPerLine = 0;
+
+    for (int y = dataWindow.min.y, i = 0; y <= dataWindow.max.y; ++y, ++i)
+	if (maxBytesPerLine < bytesPerLine[i])
+	    maxBytesPerLine = bytesPerLine[i];
+
+    return maxBytesPerLine;
+}
+
+int
+numLinesInBuffer (Compressor * compressor)
+{
+    return compressor? compressor->numScanLines(): 1;
+}
+
+bool
+usesLongNames (const Header &header)
+{
+    //
+    // If an OpenEXR file contains any attribute names, attribute type names
+    // or channel names longer than 31 characters, then the file cannot be
+    // read by older versions of the IlmImf library (up to OpenEXR 1.6.1).
+    // Before writing the file header, we check if the header contains
+    // any names longer than 31 characters; if it does, then we set the
+    // LONG_NAMES_FLAG in the file version number.  Older versions of the
+    // IlmImf library will refuse to read files that have the LONG_NAMES_FLAG
+    // set.  Without the flag, older versions of the library would mis-
+    // interpret the file as broken.
+    //
+
+    for (Header::ConstIterator i = header.begin();
+         i != header.end();
+         ++i)
+    {
+        if (strlen (i.name()) >= 32 || strlen (i.attribute().typeName()) >= 32)
+            return true;
+    }
+
+    const ChannelList &channels = header.channels();
+
+    for (ChannelList::ConstIterator i = channels.begin();
+         i != channels.end();
+         ++i)
+    {
+        if (strlen (i.name()) >= 32)
+            return true;
+    }
+
+    return false;
+}
+
+int
+getScanlineChunkOffsetTableSize(const Header& header)
+{
+    const Box2i &dataWindow = header.dataWindow();
+
+    vector<size_t> bytesPerLine;
+    size_t maxBytesPerLine = bytesPerLineTable (header,
+                                                bytesPerLine);
+
+    Compressor* compressor = newCompressor(header.compression(),
+                                           maxBytesPerLine,
+                                           header);
+
+    int linesInBuffer = numLinesInBuffer (compressor);
+
+    int lineOffsetSize = (dataWindow.max.y - dataWindow.min.y +
+                          linesInBuffer) / linesInBuffer;
+
+    delete compressor;
+
+    return lineOffsetSize;
+}
+```
+
+### File: OpenEXR/IlmImf/ImfPizCompressor.cpp
+```c
+///////////////////////////////////////////////////////////////////////////
+//
+// Copyright (c) 2004, Industrial Light & Magic, a division of Lucas
+// Digital Ltd. LLC
+// 
+// All rights reserved.
+// 
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+// *       Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+// *       Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+// *       Neither the name of Industrial Light & Magic nor the names of
+// its contributors may be used to endorse or promote products derived
+// from this software without specific prior written permission. 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+///////////////////////////////////////////////////////////////////////////
+
+
+//-----------------------------------------------------------------------------
+//
+//	class PizCompressor
+//
+//-----------------------------------------------------------------------------
+
+#include "ImfPizCompressor.h"
+#include "ImfHeader.h"
+#include "ImfChannelList.h"
+#include "ImfHuf.h"
+#include "ImfWav.h"
+#include "ImfMisc.h"
+#include "ImfCheckedArithmetic.h"
+#include <ImathFun.h>
+#include <ImathBox.h>
+#include <Iex.h>
+#include "ImfIO.h"
+#include "ImfXdr.h"
+#include "ImfAutoArray.h"
+#include <string.h>
+#include <assert.h>
+#include "ImfNamespace.h"
+
+OPENEXR_IMF_INTERNAL_NAMESPACE_SOURCE_ENTER
+
+using IMATH_NAMESPACE::divp;
+using IMATH_NAMESPACE::modp;
+using IMATH_NAMESPACE::Box2i;
+using IMATH_NAMESPACE::V2i;
+using IEX_NAMESPACE::InputExc;
+
+namespace {
+
+//
+// Functions to compress the range of values in the pixel data
+//
+
+const int USHORT_RANGE = (1 << 16);
+const int BITMAP_SIZE  = (USHORT_RANGE >> 3);
+
+void
+bitmapFromData (const unsigned short data[/*nData*/],
+		int nData,
+		unsigned char bitmap[BITMAP_SIZE],
+		unsigned short &minNonZero,
+		unsigned short &maxNonZero)
+{
+    for (int i = 0; i < BITMAP_SIZE; ++i)
+	bitmap[i] = 0;
+
+    for (int i = 0; i < nData; ++i)
+	bitmap[data[i] >> 3] |= (1 << (data[i] & 7));
+
+    bitmap[0] &= ~1;			// zero is not explicitly stored in
+					// the bitmap; we assume that the
+					// data always contain zeroes
+    minNonZero = BITMAP_SIZE - 1;
+    maxNonZero = 0;
+
+    for (int i = 0; i < BITMAP_SIZE; ++i)
+    {
+	if (bitmap[i])
+	{
+	    if (minNonZero > i)
+		minNonZero = i;
+	    if (maxNonZero < i)
+		maxNonZero = i;
+	}
+    }
+}
+
+
+unsigned short
+forwardLutFromBitmap (const unsigned char bitmap[BITMAP_SIZE],
+		      unsigned short lut[USHORT_RANGE])
+{
+    int k = 0;
+
+    for (int i = 0; i < USHORT_RANGE; ++i)
+    {
+	if ((i == 0) || (bitmap[i >> 3] & (1 << (i & 7))))
+	    lut[i] = k++;
+	else
+	    lut[i] = 0;
+    }
+
+    return k - 1;	// maximum value stored in lut[],
+}			// i.e. number of ones in bitmap minus 1
+
+
+unsigned short
+reverseLutFromBitmap (const unsigned char bitmap[BITMAP_SIZE],
+		      unsigned short lut[USHORT_RANGE])
+{
+    int k = 0;
+
+    for (int i = 0; i < USHORT_RANGE; ++i)
+    {
+	if ((i == 0) || (bitmap[i >> 3] & (1 << (i & 7))))
+	    lut[k++] = i;
+    }
+
+    int n = k - 1;
+
+    while (k < USHORT_RANGE)
+	lut[k++] = 0;
+
+    return n;		// maximum k where lut[k] is non-zero,
+}			// i.e. number of ones in bitmap minus 1
+
+
+void
+applyLut (const unsigned short lut[USHORT_RANGE],
+	  unsigned short data[/*nData*/],
+	  int nData)
+{
+    for (int i = 0; i < nData; ++i)
+	data[i] = lut[data[i]];
+}
+
+
+} // namespace
+
+
+struct PizCompressor::ChannelData
+{
+    unsigned short *	start;
+    unsigned short *	end;
+    int			nx;
+    int			ny;
+    int			ys;
+    int			size;
+};
+
+
+PizCompressor::PizCompressor
+    (const Header &hdr,
+     size_t maxScanLineSize,
+     size_t numScanLines)
+:
+    Compressor (hdr),
+    _maxScanLineSize (maxScanLineSize),
+    _format (XDR),
+    _numScanLines (numScanLines),
+    _tmpBuffer (0),
+    _outBuffer (0),
+    _numChans (0),
+    _channels (hdr.channels()),
+    _channelData (0)
+{
+    // TODO: Remove this when we can change the ABI
+    (void) _maxScanLineSize;
+    size_t tmpBufferSize = uiMult (maxScanLineSize, numScanLines) / 2;
+
+    size_t outBufferSize =
+                uiAdd (uiMult (maxScanLineSize, numScanLines),
+                       size_t (65536 + 8192));
+
+    _tmpBuffer = new unsigned short
+            [checkArraySize (tmpBufferSize, sizeof (unsigned short))];
+
+    _outBuffer = new char [outBufferSize];
+
+    const ChannelList &channels = header().channels();
+    bool onlyHalfChannels = true;
+
+    for (ChannelList::ConstIterator c = channels.begin();
+	 c != channels.end();
+	 ++c)
+    {
+	_numChans++;
+
+	assert (pixelTypeSize (c.channel().type) % pixelTypeSize (HALF) == 0);
+
+	if (c.channel().type != HALF)
+	    onlyHalfChannels = false;
+    }
+
+    _channelData = new ChannelData[_numChans];
+
+    const Box2i &dataWindow = hdr.dataWindow();
+
+    _minX = dataWindow.min.x;
+    _maxX = dataWindow.max.x;
+    _maxY = dataWindow.max.y;
+
+    //
+    // We can support uncompressed data in the machine's native format
+    // if all image channels are of type HALF, and if the Xdr and the
+    // native represenations of a half have the same size.
+    //
+
+    if (onlyHalfChannels && (sizeof (half) == pixelTypeSize (HALF)))
+	_format = NATIVE;
+}
+
+
+PizCompressor::~PizCompressor ()
+{
+    delete [] _tmpBuffer;
+    delete [] _outBuffer;
+    delete [] _channelData;
+}
+
+
+int
+PizCompressor::numScanLines () const
+{
+    return _numScanLines;
+}
+
+
+Compressor::Format
+PizCompressor::format () const
+{
+    return _format;
+}
+
+
+int
+PizCompressor::compress (const char *inPtr,
+			 int inSize,
+			 int minY,
+			 const char *&outPtr)
+{
+    return compress (inPtr,
+		     inSize,
+		     Box2i (V2i (_minX, minY),
+			    V2i (_maxX, minY + numScanLines() - 1)),
+		     outPtr);
+}
+
+
+int
+PizCompressor::compressTile (const char *inPtr,
+			     int inSize,
+			     IMATH_NAMESPACE::Box2i range,
+			     const char *&outPtr)
+{
+    return compress (inPtr, inSize, range, outPtr);
+}
+
+
+int
+PizCompressor::uncompress (const char *inPtr,
+			   int inSize,
+			   int minY,
+			   const char *&outPtr)
+{
+    return uncompress (inPtr,
+		       inSize,
+		       Box2i (V2i (_minX, minY),
+			      V2i (_maxX, minY + numScanLines() - 1)),
+		       outPtr);
+}
+
+
+int
+PizCompressor::uncompressTile (const char *inPtr,
+			       int inSize,
+			       IMATH_NAMESPACE::Box2i range,
+			       const char *&outPtr)
+{
+    return uncompress (inPtr, inSize, range, outPtr);
+}
+
+
+int
+PizCompressor::compress (const char *inPtr,
+			 int inSize,
+			 IMATH_NAMESPACE::Box2i range,
+			 const char *&outPtr)
+{
+    //
+    // This is the compress function which is used by both the tiled and
+    // scanline compression routines.
+    //
+
+    //
+    // Special case �- empty input buffer
+    //
+
+    if (inSize == 0)
+    {
+	outPtr = _outBuffer;
+	return 0;
+    }
+
+    //
+    // Rearrange the pixel data so that the wavelet
+    // and Huffman encoders can process them easily.
+    //
+    // The wavelet and Huffman encoders both handle only
+    // 16-bit data, so 32-bit data must be split into smaller
+    // pieces.  We treat each 32-bit ch
+
+// ... (6963 more chars)
+```
+
+### File: OpenEXR/IlmImf/ImfRle.cpp
+```c
+int
+rleUncompress (int inLength, int maxLength, const signed char in[], char out[])
+{
+    char *outStart = out;
+
+    while (inLength > 0)
+    {
+	if (*in < 0)
+	{
+	    int count = -((int)*in++);
+	    inLength -= count + 1;
+
+	    if (0 > (maxLength -= count))
+		return 0;
+
+        memcpy(out, in, count);
+        out += count;
+        in  += count;
+	}
+	else
+	{
+	    int count = *in++;
+	    inLength -= 2;
+
+	    if (0 > (maxLength -= count + 1))
+		return 0;
+
+        memset(out, *(char*)in, count+1);
+        out += count+1;
+
+	    in++;
+	}
+    }
+
+    return out - outStart;
+}
+```
+
+### File: OpenEXR/IlmImf/ImfScanLineInputFile.cpp
+```c
+void ScanLineInputFile::initialize(const Header& header)
+{
+    try
+    {
+        _data->header = header;
+
+        _data->lineOrder = _data->header.lineOrder();
+
+        const Box2i &dataWindow = _data->header.dataWindow();
+
+        _data->minX = dataWindow.min.x;
+        _data->maxX = dataWindow.max.x;
+        _data->minY = dataWindow.min.y;
+        _data->maxY = dataWindow.max.y;
+
+        size_t maxBytesPerLine = bytesPerLineTable (_data->header,
+                                                    _data->bytesPerLine);
+
+        for (size_t i = 0; i < _data->lineBuffers.size(); i++)
+        {
+            _data->lineBuffers[i] = new LineBuffer (newCompressor
+                                                (_data->header.compression(),
+                                                 maxBytesPerLine,
+                                                 _data->header));
+        }
+
+        _data->linesInBuffer =
+            numLinesInBuffer (_data->lineBuffers[0]->compressor);
+
+        _data->lineBufferSize = maxBytesPerLine * _data->linesInBuffer;
+
+        if (!_streamData->is->isMemoryMapped())
+        {
+            for (size_t i = 0; i < _data->lineBuffers.size(); i++)
+            {
+                _data->lineBuffers[i]->buffer = (char *) EXRAllocAligned(_data->lineBufferSize*sizeof(char),16);
+            }
+        }
+        _data->nextLineBufferMinY = _data->minY - 1;
+
+        offsetInLineBufferTable (_data->bytesPerLine,
+                                 _data->linesInBuffer,
+                                 _data->offsetInLineBuffer);
+
+        int lineOffsetSize = (dataWindow.max.y - dataWindow.min.y +
+                              _data->linesInBuffer) / _data->linesInBuffer;
+
+        _data->lineOffsets.resize (lineOffsetSize);
+    }
+    catch (...)
+    {
+        delete _data;
+        _data=NULL;
+        throw;
+    }
+}
+
+void	
+ScanLineInputFile::setFrameBuffer (const FrameBuffer &frameBuffer)
+{
+    Lock lock (*_streamData);
+
+    
+    
+    const ChannelList &channels = _data->header.channels();
+    for (FrameBuffer::ConstIterator j = frameBuffer.begin();
+	 j != frameBuffer.end();
+	 ++j)
+    {
+	ChannelList::ConstIterator i = channels.find (j.name());
+
+	if (i == channels.end())
+	    continue;
+
+	if (i.channel().xSampling != j.slice().xSampling ||
+	    i.channel().ySampling != j.slice().ySampling)
+	    THROW (IEX_NAMESPACE::ArgExc, "X and/or y subsampling factors "
+				"of \"" << i.name() << "\" channel "
+				"of input file \"" << fileName() << "\" are "
+				"not compatible with the frame buffer's "
+				"subsampling factors.");
+    }
+
+    // optimization is possible if this is a little endian system
+    // and both inputs and outputs are half floats
+    // 
+    bool optimizationPossible = true;
+    
+    if (!GLOBAL_SYSTEM_LITTLE_ENDIAN)
+    {
+        optimizationPossible =false;
+    }
+    
+    vector<sliceOptimizationData> optData;
+    
+
+    //
+    // Initialize the slice table for readPixels().
+    //
+
+    vector<InSliceInfo> slices;
+    ChannelList::ConstIterator i = channels.begin();
+    
+    // current offset of channel: pixel data starts at offset*width into the
+    // decompressed scanline buffer
+    size_t offset = 0;
+    
+    for (FrameBuffer::ConstIterator j = frameBuffer.begin();
+	 j != frameBuffer.end();
+	 ++j)
+    {
+	while (i != channels.end() && strcmp (i.name(), j.name()) < 0)
+	{
+	    //
+	    // Channel i is present in the file but not
+	    // in the frame buffer; data for channel i
+	    // will be skipped during readPixels().
+	    //
+
+	    slices.push_back (InSliceInfo (i.channel().type,
+					   i.channel().type,
+					   0, // base
+					   0, // xStride
+					   0, // yStride
+					   i.channel().xSampling,
+					   i.channel().ySampling,
+					   false,  // fill
+					   true, // skip
+					   0.0)); // fillValue
+	    
+              switch(i.channel().type)
+              {
+                  case OPENEXR_IMF_INTERNAL_NAMESPACE::HALF :
+                      offset++;
+                      break;
+                  case OPENEXR_IMF_INTERNAL_NAMESPACE::FLOAT :
+                      offset+=2;
+                      break;
+                  case OPENEXR_IMF_INTERNAL_NAMESPACE::UINT :
+                      offset+=2;
+                      break;
+                  case OPENEXR_IMF_INTERNAL_NAMESPACE::NUM_PIXELTYPES:
+                  default:
+                      // not possible.
+                      break;
+              }
+              ++i;
+	}
+
+	bool fill = false;
+
+	if (i == channels.end() || strcmp (i.name(), j.name()) > 0)
+	{
+	    //
+	    // Channel i is present in the frame buffer, but not in the file.
+	    // In the frame buffer, slice j will be filled with a default value.
+	    //
+
+	    fill = true;
+	}
+
+	slices.push_back (InSliceInfo (j.slice().type,
+				       fill? j.slice().type:
+				             i.channel().type,
+				       j.slice().base,
+				       j.slice().xStride,
+				       j.slice().yStride,
+				       j.slice().xSampling,
+				       j.slice().ySampling,
+				       fill,
+				       false, // skip
+				       j.slice().fillValue));
+
+          if(!fill && i.channel().type!=OPENEXR_IMF_INTERNAL_NAMESPACE::HALF)
+          {
+              optimizationPossible = false;
+          }
+          
+          if(j.slice().type != OPENEXR_IMF_INTERNAL_NAMESPACE::HALF)
+          {
+              optimizationPossible = false;
+          }
+          if(j.slice().xSampling!=1 || j.slice().ySampling!=1)
+          {
+              optimizationPossible = false;
+          }
+
+          
+          if(optimizationPossible)
+          {
+              sliceOptimizationData dat;
+              dat.base = j.slice().base;
+              dat.fill = fill;
+              dat.fillValue = j.slice().fillValue;
+              dat.offset = offset;
+              dat.xStride = j.slice().xStride;
+              dat.yStride = j.slice().yStride;
+              dat.xSampling = j.slice().xSampling;
+              dat.ySampling = j.slice().ySampling;
+              optData.push_back(dat);
+          }
+          
+          if(!fill)
+          {
+              switch(i.channel().type)
+              {
+                  case OPENEXR_IMF_INTERNAL_NAMESPACE::HALF :
+                      offset++;
+                      break;
+                  case OPENEXR_IMF_INTERNAL_NAMESPACE::FLOAT :
+                      offset+=2;
+                      break;
+                  case OPENEXR_IMF_INTERNAL_NAMESPACE::UINT :
+                      offset+=2;
+                      break;
+                  case OPENEXR_IMF_INTERNAL_NAMESPACE::NUM_PIXELTYPES:
+                  default:
+                      // not possible.
+                      break;
+              }
+          }
+          
+
+          
+	if (i != channels.end() && !fill)
+	    ++i;
+    }
+
+   
+   if(optimizationPossible)
+   {
+       //
+       // check optimisibility
+       // based on channel ordering and fill channel positions
+       //
+       sort(optData.begin(),optData.end());
+       _data->optimizationMode = detectOptimizationMode(optData);
+   }
+   
+   if(!optimizationPossible || _data->optimizationMode._optimizable==false)
+   {   
+       optData = vector<sliceOptimizationData>();
+       _data->optimizationMode._optimizable=false;
+   }
+    
+    //
+    // Store the new frame buffer.
+    //
+
+    _data->frameBuffer = frameBuffer;
+    _data->slices = slices;
+    _data->optimizationData = optData;
+}
+```
+
+### File: OpenEXR/IlmImf/ImfTiledInputFile.cpp
+```c
+void
+TiledInputFile::compatibilityInitialize(OPENEXR_IMF_INTERNAL_NAMESPACE::IStream& is)
+{
+    is.seekg(0);
+    //
+    // Construct a MultiPartInputFile, initialize TiledInputFile
+    // with the part 0 data.
+    // (TODO) maybe change the third parameter of the constructor of MultiPartInputFile later.
+    //
+    _data->multiPartBackwardSupport = true;
+    _data->multiPartFile = new MultiPartInputFile(is, _data->numThreads);
+    InputPartData* part = _data->multiPartFile->getPart(0);
+
+    multiPartInitialize(part);
+}
+```
+
+### File: OpenEXR/IlmImf/ImfTiledMisc.cpp
+```c
+int
+getTiledChunkOffsetTableSize(const Header& header)
+{
+    //
+    // Save the dataWindow information
+    //
+
+    const Box2i &dataWindow = header.dataWindow();
+    
+    //
+    // Precompute level and tile information.
+    //
+
+    int* numXTiles;
+    int* numYTiles;
+    int numXLevels;
+    int numYLevels;
+    precalculateTileInfo (header.tileDescription(),
+                          dataWindow.min.x, dataWindow.max.x,
+                          dataWindow.min.y, dataWindow.max.y,
+                          numXTiles, numYTiles,
+                          numXLevels, numYLevels);
+
+    //
+    // Calculate lineOffsetSize.
+    //
+    Int64 lineOffsetSize = 0;
+    const TileDescription &desc = header.tileDescription();
+    switch (desc.mode)
+    {
+        case ONE_LEVEL:
+        case MIPMAP_LEVELS:
+            for (int i = 0; i < numXLevels; i++)
+            {
+                lineOffsetSize += static_cast<Int64>(numXTiles[i]) * static_cast<Int64>(numYTiles[i]);
+                if ( lineOffsetSize > static_cast<Int64>(std::numeric_limits<int>::max()) )
+                {
+                    throw IEX_NAMESPACE::LogicExc("Maximum number of tiles exceeded");
+                }
+            }
+           break;
+        case RIPMAP_LEVELS:
+            for (int i = 0; i < numXLevels; i++)
+            {
+                for (int j = 0; j < numYLevels; j++)
+                {
+                     lineOffsetSize += static_cast<Int64>(numXTiles[i]) * static_cast<Int64>(numYTiles[j]);
+                     if ( lineOffsetSize > static_cast<Int64>(std::numeric_limits<int>::max()) )
+                     {
+                        throw IEX_NAMESPACE::LogicExc("Maximum number of tiles exceeded");
+                     }
+                }
+            }
+           break;
+        case NUM_LEVELMODES :
+            throw IEX_NAMESPACE::LogicExc("Bad level mode getting chunk offset table size");
+    }
+
+    delete[] numXTiles;
+    delete[] numYTiles;
+
+    return static_cast<int>(lineOffsetSize);
+}
+```
+
+### File: OpenEXR/IlmImfTest/testDeepTiledBasic.cpp
+```c
+void readFile (int channelCount,
+               bool bulkRead,
+               bool relativeCoords,
+               bool randomChannels,
+               const std::string & filename)
+{
+    if (relativeCoords)
+        assert(bulkRead == false);
+
+    cout << "reading " << flush;
+
+    DeepTiledInputFile file (filename.c_str(), 4);
+
+    const Header& fileHeader = file.header();
+    assert (fileHeader.displayWindow() == header.displayWindow());
+    assert (fileHeader.dataWindow() == header.dataWindow());
+    assert (fileHeader.pixelAspectRatio() == header.pixelAspectRatio());
+    assert (fileHeader.screenWindowCenter() == header.screenWindowCenter());
+    assert (fileHeader.screenWindowWidth() == header.screenWindowWidth());
+    assert (fileHeader.lineOrder() == header.lineOrder());
+    assert (fileHeader.compression() == header.compression());
+    assert (fileHeader.channels() == header.channels());
+    assert (fileHeader.type() == header.type());
+    assert (fileHeader.tileDescription() == header.tileDescription());
+
+    Array2D<unsigned int> localSampleCount;
+    localSampleCount.resizeErase(height, width);
+    
+    // also test filling channels. Generate up to 2 extra channels
+    int fillChannels=random_int(3);
+    
+    Array<Array2D< void* > > data(channelCount+fillChannels);
+    for (int i = 0; i < channelCount+fillChannels; i++)
+        data[i].resizeErase(height, width);
+
+    DeepFrameBuffer frameBuffer;
+
+    int memOffset;
+    if (relativeCoords)
+        memOffset = 0;
+    else
+        memOffset = dataWindow.min.x + dataWindow.min.y * width;
+    frameBuffer.insertSampleCountSlice (Slice (IMF::UINT,
+                                        (char *) (&localSampleCount[0][0] - memOffset),
+                                        sizeof (unsigned int) * 1,
+                                        sizeof (unsigned int) * width,
+                                        1, 1,
+                                        0,
+                                        relativeCoords,
+                                        relativeCoords));
+
+    
+    vector<int> read_channel(channelCount);
+    int channels_added=0;
+    for (int i = 0; i < channelCount; i++)
+    {
+         if(randomChannels)
+        {
+	     read_channel[i] = random_int(2);
+	     
+        }
+        if(!randomChannels || read_channel[i]==1)
+        {
+            PixelType type = IMF::NUM_PIXELTYPES;
+            if (channelTypes[i] == 0)
+                type = IMF::UINT;
+            if (channelTypes[i] == 1)
+                type = IMF::HALF;
+            if (channelTypes[i] == 2)
+                type = IMF::FLOAT;
+
+            stringstream ss;
+            ss << i;
+            string str = ss.str();
+
+            int sampleSize = 0;
+            if (channelTypes[i] == 0) sampleSize = sizeof (unsigned int);
+            if (channelTypes[i] == 1) sampleSize = sizeof (half);
+            if (channelTypes[i] == 2) sampleSize = sizeof (float);
+
+            int pointerSize = sizeof (char *);
+
+            frameBuffer.insert (str,
+                                DeepSlice (type,
+                                (char *) (&data[i][0][0] - memOffset),
+                                pointerSize * 1,
+                                pointerSize * width,
+                                sampleSize,
+                                1, 1,
+                                0,
+                                relativeCoords,
+                                relativeCoords));
+                channels_added++;
+            }
+    }
+     if(channels_added==0)
+    {
+      cout << "skipping " <<flush;
+      return;
+    }
+    for(int i = 0 ; i < fillChannels ; ++i )
+    { 
+        PixelType type  = IMF::FLOAT;
+        int sampleSize = sizeof(float);            
+        int pointerSize = sizeof (char *);
+        stringstream ss;
+        // generate channel names that aren't in file but (might) interleave with existing file
+        ss << i << "fill";
+        string str = ss.str();
+        frameBuffer.insert (str,
+                            DeepSlice (type,
+                            (char *) (&data[i+channelCount][0][0] - memOffset),
+                            pointerSize * 1,
+                            pointerSize * width,
+                            sampleSize,
+                            1, 1,
+                            0,
+                            relativeCoords,
+                            relativeCoords));
+    }
+
+    file.setFrameBuffer(frameBuffer);
+
+    if (bulkRead)
+        cout << "bulk " << flush;
+    else
+    {
+        if (relativeCoords == false)
+            cout << "per-tile " << flush;
+        else
+            cout << "per-tile with relative coordinates " << flush;
+    }
+
+    for (int ly = 0; ly < file.numYLevels(); ly++)
+        for (int lx = 0; lx < file.numXLevels(); lx++)
+        {
+            Box2i dataWindowL = file.dataWindowForLevel(lx, ly);
+
+            if (bulkRead)
+            {
+                //
+                // Testing bulk read (without relative coordinates).
+                //
+
+                file.readPixelSampleCounts(0, file.numXTiles(lx) - 1, 0, file.numYTiles(ly) - 1, lx, ly);
+
+                for (int i = 0; i < file.numYTiles(ly); i++)
+                {
+                    for (int j = 0; j < file.numXTiles(lx); j++)
+                    {
+                        Box2i box = file.dataWindowForTile(j, i, lx, ly);
+                        for (int y = box.min.y; y <= box.max.y; y++)
+                            for (int x = box.min.x; x <= box.max.x; x++)
+                            {
+                                int dwy = y - dataWindowL.min.y;
+                                int dwx = x - dataWindowL.min.x;
+                                assert(localSampleCount[dwy][dwx] == sampleCountWhole[ly][lx][dwy][dwx]);
+
+                                for (size_t k = 0; k < channelTypes.size(); k++)
+                                {
+                                    if (channelTypes[k] == 0)
+                                        data[k][dwy][dwx] = new unsigned int[localSampleCount[dwy][dwx]];
+                                    if (channelTypes[k] == 1)
+                                        data[k][dwy][dwx] = new half[localSampleCount[dwy][dwx]];
+                                    if (channelTypes[k] == 2)
+                                        data[k][dwy][dwx] = new float[localSampleCount[dwy][dwx]];
+                                }
+                                
+                                for( int f = 0 ; f < fillChannels ; ++f )
+                                {
+                                     data[f + channelTypes.size()][dwy][dwx] = new float[localSampleCount[dwy][dwx]];
+                                }
+                                
+                            }
+                            
+                    }
+                }
+
+                file.readTiles(0, file.numXTiles(lx) - 1, 0, file.numYTiles(ly) - 1, lx, ly);
+            }
+            else if (bulkRead == false)
+            {
+                if (relativeCoords == false)
+                {
+                    //
+                    // Testing per-tile read without relative coordinates.
+                    //
+
+                    for (int i = 0; i < file.numYTiles(ly); i++)
+                    {
+                        for (int j = 0; j < file.numXTiles(lx); j++)
+                        {
+                            file.readPixelSampleCount(j, i, lx, ly);
+
+                            Box2i box = file.dataWindowForTile(j, i, lx, ly);
+                            for (int y = box.min.y; y <= box.max.y; y++)
+                                for (int x = box.min.x; x <= box.max.x; x++)
+                                {
+                                    int dwy = y - dataWindowL.min.y;
+                                    int dwx = x - dataWindowL.min.x;
+                                    assert(localSampleCount[dwy][dwx] == sampleCountWhole[ly][lx][dwy][dwx]);
+
+                                    for (size_t k = 0; 
+
+// ... (9001 more chars)
+```
+
+### File: OpenEXR/IlmImfTest/testMultiPartApi.cpp
+```c
+///////////////////////////////////////////////////////////////////////////
+//
+// Copyright (c) 2011, Industrial Light & Magic, a division of Lucas
+// Digital Ltd. LLC
+//
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+// *       Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+// *       Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+// *       Neither the name of Industrial Light & Magic nor the names of
+// its contributors may be used to endorse or promote products derived
+// from this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+///////////////////////////////////////////////////////////////////////////
+
+#ifdef NDEBUG
+#    undef NDEBUG
+#endif
+
+#include <iostream>
+#include <string>
+#include <vector>
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+
+#include "tmpDir.h"
+#include "testMultiPartApi.h"
+#include "random.h"
+
+#include <ImfPartType.h>
+#include <ImfMultiPartInputFile.h>
+#include <ImfMultiPartOutputFile.h>
+#include <ImfOutputFile.h>
+#include <ImfTiledOutputFile.h>
+#include <ImfGenericOutputFile.h>
+#include <ImfArray.h>
+#include <ImfChannelList.h>
+#include <ImfOutputPart.h>
+#include <ImfInputPart.h>
+#include <ImfTiledOutputPart.h>
+#include <ImfTiledInputPart.h>
+#include <ImfTiledMisc.h>
+
+namespace IMF = OPENEXR_IMF_NAMESPACE;
+using namespace IMF;
+using namespace std;
+using namespace IMATH_NAMESPACE;
+
+namespace
+{
+
+const int height = 263;
+const int width = 197;
+
+struct Task
+{
+        int partNumber;
+        int tx, ty, lx, ly;
+
+        Task(int partNumber):
+            partNumber(partNumber)
+        {}
+
+        Task(int partNumber, int tx, int ty, int lx, int ly):
+            partNumber(partNumber),
+            tx(tx),
+            ty(ty),
+            lx(lx),
+            ly(ly)
+        {}
+};
+
+vector<Header> headers;
+vector<int> pixelTypes;
+vector<int> partTypes;
+vector<int> levelModes;
+
+template <class T>
+void fillPixels (Array2D<T> &ph, int width, int height)
+{
+    ph.resizeErase(height, width);
+    for (int y = 0; y < height; ++y)
+        for (int x = 0; x < width; ++x)
+        {
+            //
+            // We do this because half cannot store number bigger than 2048 exactly.
+            //
+            ph[y][x] = (y * width + x) % 2049;
+        }
+}
+
+template <class T>
+bool checkPixels (Array2D<T> &ph, int lx, int rx, int ly, int ry, int width)
+{
+    for (int y = ly; y <= ry; ++y)
+        for (int x = lx; x <= rx; ++x)
+            if (ph[y][x] != static_cast<T>(((y * width + x) % 2049)))
+            {
+                cout << "value at " << x << ", " << y << ": " << ph[y][x]
+                     << ", should be " << (y * width + x) % 2049 << endl << flush;
+                return false;
+            }
+    return true;
+}
+
+template <class T>
+bool checkPixels (Array2D<T> &ph, int width, int height)
+{
+    return checkPixels<T> (ph, 0, width - 1, 0, height - 1, width);
+}
+
+void generateRandomHeaders(int partCount, vector<Header>& headers, vector<Task>& taskList)
+{
+    headers.clear();
+    for (int i = 0; i < partCount; i++)
+    {
+        Header header(width, height);
+        int pixelType = random_int(3);
+        int partType = random_int(2);
+        pixelTypes[i] = pixelType;
+        partTypes[i] = partType;
+
+        stringstream ss;
+        ss << i;
+        header.setName(ss.str());
+
+        switch (pixelType)
+        {
+            case 0:
+                header.channels().insert("UINT", Channel(IMF::UINT));
+                break;
+            case 1:
+                header.channels().insert("FLOAT", Channel(IMF::FLOAT));
+                break;
+            case 2:
+                header.channels().insert("HALF", Channel(IMF::HALF));
+                break;
+        }
+
+        switch (partType)
+        {
+            case 0:
+                header.setType(SCANLINEIMAGE);
+                break;
+            case 1:
+                header.setType(TILEDIMAGE);
+                break;
+        }
+
+        int tileX;
+        int tileY;
+        int levelMode = 0;
+        if (partType == 1)
+        {
+            tileX = random_int(width) + 1;
+            tileY = random_int(height) + 1;
+            levelMode = random_int(3);
+            levelModes[i] = levelMode;
+            LevelMode lm = NUM_LEVELMODES;
+            switch (levelMode)
+            {
+                case 0:
+                    lm = ONE_LEVEL;
+                    break;
+                case 1:
+                    lm = MIPMAP_LEVELS;
+                    break;
+                case 2:
+                    lm = RIPMAP_LEVELS;
+                    break;
+            }
+            header.setTileDescription(TileDescription(tileX, tileY, lm));
+        }
+
+        //
+        // Add lines or tiles to task list.
+        //
+        if (partType == 0)
+        {
+            for (int j = 0; j < height; j++)
+                taskList.push_back(Task(i));
+        }
+        else
+        {
+            int numXLevel;
+            int numYLevel;
+            int* numXTiles;
+            int* numYTiles;
+            precalculateTileInfo (header.tileDescription(),
+                                  0, width - 1,
+                                  0, height - 1,
+                                  numXTiles, numYTiles,
+                                  numXLevel, numYLevel);
+
+            for (int lx = 0; lx < numXLevel; lx++)
+                for (int ly = 0; ly < numYLevel; ly++)
+                {
+                    if (levelMode == 1)
+                        if (lx != ly) continue;
+
+                    // Get all tasks for this level.
+                    for (int tx = 0; tx < numXTiles[lx]; tx++)
+                        for (int ty = 0; ty < numYTiles[ly]; ty++)
+                            taskList.push_back(Task(i, tx, ty, lx, ly));
+                }
+
+            delete[] numXTiles;
+            delete[] numYTiles;
+        }
+
+//        if (partType == 0)
+//        {
+//            cout << "pixelType = " << pixelType << " partType = " << partType
+//                 << endl << flush;
+//        }
+//        else
+//        {
+//            cout << "pixelType = " << pixelType << " partType = " << partType
+//                 << " levelMode = " << levelModes[i] << endl << flush;
+//        }
+
+        headers.push_back(header);
+    }
+}
+
+void setOutputFrameBuffer(FrameBuffer& frameBuffer, int pixelType,
+                          Array2D<unsigned int>& uData, Array2D<float>& fData,
+                          Array2D<half>& hData, int width)
+{
+    switch (pixelType)
+    {
+        case 0:
+            frameBuffer.insert ("UINT",
+                                Slice (IMF::UINT,
+                                (char *) (&uData[0][0]),
+                                sizeof (uData[0][0]) * 1,
+                                sizeof (uData[0][0]) * width));
+            break;
+        case 1:
+            frameBuffer.insert ("FLOAT",
+                                Slice (IMF::FLOAT,
+         
+
+// ... (16431 more chars)
+```
+
+### File: OpenEXR/IlmImfTest/testMultiPartThreading.cpp
+```c
+///////////////////////////////////////////////////////////////////////////
+//
+// Copyright (c) 2011, Industrial Light & Magic, a division of Lucas
+// Digital Ltd. LLC
+//
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+// *       Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+// *       Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+// *       Neither the name of Industrial Light & Magic nor the names of
+// its contributors may be used to endorse or promote products derived
+// from this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+///////////////////////////////////////////////////////////////////////////
+
+#ifdef NDEBUG
+#    undef NDEBUG
+#endif
+
+#include <iostream>
+#include <string>
+#include <vector>
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+
+#include "tmpDir.h"
+#include "testMultiPartThreading.h"
+#include "random.h"
+
+#include <ImfPartType.h>
+#include <ImfMultiPartInputFile.h>
+#include <ImfMultiPartOutputFile.h>
+#include <ImfOutputFile.h>
+#include <ImfTiledOutputFile.h>
+#include <ImfGenericOutputFile.h>
+#include <ImfArray.h>
+#include <ImfChannelList.h>
+#include <ImfOutputPart.h>
+#include <ImfInputPart.h>
+#include <ImfTiledOutputPart.h>
+#include <ImfTiledInputPart.h>
+#include <IlmThreadPool.h>
+#include <IlmThreadMutex.h>
+#include <ImfTiledMisc.h>
+
+namespace IMF = OPENEXR_IMF_NAMESPACE;
+using namespace IMF;
+using namespace std;
+using namespace IMATH_NAMESPACE;
+using namespace ILMTHREAD_NAMESPACE;
+
+namespace
+{
+
+const int height = 263;
+const int width = 197;
+
+vector<Header> headers;
+vector<int> pixelTypes;
+vector<int> partTypes;
+vector<int> levelModes;
+
+Mutex mutexes[200];
+
+template <class T>
+void fillPixels (Array2D<T> &ph, int width, int height)
+{
+    ph.resizeErase(height, width);
+    for (int y = 0; y < height; ++y)
+        for (int x = 0; x < width; ++x)
+        {
+            //
+            // We do this because half cannot store number bigger than 2048 exactly.
+            //
+            ph[y][x] = (y * width + x) % 2049;
+        }
+}
+
+template <class T>
+bool checkPixels (Array2D<T> &ph, int lx, int rx, int ly, int ry, int width)
+{
+    for (int y = ly; y <= ry; ++y)
+        for (int x = lx; x <= rx; ++x)
+            if (ph[y][x] != static_cast<T>(((y * width + x) % 2049)))
+            {
+                cout << "value at " << x << ", " << y << ": " << ph[y][x]
+                     << ", should be " << (y * width + x) % 2049 << endl << flush;
+                return false;
+            }
+    return true;
+}
+
+template <class T>
+bool checkPixels (Array2D<T> &ph, int width, int height)
+{
+    return checkPixels<T> (ph, 0, width - 1, 0, height - 1, width);
+}
+
+void setOutputFrameBuffer(FrameBuffer& frameBuffer, int pixelType,
+                          Array2D<unsigned int>& uData, Array2D<float>& fData,
+                          Array2D<half>& hData, int width)
+{
+    switch (pixelType)
+    {
+        case 0:
+            frameBuffer.insert ("UINT",
+                                Slice (IMF::UINT,
+                                (char *) (&uData[0][0]),
+                                sizeof (uData[0][0]) * 1,
+                                sizeof (uData[0][0]) * width));
+            break;
+        case 1:
+            frameBuffer.insert ("FLOAT",
+                                Slice (IMF::FLOAT,
+                                (char *) (&fData[0][0]),
+                                sizeof (fData[0][0]) * 1,
+                                sizeof (fData[0][0]) * width));
+            break;
+        case 2:
+            frameBuffer.insert ("HALF",
+                                Slice (IMF::HALF,
+                                (char *) (&hData[0][0]),
+                                sizeof (hData[0][0]) * 1,
+                                sizeof (hData[0][0]) * width));
+            break;
+    }
+}
+
+void setInputFrameBuffer(FrameBuffer& frameBuffer, int pixelType,
+                         Array2D<unsigned int>& uData, Array2D<float>& fData,
+                         Array2D<half>& hData, int width, int height)
+{
+    switch (pixelType)
+    {
+        case 0:
+            uData.resizeErase(height, width);
+            frameBuffer.insert ("UINT",
+                                Slice (IMF::UINT,
+                                (char *) (&uData[0][0]),
+                                sizeof (uData[0][0]) * 1,
+                                sizeof (uData[0][0]) * width,
+                                1, 1,
+                                0));
+            break;
+        case 1:
+            fData.resizeErase(height, width);
+            frameBuffer.insert ("FLOAT",
+                                Slice (IMF::FLOAT,
+                                (char *) (&fData[0][0]),
+                                sizeof (fData[0][0]) * 1,
+                                sizeof (fData[0][0]) * width,
+                                1, 1,
+                                0));
+            break;
+        case 2:
+            hData.resizeErase(height, width);
+            frameBuffer.insert ("HALF",
+                                Slice (IMF::HALF,
+                                (char *) (&hData[0][0]),
+                                sizeof (hData[0][0]) * 1,
+                                sizeof (hData[0][0]) * width,
+                                1, 1,
+                                0));
+            break;
+    }
+}
+
+struct WritingTaskData
+{
+        int partNumber;
+        int tx, ty, lx, ly;
+
+        WritingTaskData(int partNumber):
+            partNumber(partNumber)
+        {}
+
+        WritingTaskData(int partNumber, int tx, int ty, int lx, int ly):
+            partNumber(partNumber),
+            tx(tx),
+            ty(ty),
+            lx(lx),
+            ly(ly)
+        {}
+};
+
+class WritingTask: public Task
+{
+    public:
+        WritingTask (TaskGroup *group, MultiPartOutputFile* file, vector<WritingTaskData*> data,
+                     Array2D<FrameBuffer>* tiledFrameBuffers):
+            Task(group),
+            file(file),
+            data(data),
+            tiledFrameBuffers(tiledFrameBuffers)
+        {}
+
+        void execute()
+        {
+            for (size_t i = 0; i < data.size(); i++)
+            {
+                int partNumber = data[i]->partNumber;
+                int partType = partTypes[partNumber];
+
+                if (partType == 0)
+                {
+                    OutputPart part(*file, partNumber);
+                    part.writePixels();
+                }
+                else
+                {
+                    int tx = data[i]->tx;
+                    int ty = data[i]->ty;
+                    int lx = data[i]->lx;
+                    int ly = data[i]->ly;
+                    TiledOutputPart part(*file, partNumber);
+
+                    //
+                    // We add lock here to assure that two threads that accessing
+                    // the same part won't mess things up.
+       
+
+// ... (19261 more chars)
+```
+
+### File: OpenEXR/exrmakepreview/makePreview.cpp
+```c
+void
+generatePreview (const char inFileName[],
+		 float exposure,
+		 int previewWidth,
+		 int &previewHeight,
+		 Array2D <PreviewRgba> &previewPixels)
+{
+    //
+    // Read the input file
+    //
+
+    RgbaInputFile in (inFileName);
+
+    Box2i dw = in.dataWindow();
+    float a = in.pixelAspectRatio();
+    int w = dw.max.x - dw.min.x + 1;
+    int h = dw.max.y - dw.min.y + 1;
+
+    Array2D <Rgba> pixels (h, w);
+    in.setFrameBuffer (ComputeBasePointer (&pixels[0][0], dw), 1, w);
+    in.readPixels (dw.min.y, dw.max.y);
+
+    //
+    // Make a preview image
+    //
+
+    previewHeight = max (int (h / (w * a) * previewWidth + .5f), 1);
+    previewPixels.resizeErase (previewHeight, previewWidth);
+
+    float fx = (previewWidth  > 1)? (float (w - 1) / (previewWidth  - 1)): 1;
+    float fy = (previewHeight > 1)? (float (h - 1) / (previewHeight - 1)): 1;
+    float m  = Math<float>::pow (2.f, IMATH_NAMESPACE::clamp (exposure + 2.47393f, -20.f, 20.f));
+
+    for (int y = 0; y < previewHeight; ++y)
+    {
+	for (int x = 0; x < previewWidth; ++x)
+	{
+	    PreviewRgba &preview = previewPixels[y][x];
+	    const Rgba &pixel = pixels[int (y * fy + .5f)][int (x * fx + .5f)];
+
+	    preview.r = gamma (pixel.r, m);
+	    preview.g = gamma (pixel.g, m);
+	    preview.b = gamma (pixel.b, m);
+	    preview.a = int (IMATH_NAMESPACE::clamp (pixel.a * 255.f, 0.f, 255.f) + .5f);
+	}
+    }
+}
+```

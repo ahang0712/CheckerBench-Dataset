@@ -1,0 +1,32 @@
+diff --git a/mod/forum/amd/build/form-user-selector.min.js b/mod/forum/amd/build/form-user-selector.min.js
+index 5a1da30287531976aa34332e3bfdf1e23a0008d9..19447f7cdb6752a91f454a572e945897b4d5d5cc 100644
+GIT binary patch
+delta 79
+zcmdnN@sneNHj}1Ka(-S(YDGzAimi%9acWL#a!G!Xre0!6Ns)$9N@7W(E>yu}b*4HI
+Pgla3ezRgRSCNly6cpe=d
+
+delta 16
+Ycmey#v4dlSHq+z?rmD@)m?kp<05{eKH2?qr
+
+diff --git a/mod/forum/amd/src/form-user-selector.js b/mod/forum/amd/src/form-user-selector.js
+index 3c69c3210ee..910c847d15d 100644
+--- a/mod/forum/amd/src/form-user-selector.js
++++ b/mod/forum/amd/src/form-user-selector.js
+@@ -37,6 +37,7 @@ define(['jquery', 'core/ajax', 'core/templates'], function($, Ajax, Templates) {
+         transport: function(selector, query, success, failure) {
+             var promise;
+             var courseid = $(selector).attr('courseid');
++            var contextid = $(selector).attr('data-contextid');
+ 
+             promise = Ajax.call([{
+                 methodname: 'core_enrol_search_users',
+@@ -45,7 +46,8 @@ define(['jquery', 'core/ajax', 'core/templates'], function($, Ajax, Templates) {
+                     search: query,
+                     searchanywhere: true,
+                     page: 0,
+-                    perpage: 30
++                    perpage: 30,
++                    contextid: contextid,
+                 }
+             }]);
+ 
