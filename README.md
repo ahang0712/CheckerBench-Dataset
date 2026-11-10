@@ -1,5 +1,7 @@
 # CheckerBench Dataset
 
+The original synthesis [skills and reference guidance](skills/README.md) are now directly browsable, with SHA-256 checksums and a mapping to all 300 task prompts. This supplement preserves the archived guidance contents; it does not change the task roster or runtime archives.
+
 **300 static-analysis tasks with complete runtime assets: 159 CSA tasks and 141 CodeQL tasks.**
 
 | Backend / language | Tasks |

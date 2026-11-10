@@ -1,0 +1,11 @@
+# CWE-19: Data Processing Errors
+- **Typical pattern:** A Category (not a weakness) grouping weaknesses related to improper handling of input data during processing, such as missing/inconsistent special elements, overly restrictive regex, or collapse of data into unsafe values. CWE-19 is PROHIBITED for vulnerability mapping; prefer its member weaknesses.
+- **Checker suggestion:** Insufficient samples, no reliable recommendation yet.
+
+## CWE-367: Time-of-check Time-of-use (TOCTOU) Race Condition
+- **Typical pattern:** The product checks the state of a resource (e.g., file permissions via access(), stat(), or lstat()) then later uses the resource (e.g., open(), fopen()) without ensuring the resource has not changed between check and use. An attacker can swap the resource (e.g., via a symlink) in the window between check and use. Common in setuid programs and file-based operations.
+- **Checker suggestion:** Flag code paths where a resource check (access/stat/lstat/eaccess) is separated from its use (open/fopen/openat) by any non-atomic operations, especially calls that may yield control (printf, sleep, I/O). Prefer using open() with O_NOFOLLOW or operating on file descriptors rather than path names to eliminate the window.
+
+## CWE-662: Improper Synchronization
+- **Typical pattern:** Shared resources (memory, files, state) are accessed from multiple threads or processes without proper synchronization primitives (mutexes, semaphores, critical sections). Specific manifestations include missing locks, incorrect lock ordering, unchecked return values from locking APIs, or use of non-reentrant functions in concurrent contexts. This is a Class-level CWE (DISCOURAGED for direct mapping); prefer its children such as CWE-667 (Improper Locking), CWE-820 (Missing Synchronization), or CWE-821 (Incorrect Synchronization).
+- **Checker suggestion:** Flag shared mutable global/static variables accessed from multiple threads without a corresponding lock acquisition. Also flag calls to pthread_mutex_lock/pthread_mutex_unlock where the return value is not checked, as an unlock failure or lock denial can silently break synchronization guarantees.

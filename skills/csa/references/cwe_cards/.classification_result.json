@@ -1,0 +1,3125 @@
+{
+  "generated_at": "2026-06-20",
+  "source": "pipeline_db",
+  "linux_total": 1142,
+  "nonlinux_total": 2474,
+  "total_cwes": 111,
+  "tier1_count": 7,
+  "tier2_count": 16,
+  "tier3_count": 88,
+  "cards_planned": 37,
+  "cwes": {
+    "CWE-787": {
+      "tier": 1,
+      "n": 449,
+      "name": "Out-of-bounds Write",
+      "linux_cnt": 84,
+      "nonlinux_cnt": 365,
+      "linux_pct": 7.4,
+      "nonlinux_pct": 14.8,
+      "ratio": 2.01,
+      "project_count": 119,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          84
+        ],
+        [
+          "gpac_gpac",
+          51
+        ],
+        [
+          "radareorg_radare2",
+          15
+        ],
+        [
+          "jerryscript-project_jerryscript",
+          15
+        ],
+        [
+          "FreeRDP_FreeRDP",
+          15
+        ]
+      ],
+      "card_filenames": [
+        "CWE-787-kernel.md",
+        "CWE-787-userspace.md"
+      ],
+      "category": "Memory_Safety"
+    },
+    "CWE-476": {
+      "tier": 1,
+      "n": 447,
+      "name": "NULL Pointer Dereference",
+      "linux_cnt": 204,
+      "nonlinux_cnt": 243,
+      "linux_pct": 17.9,
+      "nonlinux_pct": 9.8,
+      "ratio": 1.82,
+      "project_count": 64,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          204
+        ],
+        [
+          "gpac_gpac",
+          70
+        ],
+        [
+          "LibreDWG_libredwg",
+          23
+        ],
+        [
+          "FFmpeg_FFmpeg",
+          14
+        ],
+        [
+          "axiomatic-systems_Bento4",
+          10
+        ]
+      ],
+      "card_filename": "CWE-476.md",
+      "category": "Memory_Safety"
+    },
+    "CWE-125": {
+      "tier": 1,
+      "n": 418,
+      "name": "Out-of-bounds Read",
+      "linux_cnt": 50,
+      "nonlinux_cnt": 368,
+      "linux_pct": 4.4,
+      "nonlinux_pct": 14.9,
+      "ratio": 3.4,
+      "project_count": 102,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          50
+        ],
+        [
+          "FreeRDP_FreeRDP",
+          37
+        ],
+        [
+          "gpac_gpac",
+          29
+        ],
+        [
+          "FFmpeg_FFmpeg",
+          27
+        ],
+        [
+          "libarchive_libarchive",
+          19
+        ]
+      ],
+      "card_filenames": [
+        "CWE-125-kernel.md",
+        "CWE-125-userspace.md"
+      ],
+      "category": "Memory_Safety"
+    },
+    "CWE-416": {
+      "tier": 1,
+      "n": 340,
+      "name": "Use After Free",
+      "linux_cnt": 238,
+      "nonlinux_cnt": 102,
+      "linux_pct": 20.8,
+      "nonlinux_pct": 4.1,
+      "ratio": 5.05,
+      "project_count": 38,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          238
+        ],
+        [
+          "gpac_gpac",
+          25
+        ],
+        [
+          "LibVNC_libvncserver",
+          7
+        ],
+        [
+          "GNOME_libxml2",
+          5
+        ],
+        [
+          "vcftools_vcftools",
+          4
+        ]
+      ],
+      "card_filenames": [
+        "CWE-416-kernel.md",
+        "CWE-416-userspace.md"
+      ],
+      "category": "Memory_Safety"
+    },
+    "CWE-119": {
+      "tier": 1,
+      "n": 248,
+      "name": "Improper Restriction (generic memory)",
+      "linux_cnt": 29,
+      "nonlinux_cnt": 219,
+      "linux_pct": 2.5,
+      "nonlinux_pct": 8.9,
+      "ratio": 3.49,
+      "project_count": 59,
+      "top_projects": [
+        [
+          "FFmpeg_FFmpeg",
+          55
+        ],
+        [
+          "torvalds_linux",
+          29
+        ],
+        [
+          "gpac_gpac",
+          15
+        ],
+        [
+          "file_file",
+          11
+        ],
+        [
+          "ArtifexSoftware_mupdf",
+          11
+        ]
+      ],
+      "card_filenames": [
+        "CWE-119-kernel.md",
+        "CWE-119-userspace.md"
+      ],
+      "category": "Memory_Safety"
+    },
+    "CWE-190": {
+      "tier": 1,
+      "n": 120,
+      "name": "Integer Overflow/Wraparound",
+      "linux_cnt": 12,
+      "nonlinux_cnt": 108,
+      "linux_pct": 1.1,
+      "nonlinux_pct": 4.4,
+      "ratio": 4.15,
+      "project_count": 48,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          12
+        ],
+        [
+          "libsndfile_libsndfile",
+          10
+        ],
+        [
+          "FFmpeg_FFmpeg",
+          10
+        ],
+        [
+          "AcademySoftwareFoundation_openexr",
+          10
+        ],
+        [
+          "uclouvain_openjpeg",
+          7
+        ]
+      ],
+      "card_filenames": [
+        "CWE-190-kernel.md",
+        "CWE-190-userspace.md"
+      ],
+      "category": "Integer_Arithmetic"
+    },
+    "CWE-401": {
+      "tier": 1,
+      "n": 116,
+      "name": "Missing Release of Memory (Memory Leak)",
+      "linux_cnt": 57,
+      "nonlinux_cnt": 59,
+      "linux_pct": 5.0,
+      "nonlinux_pct": 2.4,
+      "ratio": 2.09,
+      "project_count": 22,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          57
+        ],
+        [
+          "gpac_gpac",
+          25
+        ],
+        [
+          "tbeu_matio",
+          3
+        ],
+        [
+          "muttmua_mutt",
+          3
+        ],
+        [
+          "isc-projects_bind9",
+          3
+        ]
+      ],
+      "card_filenames": [
+        "CWE-401-kernel.md",
+        "CWE-401-userspace.md"
+      ],
+      "category": "Resource_Management"
+    },
+    "CWE-120": {
+      "tier": 2,
+      "n": 89,
+      "name": "Classic Buffer Overflow",
+      "linux_cnt": 15,
+      "nonlinux_cnt": 74,
+      "linux_pct": 1.3,
+      "nonlinux_pct": 3.0,
+      "ratio": 2.28,
+      "project_count": 30,
+      "top_projects": [
+        [
+          "gpac_gpac",
+          20
+        ],
+        [
+          "torvalds_linux",
+          15
+        ],
+        [
+          "liblouis_liblouis",
+          7
+        ],
+        [
+          "glennrp_libpng",
+          6
+        ],
+        [
+          "pjsip_pjproject",
+          5
+        ]
+      ],
+      "card_filename": "CWE-120.md",
+      "category": "Memory_Safety"
+    },
+    "CWE-20": {
+      "tier": 2,
+      "n": 88,
+      "name": "Improper Input Validation",
+      "linux_cnt": 4,
+      "nonlinux_cnt": 84,
+      "linux_pct": 0.4,
+      "nonlinux_pct": 3.4,
+      "ratio": 9.69,
+      "project_count": 30,
+      "top_projects": [
+        [
+          "FFmpeg_FFmpeg",
+          25
+        ],
+        [
+          "isc-projects_bind9",
+          10
+        ],
+        [
+          "apache_trafficserver",
+          10
+        ],
+        [
+          "libarchive_libarchive",
+          6
+        ],
+        [
+          "nodejs_node",
+          5
+        ]
+      ],
+      "card_filename": "CWE-20.md",
+      "category": "Input_Validation"
+    },
+    "CWE-415": {
+      "tier": 2,
+      "n": 67,
+      "name": "Double Free",
+      "linux_cnt": 28,
+      "nonlinux_cnt": 39,
+      "linux_pct": 2.5,
+      "nonlinux_pct": 1.6,
+      "ratio": 1.56,
+      "project_count": 20,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          28
+        ],
+        [
+          "gpac_gpac",
+          8
+        ],
+        [
+          "LibreDWG_libredwg",
+          6
+        ],
+        [
+          "radareorg_radare2",
+          3
+        ],
+        [
+          "CESNET_libyang",
+          3
+        ]
+      ],
+      "card_filename": "CWE-415.md",
+      "category": "Memory_Safety"
+    },
+    "CWE-362": {
+      "tier": 2,
+      "n": 64,
+      "name": "Concurrent Execution (Race Condition)",
+      "linux_cnt": 57,
+      "nonlinux_cnt": 7,
+      "linux_pct": 5.0,
+      "nonlinux_pct": 0.3,
+      "ratio": 17.64,
+      "project_count": 8,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          57
+        ],
+        [
+          "videolan_dav1d",
+          1
+        ],
+        [
+          "sudo-project_sudo",
+          1
+        ],
+        [
+          "pjsip_pjproject",
+          1
+        ],
+        [
+          "isc-projects_bind9",
+          1
+        ]
+      ],
+      "card_filename": "CWE-362.md",
+      "extreme_imbalance_warning": "Over 89% of samples are from kernel-class projects — userspace applicability is unverified.",
+      "category": "Concurrency"
+    },
+    "CWE-617": {
+      "tier": 2,
+      "n": 57,
+      "name": "Reachable Assertion",
+      "linux_cnt": 4,
+      "nonlinux_cnt": 53,
+      "linux_pct": 0.4,
+      "nonlinux_pct": 2.1,
+      "ratio": 6.12,
+      "project_count": 12,
+      "top_projects": [
+        [
+          "jerryscript-project_jerryscript",
+          26
+        ],
+        [
+          "isc-projects_bind9",
+          8
+        ],
+        [
+          "galpeter_jerryscript",
+          6
+        ],
+        [
+          "torvalds_linux",
+          4
+        ],
+        [
+          "NLnetLabs_unbound",
+          4
+        ]
+      ],
+      "card_filename": "CWE-617.md",
+      "category": "Input_Validation"
+    },
+    "CWE-667": {
+      "tier": 2,
+      "n": 49,
+      "name": "Improper Locking",
+      "linux_cnt": 47,
+      "nonlinux_cnt": 2,
+      "linux_pct": 4.1,
+      "nonlinux_pct": 0.1,
+      "ratio": 50.91,
+      "project_count": 3,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          47
+        ],
+        [
+          "pjsip_pjproject",
+          1
+        ],
+        [
+          "memcached_memcached",
+          1
+        ]
+      ],
+      "card_filename": "CWE-667.md",
+      "extreme_imbalance_warning": "Over 96% of samples are from kernel-class projects — userspace applicability is unverified.",
+      "category": "Concurrency"
+    },
+    "CWE-400": {
+      "tier": 2,
+      "n": 45,
+      "name": "Uncontrolled Resource Consumption",
+      "linux_cnt": 4,
+      "nonlinux_cnt": 41,
+      "linux_pct": 0.4,
+      "nonlinux_pct": 1.7,
+      "ratio": 4.73,
+      "project_count": 26,
+      "top_projects": [
+        [
+          "isc-projects_bind9",
+          6
+        ],
+        [
+          "torvalds_linux",
+          4
+        ],
+        [
+          "jerryscript-project_jerryscript",
+          4
+        ],
+        [
+          "jsummers_imageworsener",
+          3
+        ],
+        [
+          "ImageMagick_ImageMagick",
+          3
+        ]
+      ],
+      "card_filename": "CWE-400.md",
+      "category": "Resource_Management"
+    },
+    "CWE-835": {
+      "tier": 2,
+      "n": 41,
+      "name": "Loop with Unreachable Exit (Infinite Loop)",
+      "linux_cnt": 13,
+      "nonlinux_cnt": 28,
+      "linux_pct": 1.1,
+      "nonlinux_pct": 1.1,
+      "ratio": 1.01,
+      "project_count": 14,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          13
+        ],
+        [
+          "gpac_gpac",
+          5
+        ],
+        [
+          "FFmpeg_FFmpeg",
+          4
+        ],
+        [
+          "jsummers_imageworsener",
+          3
+        ],
+        [
+          "gdraheim_zziplib",
+          3
+        ]
+      ],
+      "card_filename": "CWE-835.md",
+      "category": "Integer_Arithmetic"
+    },
+    "CWE-189": {
+      "tier": 2,
+      "n": 36,
+      "name": "Numeric Errors",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 36,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 1.5,
+      "ratio": 999.0,
+      "project_count": 10,
+      "top_projects": [
+        [
+          "FFmpeg_FFmpeg",
+          12
+        ],
+        [
+          "FreeRDP_FreeRDP",
+          7
+        ],
+        [
+          "malaterre_GDCM",
+          5
+        ],
+        [
+          "ivmai_bdwgc",
+          4
+        ],
+        [
+          "vadz_libtiff",
+          3
+        ]
+      ],
+      "card_filename": "CWE-189.md",
+      "extreme_imbalance_warning": "Over 100% of samples are from userspace projects — kernel applicability is unverified.",
+      "category": "Integer_Arithmetic"
+    },
+    "CWE-399": {
+      "tier": 2,
+      "n": 35,
+      "name": "Resource Management Errors",
+      "linux_cnt": 3,
+      "nonlinux_cnt": 32,
+      "linux_pct": 0.3,
+      "nonlinux_pct": 1.3,
+      "ratio": 4.92,
+      "project_count": 12,
+      "top_projects": [
+        [
+          "isc-projects_bind9",
+          10
+        ],
+        [
+          "file_file",
+          8
+        ],
+        [
+          "FFmpeg_FFmpeg",
+          4
+        ],
+        [
+          "torvalds_linux",
+          3
+        ],
+        [
+          "lighttpd_lighttpd1.4",
+          2
+        ]
+      ],
+      "card_filename": "CWE-399.md",
+      "category": "Resource_Management"
+    },
+    "CWE-369": {
+      "tier": 2,
+      "n": 30,
+      "name": "Divide By Zero",
+      "linux_cnt": 4,
+      "nonlinux_cnt": 26,
+      "linux_pct": 0.4,
+      "nonlinux_pct": 1.1,
+      "ratio": 3.0,
+      "project_count": 18,
+      "top_projects": [
+        [
+          "FFmpeg_FFmpeg",
+          6
+        ],
+        [
+          "torvalds_linux",
+          4
+        ],
+        [
+          "uclouvain_openjpeg",
+          3
+        ],
+        [
+          "libjpeg-turbo_libjpeg-turbo",
+          2
+        ],
+        [
+          "gpac_gpac",
+          2
+        ]
+      ],
+      "card_filename": "CWE-369.md",
+      "category": "Integer_Arithmetic"
+    },
+    "CWE-674": {
+      "tier": 2,
+      "n": 29,
+      "name": "Uncontrolled Recursion",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 29,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 1.2,
+      "ratio": 999.0,
+      "project_count": 12,
+      "top_projects": [
+        [
+          "skvadrik_re2c",
+          9
+        ],
+        [
+          "sass_libsass",
+          6
+        ],
+        [
+          "gpac_gpac",
+          3
+        ],
+        [
+          "eclipse_mosquitto",
+          2
+        ],
+        [
+          "CESNET_libyang",
+          2
+        ]
+      ],
+      "card_filename": "CWE-674.md",
+      "extreme_imbalance_warning": "Over 100% of samples are from userspace projects — kernel applicability is unverified.",
+      "category": "Resource_Management"
+    },
+    "CWE-772": {
+      "tier": 2,
+      "n": 27,
+      "name": "Missing Release of Resource after Lifetime",
+      "linux_cnt": 1,
+      "nonlinux_cnt": 26,
+      "linux_pct": 0.1,
+      "nonlinux_pct": 1.1,
+      "ratio": 12.0,
+      "project_count": 8,
+      "top_projects": [
+        [
+          "ImageMagick_ImageMagick",
+          14
+        ],
+        [
+          "jsummers_imageworsener",
+          5
+        ],
+        [
+          "gdraheim_zziplib",
+          3
+        ],
+        [
+          "torvalds_linux",
+          1
+        ],
+        [
+          "lfittl_libpg_query",
+          1
+        ]
+      ],
+      "card_filename": "CWE-772.md",
+      "extreme_imbalance_warning": "Over 96% of samples are from userspace projects — kernel applicability is unverified.",
+      "category": "Resource_Management"
+    },
+    "CWE-908": {
+      "tier": 2,
+      "n": 26,
+      "name": "Use of Uninitialized Resource",
+      "linux_cnt": 10,
+      "nonlinux_cnt": 16,
+      "linux_pct": 0.9,
+      "nonlinux_pct": 0.6,
+      "ratio": 1.35,
+      "project_count": 13,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          10
+        ],
+        [
+          "radareorg_radare2",
+          3
+        ],
+        [
+          "mity_md4c",
+          2
+        ],
+        [
+          "dbry_WavPack",
+          2
+        ],
+        [
+          "h2o_h2o",
+          1
+        ]
+      ],
+      "card_filename": "CWE-908.md",
+      "category": "Memory_Safety"
+    },
+    "CWE-770": {
+      "tier": 2,
+      "n": 26,
+      "name": "Allocation Without Limits or Throttling",
+      "linux_cnt": 6,
+      "nonlinux_cnt": 20,
+      "linux_pct": 0.5,
+      "nonlinux_pct": 0.8,
+      "ratio": 1.54,
+      "project_count": 13,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          6
+        ],
+        [
+          "wolfSSL_wolfssl",
+          4
+        ],
+        [
+          "gpac_gpac",
+          3
+        ],
+        [
+          "the-tcpdump-group_libpcap",
+          2
+        ],
+        [
+          "jerryscript-project_jerryscript",
+          2
+        ]
+      ],
+      "card_filename": "CWE-770.md",
+      "category": "Resource_Management"
+    },
+    "CWE-200": {
+      "tier": 2,
+      "n": 21,
+      "name": "Exposure of Sensitive Information",
+      "linux_cnt": 3,
+      "nonlinux_cnt": 18,
+      "linux_pct": 0.3,
+      "nonlinux_pct": 0.7,
+      "ratio": 2.77,
+      "project_count": 10,
+      "top_projects": [
+        [
+          "ccxvii_mujs",
+          5
+        ],
+        [
+          "torvalds_linux",
+          3
+        ],
+        [
+          "FFmpeg_FFmpeg",
+          3
+        ],
+        [
+          "eclipse_mosquitto",
+          2
+        ],
+        [
+          "c-ares_c-ares",
+          2
+        ]
+      ],
+      "card_filename": "CWE-200.md",
+      "category": "Security_Policy"
+    },
+    "CWE-122": {
+      "tier": 3,
+      "n": 18,
+      "name": "CWE-122",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 18,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.7,
+      "ratio": 999.0,
+      "project_count": 6,
+      "top_projects": [
+        [
+          "gpac_gpac",
+          7
+        ],
+        [
+          "uclouvain_openjpeg",
+          6
+        ],
+        [
+          "pjsip_pjproject",
+          2
+        ],
+        [
+          "strukturag_libde265",
+          1
+        ],
+        [
+          "radareorg_radare2",
+          1
+        ]
+      ],
+      "card_filename": "Category-Memory_Safety.md",
+      "category": "Memory_Safety"
+    },
+    "CWE-264": {
+      "tier": 3,
+      "n": 16,
+      "name": "CWE-264",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 16,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.6,
+      "ratio": 999.0,
+      "project_count": 6,
+      "top_projects": [
+        [
+          "netblue30_firejail",
+          11
+        ],
+        [
+          "xinetd-org_xinetd",
+          1
+        ],
+        [
+          "monkey_monkey",
+          1
+        ],
+        [
+          "lxc_lxc",
+          1
+        ],
+        [
+          "isc-projects_bind9",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-681": {
+      "tier": 3,
+      "n": 15,
+      "name": "CWE-681",
+      "linux_cnt": 7,
+      "nonlinux_cnt": 8,
+      "linux_pct": 0.6,
+      "nonlinux_pct": 0.3,
+      "ratio": 1.9,
+      "project_count": 7,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          7
+        ],
+        [
+          "facebook_hermes",
+          2
+        ],
+        [
+          "FFmpeg_FFmpeg",
+          2
+        ],
+        [
+          "fluent_fluent-bit",
+          1
+        ],
+        [
+          "ImageMagick_ImageMagick",
+          1
+        ]
+      ],
+      "card_filename": "Category-Integer_Arithmetic.md",
+      "category": "Integer_Arithmetic"
+    },
+    "CWE-665": {
+      "tier": 3,
+      "n": 15,
+      "name": "CWE-665",
+      "linux_cnt": 10,
+      "nonlinux_cnt": 5,
+      "linux_pct": 0.9,
+      "nonlinux_pct": 0.2,
+      "ratio": 4.33,
+      "project_count": 4,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          10
+        ],
+        [
+          "LibVNC_libvncserver",
+          2
+        ],
+        [
+          "LibRaw_LibRaw",
+          2
+        ],
+        [
+          "uclouvain_openjpeg",
+          1
+        ]
+      ],
+      "card_filename": "Category-Type_Misc.md",
+      "category": "Type_Misc"
+    },
+    "CWE-295": {
+      "tier": 3,
+      "n": 14,
+      "name": "CWE-295",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 14,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.6,
+      "ratio": 999.0,
+      "project_count": 7,
+      "top_projects": [
+        [
+          "wolfSSL_wolfssl",
+          5
+        ],
+        [
+          "adrienverge_openfortivpn",
+          3
+        ],
+        [
+          "lefcha_imapfilter",
+          2
+        ],
+        [
+          "squid-cache_squid",
+          1
+        ],
+        [
+          "proftpd_proftpd",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-22": {
+      "tier": 3,
+      "n": 14,
+      "name": "CWE-22",
+      "linux_cnt": 3,
+      "nonlinux_cnt": 11,
+      "linux_pct": 0.3,
+      "nonlinux_pct": 0.4,
+      "ratio": 1.69,
+      "project_count": 11,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          3
+        ],
+        [
+          "swoole_swoole-src",
+          2
+        ],
+        [
+          "pistacheio_pistache",
+          1
+        ],
+        [
+          "lighttpd_lighttpd1.4",
+          1
+        ],
+        [
+          "libarchive_libarchive",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-129": {
+      "tier": 3,
+      "n": 14,
+      "name": "CWE-129",
+      "linux_cnt": 8,
+      "nonlinux_cnt": 6,
+      "linux_pct": 0.7,
+      "nonlinux_pct": 0.2,
+      "ratio": 2.89,
+      "project_count": 6,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          8
+        ],
+        [
+          "FFmpeg_FFmpeg",
+          2
+        ],
+        [
+          "radareorg_radare2",
+          1
+        ],
+        [
+          "admesh_admesh",
+          1
+        ],
+        [
+          "FreeRDP_FreeRDP",
+          1
+        ]
+      ],
+      "card_filename": "Category-Integer_Arithmetic.md",
+      "category": "Integer_Arithmetic"
+    },
+    "CWE-862": {
+      "tier": 3,
+      "n": 13,
+      "name": "CWE-862",
+      "linux_cnt": 9,
+      "nonlinux_cnt": 4,
+      "linux_pct": 0.8,
+      "nonlinux_pct": 0.2,
+      "ratio": 4.87,
+      "project_count": 4,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          9
+        ],
+        [
+          "netblue30_firejail",
+          2
+        ],
+        [
+          "nodejs_node",
+          1
+        ],
+        [
+          "lxc_lxc",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-843": {
+      "tier": 3,
+      "n": 13,
+      "name": "CWE-843",
+      "linux_cnt": 9,
+      "nonlinux_cnt": 4,
+      "linux_pct": 0.8,
+      "nonlinux_pct": 0.2,
+      "ratio": 4.87,
+      "project_count": 3,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          9
+        ],
+        [
+          "facebook_hermes",
+          3
+        ],
+        [
+          "moonjit_moonjit",
+          1
+        ]
+      ],
+      "card_filename": "Category-Memory_Safety.md",
+      "category": "Memory_Safety"
+    },
+    "CWE-444": {
+      "tier": 3,
+      "n": 11,
+      "name": "CWE-444",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 11,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.4,
+      "ratio": 999.0,
+      "project_count": 3,
+      "top_projects": [
+        [
+          "apache_trafficserver",
+          9
+        ],
+        [
+          "nodejs_node",
+          1
+        ],
+        [
+          "isc-projects_bind9",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-252": {
+      "tier": 3,
+      "n": 10,
+      "name": "CWE-252",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 10,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.4,
+      "ratio": 999.0,
+      "project_count": 6,
+      "top_projects": [
+        [
+          "FFmpeg_FFmpeg",
+          3
+        ],
+        [
+          "CESNET_libyang",
+          3
+        ],
+        [
+          "radareorg_radare2",
+          1
+        ],
+        [
+          "gpac_gpac",
+          1
+        ],
+        [
+          "ImageMagick_ImageMagick",
+          1
+        ]
+      ],
+      "card_filename": "Category-Input_Validation.md",
+      "category": "Input_Validation"
+    },
+    "CWE-834": {
+      "tier": 3,
+      "n": 9,
+      "name": "CWE-834",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 9,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.4,
+      "ratio": 999.0,
+      "project_count": 2,
+      "top_projects": [
+        [
+          "FFmpeg_FFmpeg",
+          8
+        ],
+        [
+          "roehling_postsrsd",
+          1
+        ]
+      ],
+      "card_filename": "Category-Integer_Arithmetic.md",
+      "category": "Integer_Arithmetic"
+    },
+    "CWE-77": {
+      "tier": 3,
+      "n": 9,
+      "name": "CWE-77",
+      "linux_cnt": 2,
+      "nonlinux_cnt": 7,
+      "linux_pct": 0.2,
+      "nonlinux_pct": 0.3,
+      "ratio": 1.62,
+      "project_count": 5,
+      "top_projects": [
+        [
+          "radareorg_radare2",
+          4
+        ],
+        [
+          "torvalds_linux",
+          2
+        ],
+        [
+          "npat-efault_picocom",
+          1
+        ],
+        [
+          "memcached_memcached",
+          1
+        ],
+        [
+          "att_ast",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-763": {
+      "tier": 3,
+      "n": 9,
+      "name": "CWE-763",
+      "linux_cnt": 6,
+      "nonlinux_cnt": 3,
+      "linux_pct": 0.5,
+      "nonlinux_pct": 0.1,
+      "ratio": 4.33,
+      "project_count": 3,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          6
+        ],
+        [
+          "gpac_gpac",
+          2
+        ],
+        [
+          "nanopb_nanopb",
+          1
+        ]
+      ],
+      "card_filename": "Category-Memory_Safety.md",
+      "category": "Memory_Safety"
+    },
+    "CWE-754": {
+      "tier": 3,
+      "n": 9,
+      "name": "CWE-754",
+      "linux_cnt": 4,
+      "nonlinux_cnt": 5,
+      "linux_pct": 0.4,
+      "nonlinux_pct": 0.2,
+      "ratio": 1.73,
+      "project_count": 6,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          4
+        ],
+        [
+          "virtualsquare_picotcp",
+          1
+        ],
+        [
+          "pjsip_pjproject",
+          1
+        ],
+        [
+          "mz-automation_libiec61850",
+          1
+        ],
+        [
+          "google_google-api-cpp-client",
+          1
+        ]
+      ],
+      "card_filename": "Category-Input_Validation.md",
+      "category": "Input_Validation"
+    },
+    "CWE-732": {
+      "tier": 3,
+      "n": 9,
+      "name": "CWE-732",
+      "linux_cnt": 4,
+      "nonlinux_cnt": 5,
+      "linux_pct": 0.4,
+      "nonlinux_pct": 0.2,
+      "ratio": 1.73,
+      "project_count": 4,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          4
+        ],
+        [
+          "eclipse_mosquitto",
+          3
+        ],
+        [
+          "isc-projects_bind9",
+          1
+        ],
+        [
+          "GNOME_glib",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-682": {
+      "tier": 3,
+      "n": 9,
+      "name": "CWE-682",
+      "linux_cnt": 7,
+      "nonlinux_cnt": 2,
+      "linux_pct": 0.6,
+      "nonlinux_pct": 0.1,
+      "ratio": 7.58,
+      "project_count": 3,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          7
+        ],
+        [
+          "virtualsquare_picotcp",
+          1
+        ],
+        [
+          "lighttpd_lighttpd1.4",
+          1
+        ]
+      ],
+      "card_filename": "Category-Integer_Arithmetic.md",
+      "category": "Integer_Arithmetic"
+    },
+    "CWE-330": {
+      "tier": 3,
+      "n": 9,
+      "name": "CWE-330",
+      "linux_cnt": 6,
+      "nonlinux_cnt": 3,
+      "linux_pct": 0.5,
+      "nonlinux_pct": 0.1,
+      "ratio": 4.33,
+      "project_count": 3,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          6
+        ],
+        [
+          "c-ares_c-ares",
+          2
+        ],
+        [
+          "wolfSSL_wolfssl",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-284": {
+      "tier": 3,
+      "n": 9,
+      "name": "CWE-284",
+      "linux_cnt": 2,
+      "nonlinux_cnt": 7,
+      "linux_pct": 0.2,
+      "nonlinux_pct": 0.3,
+      "ratio": 1.62,
+      "project_count": 6,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          2
+        ],
+        [
+          "jpirko_libndp",
+          2
+        ],
+        [
+          "eProsima_Fast-DDS",
+          2
+        ],
+        [
+          "netblue30_firejail",
+          1
+        ],
+        [
+          "SchedMD_slurm",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-203": {
+      "tier": 3,
+      "n": 9,
+      "name": "CWE-203",
+      "linux_cnt": 4,
+      "nonlinux_cnt": 5,
+      "linux_pct": 0.4,
+      "nonlinux_pct": 0.2,
+      "ratio": 1.73,
+      "project_count": 5,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          4
+        ],
+        [
+          "wolfSSL_wolfssl",
+          2
+        ],
+        [
+          "pq-crystals_kyber",
+          1
+        ],
+        [
+          "emikulic_darkhttpd",
+          1
+        ],
+        [
+          "bbbrumley_portsmash",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-131": {
+      "tier": 3,
+      "n": 9,
+      "name": "CWE-131",
+      "linux_cnt": 9,
+      "nonlinux_cnt": 0,
+      "linux_pct": 0.8,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          9
+        ]
+      ],
+      "card_filename": "Category-Memory_Safety.md",
+      "category": "Memory_Safety"
+    },
+    "CWE-909": {
+      "tier": 3,
+      "n": 8,
+      "name": "CWE-909",
+      "linux_cnt": 8,
+      "nonlinux_cnt": 0,
+      "linux_pct": 0.7,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          8
+        ]
+      ],
+      "card_filename": "Category-Type_Misc.md",
+      "category": "Type_Misc"
+    },
+    "CWE-755": {
+      "tier": 3,
+      "n": 8,
+      "name": "CWE-755",
+      "linux_cnt": 5,
+      "nonlinux_cnt": 3,
+      "linux_pct": 0.4,
+      "nonlinux_pct": 0.1,
+      "ratio": 3.61,
+      "project_count": 3,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          5
+        ],
+        [
+          "webmproject_libvpx",
+          2
+        ],
+        [
+          "axiomatic-systems_Bento4",
+          1
+        ]
+      ],
+      "card_filename": "Category-Input_Validation.md",
+      "category": "Input_Validation"
+    },
+    "CWE-269": {
+      "tier": 3,
+      "n": 8,
+      "name": "CWE-269",
+      "linux_cnt": 1,
+      "nonlinux_cnt": 7,
+      "linux_pct": 0.1,
+      "nonlinux_pct": 0.3,
+      "ratio": 3.23,
+      "project_count": 5,
+      "top_projects": [
+        [
+          "netblue30_firejail",
+          4
+        ],
+        [
+          "torvalds_linux",
+          1
+        ],
+        [
+          "sudo-project_sudo",
+          1
+        ],
+        [
+          "isc-projects_bind9",
+          1
+        ],
+        [
+          "GNS3_ubridge",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-863": {
+      "tier": 3,
+      "n": 7,
+      "name": "CWE-863",
+      "linux_cnt": 7,
+      "nonlinux_cnt": 0,
+      "linux_pct": 0.6,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          7
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-59": {
+      "tier": 3,
+      "n": 7,
+      "name": "CWE-59",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 7,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.3,
+      "ratio": 999.0,
+      "project_count": 6,
+      "top_projects": [
+        [
+          "ClusterLabs_libqb",
+          2
+        ],
+        [
+          "proftpd_proftpd",
+          1
+        ],
+        [
+          "lxc_lxc",
+          1
+        ],
+        [
+          "libarchive_libarchive",
+          1
+        ],
+        [
+          "WayneD_rsync",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-287": {
+      "tier": 3,
+      "n": 7,
+      "name": "CWE-287",
+      "linux_cnt": 3,
+      "nonlinux_cnt": 4,
+      "linux_pct": 0.3,
+      "nonlinux_pct": 0.2,
+      "ratio": 1.62,
+      "project_count": 5,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          3
+        ],
+        [
+          "openssh_openssh-portable",
+          1
+        ],
+        [
+          "mkj_dropbear",
+          1
+        ],
+        [
+          "holdennb_CollabCal",
+          1
+        ],
+        [
+          "eclipse_mosquitto",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-273": {
+      "tier": 3,
+      "n": 7,
+      "name": "CWE-273",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 7,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.3,
+      "ratio": 999.0,
+      "project_count": 2,
+      "top_projects": [
+        [
+          "zsh-users_zsh",
+          6
+        ],
+        [
+          "libuv_libuv",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-79": {
+      "tier": 3,
+      "n": 6,
+      "name": "CWE-79",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 6,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.2,
+      "ratio": 999.0,
+      "project_count": 4,
+      "top_projects": [
+        [
+          "c-ares_c-ares",
+          2
+        ],
+        [
+          "apache_trafficserver",
+          2
+        ],
+        [
+          "raysan5_raylib",
+          1
+        ],
+        [
+          "GNOME_libxml2",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-78": {
+      "tier": 3,
+      "n": 6,
+      "name": "CWE-78",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 6,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.2,
+      "ratio": 999.0,
+      "project_count": 4,
+      "top_projects": [
+        [
+          "radare_radare2",
+          2
+        ],
+        [
+          "nodejs_node",
+          2
+        ],
+        [
+          "xrootd_xrootd",
+          1
+        ],
+        [
+          "piastry_cifs-utils",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-74": {
+      "tier": 3,
+      "n": 6,
+      "name": "CWE-74",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 6,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.2,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "swoole_swoole-src",
+          6
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-680": {
+      "tier": 3,
+      "n": 6,
+      "name": "CWE-680",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 6,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.2,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "FreeRDP_FreeRDP",
+          6
+        ]
+      ],
+      "card_filename": "Category-Resource_Management.md",
+      "category": "Resource_Management"
+    },
+    "CWE-668": {
+      "tier": 3,
+      "n": 6,
+      "name": "CWE-668",
+      "linux_cnt": 3,
+      "nonlinux_cnt": 3,
+      "linux_pct": 0.3,
+      "nonlinux_pct": 0.1,
+      "ratio": 2.17,
+      "project_count": 2,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          3
+        ],
+        [
+          "kennylevinsen_seatd",
+          3
+        ]
+      ],
+      "card_filename": "Category-Type_Misc.md",
+      "category": "Type_Misc"
+    },
+    "CWE-404": {
+      "tier": 3,
+      "n": 6,
+      "name": "CWE-404",
+      "linux_cnt": 4,
+      "nonlinux_cnt": 2,
+      "linux_pct": 0.4,
+      "nonlinux_pct": 0.1,
+      "ratio": 4.33,
+      "project_count": 3,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          4
+        ],
+        [
+          "rtcwcoop_rtcwcoop",
+          1
+        ],
+        [
+          "isc-projects_bind9",
+          1
+        ]
+      ],
+      "card_filename": "Category-Resource_Management.md",
+      "category": "Resource_Management"
+    },
+    "CWE-310": {
+      "tier": 3,
+      "n": 6,
+      "name": "CWE-310",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 6,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.2,
+      "ratio": 999.0,
+      "project_count": 2,
+      "top_projects": [
+        [
+          "polarssl_polarssl",
+          5
+        ],
+        [
+          "akheron_jansson",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-17": {
+      "tier": 3,
+      "n": 6,
+      "name": "CWE-17",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 6,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.2,
+      "ratio": 999.0,
+      "project_count": 4,
+      "top_projects": [
+        [
+          "FFmpeg_FFmpeg",
+          3
+        ],
+        [
+          "lxc_lxc",
+          1
+        ],
+        [
+          "isc-projects_bind9",
+          1
+        ],
+        [
+          "Cisco-Talos_clamav",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-121": {
+      "tier": 3,
+      "n": 6,
+      "name": "CWE-121",
+      "linux_cnt": 2,
+      "nonlinux_cnt": 4,
+      "linux_pct": 0.2,
+      "nonlinux_pct": 0.2,
+      "ratio": 1.08,
+      "project_count": 4,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          2
+        ],
+        [
+          "pjsip_pjproject",
+          2
+        ],
+        [
+          "liblouis_liblouis",
+          1
+        ],
+        [
+          "gpac_gpac",
+          1
+        ]
+      ],
+      "card_filename": "Category-Memory_Safety.md",
+      "category": "Memory_Safety"
+    },
+    "CWE-417": {
+      "tier": 3,
+      "n": 5,
+      "name": "CWE-417",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 5,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.2,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "weidai11_cryptopp",
+          5
+        ]
+      ],
+      "card_filename": "Category-Input_Validation.md",
+      "category": "Input_Validation"
+    },
+    "CWE-345": {
+      "tier": 3,
+      "n": 5,
+      "name": "CWE-345",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 5,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.2,
+      "ratio": 999.0,
+      "project_count": 5,
+      "top_projects": [
+        [
+          "wolfSSL_wolfssl",
+          1
+        ],
+        [
+          "pupnp_pupnp",
+          1
+        ],
+        [
+          "nodejs_node",
+          1
+        ],
+        [
+          "jbaines-r7_theway",
+          1
+        ],
+        [
+          "FFmpeg_FFmpeg",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-276": {
+      "tier": 3,
+      "n": 5,
+      "name": "CWE-276",
+      "linux_cnt": 2,
+      "nonlinux_cnt": 3,
+      "linux_pct": 0.2,
+      "nonlinux_pct": 0.1,
+      "ratio": 1.44,
+      "project_count": 2,
+      "top_projects": [
+        [
+          "facebook_zstd",
+          3
+        ],
+        [
+          "torvalds_linux",
+          2
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-193": {
+      "tier": 3,
+      "n": 5,
+      "name": "CWE-193",
+      "linux_cnt": 2,
+      "nonlinux_cnt": 3,
+      "linux_pct": 0.2,
+      "nonlinux_pct": 0.1,
+      "ratio": 1.44,
+      "project_count": 3,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          2
+        ],
+        [
+          "radareorg_radare2",
+          2
+        ],
+        [
+          "gpac_gpac",
+          1
+        ]
+      ],
+      "card_filename": "Category-Integer_Arithmetic.md",
+      "category": "Integer_Arithmetic"
+    },
+    "CWE-191": {
+      "tier": 3,
+      "n": 5,
+      "name": "CWE-191",
+      "linux_cnt": 1,
+      "nonlinux_cnt": 4,
+      "linux_pct": 0.1,
+      "nonlinux_pct": 0.2,
+      "ratio": 1.85,
+      "project_count": 5,
+      "top_projects": [
+        [
+          "verdammelt_tnef",
+          1
+        ],
+        [
+          "torvalds_linux",
+          1
+        ],
+        [
+          "pjsip_pjproject",
+          1
+        ],
+        [
+          "mz-automation_libiec61850",
+          1
+        ],
+        [
+          "accel-ppp_accel-ppp",
+          1
+        ]
+      ],
+      "card_filename": "Category-Integer_Arithmetic.md",
+      "category": "Integer_Arithmetic"
+    },
+    "CWE-824": {
+      "tier": 3,
+      "n": 4,
+      "name": "CWE-824",
+      "linux_cnt": 2,
+      "nonlinux_cnt": 2,
+      "linux_pct": 0.2,
+      "nonlinux_pct": 0.1,
+      "ratio": 2.17,
+      "project_count": 3,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          2
+        ],
+        [
+          "jedisct1_pure-ftpd",
+          1
+        ],
+        [
+          "dbry_WavPack",
+          1
+        ]
+      ],
+      "card_filename": "Category-Memory_Safety.md",
+      "category": "Memory_Safety"
+    },
+    "CWE-367": {
+      "tier": 3,
+      "n": 4,
+      "name": "CWE-367",
+      "linux_cnt": 3,
+      "nonlinux_cnt": 1,
+      "linux_pct": 0.3,
+      "nonlinux_pct": 0.0,
+      "ratio": 6.5,
+      "project_count": 2,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          3
+        ],
+        [
+          "qt_qtbase",
+          1
+        ]
+      ],
+      "card_filename": "Category-Concurrency.md",
+      "category": "Concurrency"
+    },
+    "CWE-327": {
+      "tier": 3,
+      "n": 4,
+      "name": "CWE-327",
+      "linux_cnt": 3,
+      "nonlinux_cnt": 1,
+      "linux_pct": 0.3,
+      "nonlinux_pct": 0.0,
+      "ratio": 6.5,
+      "project_count": 2,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          3
+        ],
+        [
+          "isc-projects_bind9",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-319": {
+      "tier": 3,
+      "n": 4,
+      "name": "CWE-319",
+      "linux_cnt": 4,
+      "nonlinux_cnt": 0,
+      "linux_pct": 0.4,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          4
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-1284": {
+      "tier": 3,
+      "n": 4,
+      "name": "CWE-1284",
+      "linux_cnt": 2,
+      "nonlinux_cnt": 2,
+      "linux_pct": 0.2,
+      "nonlinux_pct": 0.1,
+      "ratio": 2.17,
+      "project_count": 3,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          2
+        ],
+        [
+          "c-ares_c-ares",
+          1
+        ],
+        [
+          "FreeRDP_FreeRDP",
+          1
+        ]
+      ],
+      "card_filename": "Category-Memory_Safety.md",
+      "category": "Memory_Safety"
+    },
+    "CWE-704": {
+      "tier": 3,
+      "n": 3,
+      "name": "CWE-704",
+      "linux_cnt": 2,
+      "nonlinux_cnt": 1,
+      "linux_pct": 0.2,
+      "nonlinux_pct": 0.0,
+      "ratio": 4.33,
+      "project_count": 2,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          2
+        ],
+        [
+          "LibRaw_LibRaw",
+          1
+        ]
+      ],
+      "card_filename": "Category-Type_Misc.md",
+      "category": "Type_Misc"
+    },
+    "CWE-697": {
+      "tier": 3,
+      "n": 3,
+      "name": "CWE-697",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 3,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.1,
+      "ratio": 999.0,
+      "project_count": 3,
+      "top_projects": [
+        [
+          "unicorn-engine_unicorn",
+          1
+        ],
+        [
+          "kohler_gifsicle",
+          1
+        ],
+        [
+          "gpac_gpac",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-670": {
+      "tier": 3,
+      "n": 3,
+      "name": "CWE-670",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 3,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.1,
+      "ratio": 999.0,
+      "project_count": 3,
+      "top_projects": [
+        [
+          "openvswitch_ovs",
+          1
+        ],
+        [
+          "facebook_hermes",
+          1
+        ],
+        [
+          "AndrewScheidecker_WAVM",
+          1
+        ]
+      ],
+      "card_filename": "Category-Resource_Management.md",
+      "category": "Resource_Management"
+    },
+    "CWE-662": {
+      "tier": 3,
+      "n": 3,
+      "name": "CWE-662",
+      "linux_cnt": 3,
+      "nonlinux_cnt": 0,
+      "linux_pct": 0.3,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          3
+        ]
+      ],
+      "card_filename": "Category-Concurrency.md",
+      "category": "Concurrency"
+    },
+    "CWE-459": {
+      "tier": 3,
+      "n": 3,
+      "name": "CWE-459",
+      "linux_cnt": 2,
+      "nonlinux_cnt": 1,
+      "linux_pct": 0.2,
+      "nonlinux_pct": 0.0,
+      "ratio": 4.33,
+      "project_count": 2,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          2
+        ],
+        [
+          "nghttp2_nghttp2",
+          1
+        ]
+      ],
+      "card_filename": "Category-Resource_Management.md",
+      "category": "Resource_Management"
+    },
+    "CWE-354": {
+      "tier": 3,
+      "n": 3,
+      "name": "CWE-354",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 3,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.1,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "WayneD_rsync",
+          3
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-347": {
+      "tier": 3,
+      "n": 3,
+      "name": "CWE-347",
+      "linux_cnt": 2,
+      "nonlinux_cnt": 1,
+      "linux_pct": 0.2,
+      "nonlinux_pct": 0.0,
+      "ratio": 4.33,
+      "project_count": 2,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          2
+        ],
+        [
+          "wolfSSL_wolfssl",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-918": {
+      "tier": 3,
+      "n": 2,
+      "name": "CWE-918",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 2,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.1,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "libuv_libuv",
+          2
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-89": {
+      "tier": 3,
+      "n": 2,
+      "name": "CWE-89",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 2,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.1,
+      "ratio": 999.0,
+      "project_count": 2,
+      "top_projects": [
+        [
+          "TicklishHoneyBee_nodau",
+          1
+        ],
+        [
+          "SchedMD_slurm",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-776": {
+      "tier": 3,
+      "n": 2,
+      "name": "CWE-776",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 2,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.1,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "GNOME_libxml2",
+          2
+        ]
+      ],
+      "card_filename": "Category-Resource_Management.md",
+      "category": "Resource_Management"
+    },
+    "CWE-707": {
+      "tier": 3,
+      "n": 2,
+      "name": "CWE-707",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 2,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.1,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "nghttp2_nghttp2",
+          2
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-457": {
+      "tier": 3,
+      "n": 2,
+      "name": "CWE-457",
+      "linux_cnt": 2,
+      "nonlinux_cnt": 0,
+      "linux_pct": 0.2,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          2
+        ]
+      ],
+      "card_filename": "Category-Resource_Management.md",
+      "category": "Resource_Management"
+    },
+    "CWE-455": {
+      "tier": 3,
+      "n": 2,
+      "name": "CWE-455",
+      "linux_cnt": 2,
+      "nonlinux_cnt": 0,
+      "linux_pct": 0.2,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          2
+        ]
+      ],
+      "card_filename": "Category-Resource_Management.md",
+      "category": "Resource_Management"
+    },
+    "CWE-434": {
+      "tier": 3,
+      "n": 2,
+      "name": "CWE-434",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 2,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.1,
+      "ratio": 999.0,
+      "project_count": 2,
+      "top_projects": [
+        [
+          "taglib_taglib",
+          1
+        ],
+        [
+          "jedisct1_pure-ftpd",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-388": {
+      "tier": 3,
+      "n": 2,
+      "name": "CWE-388",
+      "linux_cnt": 1,
+      "nonlinux_cnt": 1,
+      "linux_pct": 0.1,
+      "nonlinux_pct": 0.0,
+      "ratio": 2.17,
+      "project_count": 2,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          1
+        ],
+        [
+          "isc-projects_bind9",
+          1
+        ]
+      ],
+      "card_filename": "Category-Input_Validation.md",
+      "category": "Input_Validation"
+    },
+    "CWE-338": {
+      "tier": 3,
+      "n": 2,
+      "name": "CWE-338",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 2,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.1,
+      "ratio": 999.0,
+      "project_count": 2,
+      "top_projects": [
+        [
+          "nodejs_node",
+          1
+        ],
+        [
+          "johguse_profanity",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-307": {
+      "tier": 3,
+      "n": 2,
+      "name": "CWE-307",
+      "linux_cnt": 2,
+      "nonlinux_cnt": 0,
+      "linux_pct": 0.2,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          2
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-281": {
+      "tier": 3,
+      "n": 2,
+      "name": "CWE-281",
+      "linux_cnt": 2,
+      "nonlinux_cnt": 0,
+      "linux_pct": 0.2,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          2
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-19": {
+      "tier": 3,
+      "n": 2,
+      "name": "CWE-19",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 2,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.1,
+      "ratio": 999.0,
+      "project_count": 2,
+      "top_projects": [
+        [
+          "isc-projects_bind9",
+          1
+        ],
+        [
+          "InfrastructureServices_dnsmasq",
+          1
+        ]
+      ],
+      "card_filename": "Category-Concurrency.md",
+      "category": "Concurrency"
+    },
+    "CWE-134": {
+      "tier": 3,
+      "n": 2,
+      "name": "CWE-134",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 2,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.1,
+      "ratio": 999.0,
+      "project_count": 2,
+      "top_projects": [
+        [
+          "fmtlib_fmt",
+          1
+        ],
+        [
+          "EliasOenal_multimon-ng",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-116": {
+      "tier": 3,
+      "n": 2,
+      "name": "CWE-116",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 2,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.1,
+      "ratio": 999.0,
+      "project_count": 2,
+      "top_projects": [
+        [
+          "sudo-project_sudo",
+          1
+        ],
+        [
+          "netdata_netdata",
+          1
+        ]
+      ],
+      "card_filename": "Category-Type_Misc.md",
+      "category": "Type_Misc"
+    },
+    "CWE-94": {
+      "tier": 3,
+      "n": 1,
+      "name": "CWE-94",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 1,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "FFmpeg_FFmpeg",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-838": {
+      "tier": 3,
+      "n": 1,
+      "name": "CWE-838",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 1,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "hyperhq_hyperstart",
+          1
+        ]
+      ],
+      "card_filename": "Category-Resource_Management.md",
+      "category": "Resource_Management"
+    },
+    "CWE-833": {
+      "tier": 3,
+      "n": 1,
+      "name": "CWE-833",
+      "linux_cnt": 1,
+      "nonlinux_cnt": 0,
+      "linux_pct": 0.1,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          1
+        ]
+      ],
+      "card_filename": "Category-Resource_Management.md",
+      "category": "Resource_Management"
+    },
+    "CWE-73": {
+      "tier": 3,
+      "n": 1,
+      "name": "CWE-73",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 1,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "sternenseemann_sternenblog",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-672": {
+      "tier": 3,
+      "n": 1,
+      "name": "CWE-672",
+      "linux_cnt": 1,
+      "nonlinux_cnt": 0,
+      "linux_pct": 0.1,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          1
+        ]
+      ],
+      "card_filename": "Category-Resource_Management.md",
+      "category": "Resource_Management"
+    },
+    "CWE-613": {
+      "tier": 3,
+      "n": 1,
+      "name": "CWE-613",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 1,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "NLnetLabs_unbound",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-610": {
+      "tier": 3,
+      "n": 1,
+      "name": "CWE-610",
+      "linux_cnt": 1,
+      "nonlinux_cnt": 0,
+      "linux_pct": 0.1,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-552": {
+      "tier": 3,
+      "n": 1,
+      "name": "CWE-552",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 1,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "cesanta_mongoose",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-532": {
+      "tier": 3,
+      "n": 1,
+      "name": "CWE-532",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 1,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "piastry_cifs-utils",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-522": {
+      "tier": 3,
+      "n": 1,
+      "name": "CWE-522",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 1,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "huntergregal_mimipenguin",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-440": {
+      "tier": 3,
+      "n": 1,
+      "name": "CWE-440",
+      "linux_cnt": 1,
+      "nonlinux_cnt": 0,
+      "linux_pct": 0.1,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          1
+        ]
+      ],
+      "card_filename": "Category-Resource_Management.md",
+      "category": "Resource_Management"
+    },
+    "CWE-436": {
+      "tier": 3,
+      "n": 1,
+      "name": "CWE-436",
+      "linux_cnt": 1,
+      "nonlinux_cnt": 0,
+      "linux_pct": 0.1,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          1
+        ]
+      ],
+      "card_filename": "Category-Resource_Management.md",
+      "category": "Resource_Management"
+    },
+    "CWE-426": {
+      "tier": 3,
+      "n": 1,
+      "name": "CWE-426",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 1,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "SchedMD_slurm",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-407": {
+      "tier": 3,
+      "n": 1,
+      "name": "CWE-407",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 1,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "CZ-NIC_knot-resolver",
+          1
+        ]
+      ],
+      "card_filename": "Category-Resource_Management.md",
+      "category": "Resource_Management"
+    },
+    "CWE-290": {
+      "tier": 3,
+      "n": 1,
+      "name": "CWE-290",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 1,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "apple_cups",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-255": {
+      "tier": 3,
+      "n": 1,
+      "name": "CWE-255",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 1,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "alandekok_freeradius-server",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-212": {
+      "tier": 3,
+      "n": 1,
+      "name": "CWE-212",
+      "linux_cnt": 1,
+      "nonlinux_cnt": 0,
+      "linux_pct": 0.1,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          1
+        ]
+      ],
+      "card_filename": "Category-Security_Policy.md",
+      "category": "Security_Policy"
+    },
+    "CWE-1321": {
+      "tier": 3,
+      "n": 1,
+      "name": "CWE-1321",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 1,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "nodejs_node",
+          1
+        ]
+      ],
+      "card_filename": "Category-Type_Misc.md",
+      "category": "Type_Misc"
+    },
+    "CWE-1188": {
+      "tier": 3,
+      "n": 1,
+      "name": "CWE-1188",
+      "linux_cnt": 1,
+      "nonlinux_cnt": 0,
+      "linux_pct": 0.1,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "torvalds_linux",
+          1
+        ]
+      ],
+      "card_filename": "Category-Type_Misc.md",
+      "category": "Type_Misc"
+    },
+    "CWE-1077": {
+      "tier": 3,
+      "n": 1,
+      "name": "CWE-1077",
+      "linux_cnt": 0,
+      "nonlinux_cnt": 1,
+      "linux_pct": 0.0,
+      "nonlinux_pct": 0.0,
+      "ratio": 999.0,
+      "project_count": 1,
+      "top_projects": [
+        [
+          "gpac_gpac",
+          1
+        ]
+      ],
+      "card_filename": "Category-Type_Misc.md",
+      "category": "Type_Misc"
+    }
+  },
+  "tier3_categories": {
+    "Concurrency": [
+      "CWE-19",
+      "CWE-367",
+      "CWE-662"
+    ],
+    "Input_Validation": [
+      "CWE-252",
+      "CWE-388",
+      "CWE-417",
+      "CWE-754",
+      "CWE-755"
+    ],
+    "Integer_Arithmetic": [
+      "CWE-129",
+      "CWE-191",
+      "CWE-193",
+      "CWE-681",
+      "CWE-682",
+      "CWE-834"
+    ],
+    "Memory_Safety": [
+      "CWE-121",
+      "CWE-122",
+      "CWE-1284",
+      "CWE-131",
+      "CWE-763",
+      "CWE-824",
+      "CWE-843"
+    ],
+    "Resource_Management": [
+      "CWE-404",
+      "CWE-407",
+      "CWE-436",
+      "CWE-440",
+      "CWE-455",
+      "CWE-457",
+      "CWE-459",
+      "CWE-670",
+      "CWE-672",
+      "CWE-680",
+      "CWE-776",
+      "CWE-833",
+      "CWE-838"
+    ],
+    "Security_Policy": [
+      "CWE-134",
+      "CWE-17",
+      "CWE-203",
+      "CWE-212",
+      "CWE-22",
+      "CWE-255",
+      "CWE-264",
+      "CWE-269",
+      "CWE-273",
+      "CWE-276",
+      "CWE-281",
+      "CWE-284",
+      "CWE-287",
+      "CWE-290",
+      "CWE-295",
+      "CWE-307",
+      "CWE-310",
+      "CWE-319",
+      "CWE-327",
+      "CWE-330",
+      "CWE-338",
+      "CWE-345",
+      "CWE-347",
+      "CWE-354",
+      "CWE-426",
+      "CWE-434",
+      "CWE-444",
+      "CWE-522",
+      "CWE-532",
+      "CWE-552",
+      "CWE-59",
+      "CWE-610",
+      "CWE-613",
+      "CWE-697",
+      "CWE-707",
+      "CWE-73",
+      "CWE-732",
+      "CWE-74",
+      "CWE-77",
+      "CWE-78",
+      "CWE-79",
+      "CWE-862",
+      "CWE-863",
+      "CWE-89",
+      "CWE-918",
+      "CWE-94"
+    ],
+    "Type_Misc": [
+      "CWE-1077",
+      "CWE-116",
+      "CWE-1188",
+      "CWE-1321",
+      "CWE-665",
+      "CWE-668",
+      "CWE-704",
+      "CWE-909"
+    ]
+  },
+  "category_umbrella_files": [
+    "Category-Concurrency.md",
+    "Category-Input_Validation.md",
+    "Category-Integer_Arithmetic.md",
+    "Category-Memory_Safety.md",
+    "Category-Resource_Management.md",
+    "Category-Security_Policy.md",
+    "Category-Type_Misc.md"
+  ],
+  "kernel_repo_whitelist": [
+    "torvalds_linux"
+  ]
+}

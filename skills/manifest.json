@@ -1,0 +1,525 @@
+{
+  "schema_version": "checkerbench-guidance-v1",
+  "task_count": 300,
+  "bundles": [
+    "codeql/go",
+    "codeql/java",
+    "codeql/javascript",
+    "codeql/python",
+    "csa"
+  ],
+  "asset_file_count": 127,
+  "unique_content_count": 115,
+  "source_policy": "Byte-preserving copy of agent-visible .claude/skills/ and references/ from the archived task workspaces; identical resources are stored once per backend/language.",
+  "checker_solution_policy": "No task-specific reference checker, rollout trace, verifier, credential configuration, or generated candidate is included.",
+  "files": {
+    "skills/codeql/go/references/codeql/ast_cfg_patterns.md": {
+      "sha256": "3d97843aec8bb8a0e5c675780ce30183e5d4bdbd4f77323a20c5f37820c8b9d7",
+      "bytes": 2510
+    },
+    "skills/codeql/go/references/codeql/convergence_protocol.md": {
+      "sha256": "6e3c75572dec4b3e2fbdf19c1b14cd7d31bda34d8c5f191518690aa1da31db31",
+      "bytes": 3154
+    },
+    "skills/codeql/go/references/codeql/dataflow_taint_patterns.md": {
+      "sha256": "1da23ef6e09cbf3a6014c5408e28ad44c987f4ac987434ac3da8eb2c27a0213e",
+      "bytes": 2419
+    },
+    "skills/codeql/go/references/codeql/go_api.md": {
+      "sha256": "565b18a74fe8a34df07e236f0807143af41066750a195352307e8a168033fae5",
+      "bytes": 3838
+    },
+    "skills/codeql/go/references/codeql/query_metadata.md": {
+      "sha256": "5a2b0f8a9cfed8d57ac2698978941c589a4731a045861f14a12de80fe6af2724",
+      "bytes": 1482
+    },
+    "skills/codeql/java/references/codeql/ast_cfg_patterns.md": {
+      "sha256": "3d97843aec8bb8a0e5c675780ce30183e5d4bdbd4f77323a20c5f37820c8b9d7",
+      "bytes": 2510
+    },
+    "skills/codeql/java/references/codeql/convergence_protocol.md": {
+      "sha256": "6e3c75572dec4b3e2fbdf19c1b14cd7d31bda34d8c5f191518690aa1da31db31",
+      "bytes": 3154
+    },
+    "skills/codeql/java/references/codeql/dataflow_taint_patterns.md": {
+      "sha256": "1da23ef6e09cbf3a6014c5408e28ad44c987f4ac987434ac3da8eb2c27a0213e",
+      "bytes": 2419
+    },
+    "skills/codeql/java/references/codeql/java_api.md": {
+      "sha256": "7b53b49af56c719f6cb326fd404d4c5a5a7f4e397f3415f252c286a2cc613d11",
+      "bytes": 2917
+    },
+    "skills/codeql/java/references/codeql/query_metadata.md": {
+      "sha256": "5a2b0f8a9cfed8d57ac2698978941c589a4731a045861f14a12de80fe6af2724",
+      "bytes": 1482
+    },
+    "skills/codeql/javascript/references/codeql/ast_cfg_patterns.md": {
+      "sha256": "3d97843aec8bb8a0e5c675780ce30183e5d4bdbd4f77323a20c5f37820c8b9d7",
+      "bytes": 2510
+    },
+    "skills/codeql/javascript/references/codeql/convergence_protocol.md": {
+      "sha256": "6e3c75572dec4b3e2fbdf19c1b14cd7d31bda34d8c5f191518690aa1da31db31",
+      "bytes": 3154
+    },
+    "skills/codeql/javascript/references/codeql/dataflow_taint_patterns.md": {
+      "sha256": "1da23ef6e09cbf3a6014c5408e28ad44c987f4ac987434ac3da8eb2c27a0213e",
+      "bytes": 2419
+    },
+    "skills/codeql/javascript/references/codeql/javascript_api.md": {
+      "sha256": "6f2e81fe6c4c67abdd254c760bac7e7ea63f97857f214fc0b60dd9ddc24a0850",
+      "bytes": 3840
+    },
+    "skills/codeql/javascript/references/codeql/query_metadata.md": {
+      "sha256": "5a2b0f8a9cfed8d57ac2698978941c589a4731a045861f14a12de80fe6af2724",
+      "bytes": 1482
+    },
+    "skills/codeql/python/references/codeql/api_navigation.md": {
+      "sha256": "6eb800901a09a052b2e86a973d4074a4fa1e412151d18fb81b13fef84ce4b5ce",
+      "bytes": 3211
+    },
+    "skills/codeql/python/references/codeql/ast_cfg_patterns.md": {
+      "sha256": "3d97843aec8bb8a0e5c675780ce30183e5d4bdbd4f77323a20c5f37820c8b9d7",
+      "bytes": 2510
+    },
+    "skills/codeql/python/references/codeql/convergence_protocol.md": {
+      "sha256": "6e3c75572dec4b3e2fbdf19c1b14cd7d31bda34d8c5f191518690aa1da31db31",
+      "bytes": 3154
+    },
+    "skills/codeql/python/references/codeql/dataflow_taint_patterns.md": {
+      "sha256": "1da23ef6e09cbf3a6014c5408e28ad44c987f4ac987434ac3da8eb2c27a0213e",
+      "bytes": 2419
+    },
+    "skills/codeql/python/references/codeql/examples/README.md": {
+      "sha256": "09f45d02ecfd9284675e0be6698748c89db1f3640da71093fb7c096efcb4e6f3",
+      "bytes": 589
+    },
+    "skills/codeql/python/references/codeql/examples/api_call_problem.ql": {
+      "sha256": "8d35346097ca385fd12c90fef4f5df97b08a6c968dcc08d45aa3591350dd5872",
+      "bytes": 569
+    },
+    "skills/codeql/python/references/codeql/examples/global_taint_path.ql": {
+      "sha256": "11f715b9cf9126e1546a01d6d8c5aecb0bedd972cb33d01e4af7f1acc4b92656",
+      "bytes": 1196
+    },
+    "skills/codeql/python/references/codeql/examples/local_flow_problem.ql": {
+      "sha256": "0d2c8bd590f249a4554428c59afccf46b8c43a0fb2204faa03fbffdb9afbada9",
+      "bytes": 690
+    },
+    "skills/codeql/python/references/codeql/examples/qlpack.yml": {
+      "sha256": "a1120c4d976977ea4e50739f071e1a05bb99d00573a38ea64ade4b29ff275b95",
+      "bytes": 94
+    },
+    "skills/codeql/python/references/codeql/python_api.md": {
+      "sha256": "9b3c36be7ac623c1d0038cc1ac827235ac5b28a5fd52f8a477c652a8bfc1e461",
+      "bytes": 1715
+    },
+    "skills/codeql/python/references/codeql/query_metadata.md": {
+      "sha256": "5a2b0f8a9cfed8d57ac2698978941c589a4731a045861f14a12de80fe6af2724",
+      "bytes": 1482
+    },
+    "skills/csa/.claude/skills/build-compile-commands/SKILL.md": {
+      "sha256": "5af1c09164b832145ee90e28ecbe760060ae0252a5aed30e16b8c2ba768fb454",
+      "bytes": 7483
+    },
+    "skills/csa/.claude/skills/c-code-analysis/SKILL.md": {
+      "sha256": "96379383f1c74a3be9681c2d32619a78588fc0f35e439814f0fff0fa2117ba48",
+      "bytes": 1691
+    },
+    "skills/csa/.claude/skills/checker-architecture/SKILL.md": {
+      "sha256": "453ba4b6ebc537c047e6d7d5b18ae71a1390d6334662a3dd77ab8e1fa70bcae8",
+      "bytes": 2577
+    },
+    "skills/csa/.claude/skills/checker-implementation-suggestions/SKILL.md": {
+      "sha256": "f9a803d7d79d34d5082d5190557d3b5670abc3f1a2b42976ad936644ed83db3f",
+      "bytes": 6267
+    },
+    "skills/csa/.claude/skills/checker-refinement/SKILL.md": {
+      "sha256": "3e27cc705fc14746f57402ed8745b2f6d11b368edf1e2e0dac22826337e3e32a",
+      "bytes": 1583
+    },
+    "skills/csa/.claude/skills/checker-scoping/SKILL.md": {
+      "sha256": "dd49524b2f05832eac98614d9a76d72f0e80f90099733a4838f08e59068425d1",
+      "bytes": 10410
+    },
+    "skills/csa/.claude/skills/checker-validation/SKILL.md": {
+      "sha256": "9446a7d1a4916f73e76c33288cbcaf408401a96be4b43fcf10808e512bd7c954",
+      "bytes": 2678
+    },
+    "skills/csa/.claude/skills/compile-debugging/SKILL.md": {
+      "sha256": "becc1a16f42cb4347173928278bef6c36c6cb100eb7603e7f063776eb2cea85c",
+      "bytes": 1725
+    },
+    "skills/csa/.claude/skills/csa-api-deep-dive/SKILL.md": {
+      "sha256": "23f7ca161e649f4d7cd35edd14707930318956b9f39669420508ba964f5b722a",
+      "bytes": 2108
+    },
+    "skills/csa/.claude/skills/csa-search/SKILL.md": {
+      "sha256": "ab8b65a3fbc8fe9fe5c225356673e243e44885909c6e8c043a77d866e83d9f39",
+      "bytes": 1192
+    },
+    "skills/csa/.claude/skills/dependency-check/SKILL.md": {
+      "sha256": "5d3220f305456eaf8451a883bf132c921345d1384473d5a05dbc9c958b0705f6",
+      "bytes": 2532
+    },
+    "skills/csa/.claude/skills/dependency-check/checker.py": {
+      "sha256": "87dcc21b6ba7fb7e716418b7cfa97a0b1f298a486e04ba035412228572ac3b8f",
+      "bytes": 10651
+    },
+    "skills/csa/.claude/skills/dependency-check/tests/test_checker.py": {
+      "sha256": "a47a08fab4a4cc7fa6045a5ef940908531f786c00692c941bfa76512b0d69b0e",
+      "bytes": 4889
+    },
+    "skills/csa/.claude/skills/dockerfile-scan/SKILL.md": {
+      "sha256": "4f3c1ce9459dc3343b5bd2af0dc180ccddc8c84fdbefdc8d169b92542036609e",
+      "bytes": 2066
+    },
+    "skills/csa/.claude/skills/dockerfile-scan/scanner.py": {
+      "sha256": "6fd9d33e2d8789bacba546ba0bde427f62ada2130dff6482321298c5fd120c5f",
+      "bytes": 8491
+    },
+    "skills/csa/.claude/skills/dockerfile-scan/tests/test_scanner.py": {
+      "sha256": "cc726e659eb4fa78a8d45221d19105f16d40a7e912c69b926266e907b30d54ee",
+      "bytes": 3690
+    },
+    "skills/csa/.claude/skills/fp-triage/SKILL.md": {
+      "sha256": "c2e91ef790d5b78d3312f745c4c61781004e0a609e20cfd34bd1bcc3a7477430",
+      "bytes": 1530
+    },
+    "skills/csa/.claude/skills/patch-analysis/SKILL.md": {
+      "sha256": "d839e1d6e45f24f98f0eef37d0a86f311ac524ed7ad2969164e0a8646ea26d7c",
+      "bytes": 1959
+    },
+    "skills/csa/.claude/skills/patch-dcrh/SKILL.md": {
+      "sha256": "e7e47b1740fb44277944be63cfb0ada4432589690bc27d6e8096675e16c1cef7",
+      "bytes": 24923
+    },
+    "skills/csa/.claude/skills/sast-lite/SKILL.md": {
+      "sha256": "65e1640fca824669173b184fd4c0f89ee4eeed965d233b576e5665b829756547",
+      "bytes": 2909
+    },
+    "skills/csa/.claude/skills/sast-lite/analyzer.py": {
+      "sha256": "a10c651fabf71dd5ad8e38eaf3ec62dd010dcb8e7bad2fc9b36f76047eb3d1d3",
+      "bytes": 12103
+    },
+    "skills/csa/.claude/skills/sast-lite/tests/test_analyzer.py": {
+      "sha256": "88134117f1471a83043be1ed2ed565544f22acc0eebb048002dcdcde5e20911f",
+      "bytes": 4096
+    },
+    "skills/csa/.claude/skills/scan-environment/SKILL.md": {
+      "sha256": "14582cbed1e9d6b57de7cdb026f87204a539da8a3ca963331c9d027ab65d4d15",
+      "bytes": 5180
+    },
+    "skills/csa/.claude/skills/secret-scanner/SKILL.md": {
+      "sha256": "729c3df40cd41960b34285001715a626c6656500eaeecd2a46452fa8a632faf4",
+      "bytes": 3069
+    },
+    "skills/csa/.claude/skills/secret-scanner/engine.py": {
+      "sha256": "af96757ba0243927529e185bb0805ef3a18d7abe558f01d09d5632967ee996c7",
+      "bytes": 11485
+    },
+    "skills/csa/.claude/skills/secret-scanner/tests/test_engine.py": {
+      "sha256": "6aa0805a8f16330da34d38ca90adacb178baf2dd0d327fa57137c8fd170fe648",
+      "bytes": 5942
+    },
+    "skills/csa/.claude/skills/security-advisor/SKILL.md": {
+      "sha256": "38ad27e5e7ce6070e245ce84c7bd3d032efe4964f4828399c8576bbc22f639b0",
+      "bytes": 23468
+    },
+    "skills/csa/.claude/skills/security-advisor/metadata.json": {
+      "sha256": "3e526be7f17cf1d6496bf3d1323081ff35334b73c47dd18d91adef2643b694c4",
+      "bytes": 1265
+    },
+    "skills/csa/.claude/skills/security-advisor/references/false-positive-rules.md": {
+      "sha256": "84e54c4f10926224d7fac31d2fb5104b523d6e8fa7df97ed6d1676861886291d",
+      "bytes": 12253
+    },
+    "skills/csa/.claude/skills/security-advisor/references/findings-template.md": {
+      "sha256": "1f027df41adc55f90a16091cbbcc49b5c869494432060ce1cd9403ee5b81ac21",
+      "bytes": 3598
+    },
+    "skills/csa/.claude/skills/security-advisor/references/research-basis.md": {
+      "sha256": "912b9e13a00b93e8bbc54575b5fa9cd2a36ec40d592a9dd2692b4ef278f49074",
+      "bytes": 13052
+    },
+    "skills/csa/.claude/skills/security-advisor/references/stack-api-surface.md": {
+      "sha256": "9cbf15ad03384af32c1fb7782016fa769f79e8d5c050a7ecf9e9ac2387d13dc6",
+      "bytes": 29525
+    },
+    "skills/csa/.claude/skills/security-advisor/references/stack-cicd-supply-chain.md": {
+      "sha256": "4d96685a92299d563bab3eb7883fa23c07fb772d387802b368f232958aec0935",
+      "bytes": 16521
+    },
+    "skills/csa/.claude/skills/security-advisor/references/stack-llm-apps.md": {
+      "sha256": "fabb58154b98c86c56c5c49577fb3cd813e40e6619b8e42c9b757147b131308b",
+      "bytes": 19491
+    },
+    "skills/csa/.claude/skills/security-advisor/references/stack-nextjs.md": {
+      "sha256": "26b6cf05ac5271f9fe9ec9a45e20e31d93399a2430ba30aae869265504500a45",
+      "bytes": 12362
+    },
+    "skills/csa/.claude/skills/security-advisor/references/stack-nodejs-general.md": {
+      "sha256": "640c837873f8482ecee2bae74119aa936817f230937ec19103c08bbd8030daec",
+      "bytes": 8739
+    },
+    "skills/csa/.claude/skills/security-advisor/references/stack-python.md": {
+      "sha256": "146fcee7859157d78b43ac2783bd0a24032c10e3089008abcbbe85083903ceb1",
+      "bytes": 7894
+    },
+    "skills/csa/.claude/skills/security-advisor/references/stack-react.md": {
+      "sha256": "ddcc6fbd04b4f9f29ee1e36ba08713df94f5472ff6f714981aa4950392d1a083",
+      "bytes": 15095
+    },
+    "skills/csa/.claude/skills/test-case-generation/SKILL.md": {
+      "sha256": "9e3451472d666b8014b3ddc670f82c5bc467c61d0d24cff4672232a958c10be3",
+      "bytes": 1434
+    },
+    "skills/csa/.claude/skills/threat-model-dcrh/README.md": {
+      "sha256": "3b0a63b162adacbbbbeae18adf7635714676cd14021b5dc0fda244858e149e56",
+      "bytes": 4744
+    },
+    "skills/csa/.claude/skills/threat-model-dcrh/SKILL.md": {
+      "sha256": "d233c3514fca75163c3ee2d88a0741d2a60b63474209f65fb12d6537f7949db7",
+      "bytes": 7025
+    },
+    "skills/csa/.claude/skills/threat-model-dcrh/bootstrap.md": {
+      "sha256": "e7bbbfbeefda45a43d16e1caf8c5145188f3642539c06f69241bbec3a469d141",
+      "bytes": 22018
+    },
+    "skills/csa/.claude/skills/threat-model-dcrh/interview.md": {
+      "sha256": "9d629e59f33cd752c5c1909cd31e8cd7b69e33ae210ed61e8bca34c74667de26",
+      "bytes": 9053
+    },
+    "skills/csa/.claude/skills/threat-model-dcrh/schema.md": {
+      "sha256": "3486fa9ca4578bc023e10a0ecf4be3d0aa94c0e68d9042d606c65cf1760fd9d7",
+      "bytes": 6844
+    },
+    "skills/csa/.claude/skills/triage-dcrh/README.md": {
+      "sha256": "1a2a15cdde02972e75de5751f043330d8fa73c091bcbf9dfebe9a233dbc58586",
+      "bytes": 3169
+    },
+    "skills/csa/.claude/skills/triage-dcrh/SKILL.md": {
+      "sha256": "2c85e2f8de6f44e0da101f4fdef9b7480e67e072ef246eb97762a4811967ae94",
+      "bytes": 44091
+    },
+    "skills/csa/.claude/skills/triage-dcrh/fixtures/canary-findings.json": {
+      "sha256": "b8c101270f63b2822283952a7d42fa77746c12cbf44225599a70d48f677aa056",
+      "bytes": 1814
+    },
+    "skills/csa/.claude/skills/vuln-scan-dcrh/SKILL.md": {
+      "sha256": "029a4b24efc5015689c537a57c2b89d9f782357e8541b016db2905fb7a05334e",
+      "bytes": 12235
+    },
+    "skills/csa/.claude/skills/vulnerability-analysis/SKILL.md": {
+      "sha256": "72f4285633c2939cdb84e434b8d861fa347db7bcfc8af67fc37bca827ddc2a34",
+      "bytes": 2329
+    },
+    "skills/csa/references/csa_checker_patterns.md": {
+      "sha256": "d87abe692091d7a3681d0f30273d631616649931fcf9b2a638786d945aaccf1d",
+      "bytes": 19775
+    },
+    "skills/csa/references/csa_headers_api.md": {
+      "sha256": "d835b255167c29e26f9937b13f2875c9033a390f5f21ec800d160f4b2989fe3e",
+      "bytes": 39469
+    },
+    "skills/csa/references/csa_utility_functions.h": {
+      "sha256": "8881d2801943b25fb611753f0c37139c48e4d219b95eb539a73099fd0b9e26b4",
+      "bytes": 11192
+    },
+    "skills/csa/references/cwe_cards/.classification_result.json": {
+      "sha256": "b895ed83e586edf7420fce467733ff35182277035bceb95767992c06a0db8350",
+      "bytes": 62519
+    },
+    "skills/csa/references/cwe_cards/CWE-119-kernel.md": {
+      "sha256": "9bd775f6fa4a93f9237e366424716ae4b19cfe547d992129a1dc6cf43a0666bc",
+      "bytes": 10574
+    },
+    "skills/csa/references/cwe_cards/CWE-119-userspace.md": {
+      "sha256": "efc1c4b99bd79964c6880d1732f7fb882a6ac19405392b3f77e40b3c4f7e52ec",
+      "bytes": 13342
+    },
+    "skills/csa/references/cwe_cards/CWE-120.md": {
+      "sha256": "265223d65ccbabc9d0133d219d90abf56440562c5e003492b32b89e6188a5f44",
+      "bytes": 4373
+    },
+    "skills/csa/references/cwe_cards/CWE-125-kernel.md": {
+      "sha256": "ad01225f929d6f74cdbcd32e6b84be5b1265d62d225739aa916e48b137ded19a",
+      "bytes": 12417
+    },
+    "skills/csa/references/cwe_cards/CWE-125-userspace.md": {
+      "sha256": "8b0d8576e9e7f920c86b7c9abffcab3a37f6bfc88375c27a48d857d193b8a3e6",
+      "bytes": 11022
+    },
+    "skills/csa/references/cwe_cards/CWE-189.md": {
+      "sha256": "0883d13d451a531ce9e813748554b932328a6817c88ae4fcc727310b41aada5c",
+      "bytes": 6163
+    },
+    "skills/csa/references/cwe_cards/CWE-190-kernel.md": {
+      "sha256": "2d1f4f37d6e9874457b59a3e6f61417052aa6efc30fbb2d9914445002cd14a9d",
+      "bytes": 11072
+    },
+    "skills/csa/references/cwe_cards/CWE-190-userspace.md": {
+      "sha256": "f8eb96a18a4e64115f4820ed1b1badf667b56de6f58dfb7d2dabb3af1009e99d",
+      "bytes": 9950
+    },
+    "skills/csa/references/cwe_cards/CWE-20.md": {
+      "sha256": "701cfdcbc39daf4ee3d22ca405731419051afd398e5ad3ab99f3c4855b6c1c75",
+      "bytes": 5092
+    },
+    "skills/csa/references/cwe_cards/CWE-200.md": {
+      "sha256": "99b9db33b0705bd210c9d80c2f689dc76a1ce2d720fc611e19eaef648017e46e",
+      "bytes": 4694
+    },
+    "skills/csa/references/cwe_cards/CWE-362.md": {
+      "sha256": "f67e92d3d24421b9c53f62b91b7f0b5095d8b67077b0da83ad6c1b5443b01a30",
+      "bytes": 4660
+    },
+    "skills/csa/references/cwe_cards/CWE-369.md": {
+      "sha256": "4ed20637f26f7e7155f6b993b010d27bbbd6988864fbef783517826ce7427f15",
+      "bytes": 5245
+    },
+    "skills/csa/references/cwe_cards/CWE-399.md": {
+      "sha256": "147f8cf44a886ffe0cc7d78b86f56d8bd734106c54a9a394a037e34911023dc9",
+      "bytes": 7751
+    },
+    "skills/csa/references/cwe_cards/CWE-400.md": {
+      "sha256": "facf35e6b42c824cbc2aebaa3fcbf02945e74826df1258f4d044edb0f95681df",
+      "bytes": 5148
+    },
+    "skills/csa/references/cwe_cards/CWE-401-kernel.md": {
+      "sha256": "fb3c02ab08081cbe43bc78a3c5bede6a00ee9bc2cd4a1738406ec434d5b38ee2",
+      "bytes": 12734
+    },
+    "skills/csa/references/cwe_cards/CWE-401-userspace.md": {
+      "sha256": "64355dec5669053f318ea57c95dd9ec74d17187dd15e313736aefdeb8444c727",
+      "bytes": 11478
+    },
+    "skills/csa/references/cwe_cards/CWE-415.md": {
+      "sha256": "ccab3d8c35adbb65261a2cf0e329ce6cd8884f31fb706c4479b6343085ef0588",
+      "bytes": 5835
+    },
+    "skills/csa/references/cwe_cards/CWE-416-kernel.md": {
+      "sha256": "a83c67927d791e6767bdc77883a2a56fa0eb899d6be3b4d7ec53db9807a3ac95",
+      "bytes": 9137
+    },
+    "skills/csa/references/cwe_cards/CWE-416-userspace.md": {
+      "sha256": "104d2aeb0215b58b9a5aaa40d7ae24af96309e135ad2fa07a75d6131d28ef9cf",
+      "bytes": 13847
+    },
+    "skills/csa/references/cwe_cards/CWE-476.md": {
+      "sha256": "15ed3608f0924bf837879445e3d456446c003847b6a9f16ec863f3ac67e7f58f",
+      "bytes": 16077
+    },
+    "skills/csa/references/cwe_cards/CWE-617.md": {
+      "sha256": "1fad6ae69884d948d28999999a6131e372b7e0a00f132239017e47d9d226d71d",
+      "bytes": 3908
+    },
+    "skills/csa/references/cwe_cards/CWE-667.md": {
+      "sha256": "b32c3af540c5c253a2e2c764207e454bc2e7de4847ad0c57b68756decf104cf9",
+      "bytes": 4400
+    },
+    "skills/csa/references/cwe_cards/CWE-674.md": {
+      "sha256": "de78fa8264fdf9caa476bcba2ac50edba295a9cedbb4a66dbfc1914013a37b65",
+      "bytes": 4705
+    },
+    "skills/csa/references/cwe_cards/CWE-770.md": {
+      "sha256": "a7217a4d3ededef579ce7c85815569897454781695fd2d7bac428268b9f78263",
+      "bytes": 4030
+    },
+    "skills/csa/references/cwe_cards/CWE-772.md": {
+      "sha256": "b04dd6aa12a5a7df23f2fa049557a0dece0af58f9aa2cca13d344bf63d091285",
+      "bytes": 4302
+    },
+    "skills/csa/references/cwe_cards/CWE-787-kernel.md": {
+      "sha256": "f24b43badb065ba20bb6d11a5aa9e7f3c5172a4df5fe2d5c293588db900ab6ee",
+      "bytes": 11603
+    },
+    "skills/csa/references/cwe_cards/CWE-787-userspace.md": {
+      "sha256": "d086bf3fb6fed90be0c3f6c50d183e2f370f5341342ae9fd4fa024ea771cf280",
+      "bytes": 9457
+    },
+    "skills/csa/references/cwe_cards/CWE-835.md": {
+      "sha256": "7e8d1f7b90af5f811bbf6942c6f07ec17f146f120331723d537ba1efce1bb747",
+      "bytes": 4454
+    },
+    "skills/csa/references/cwe_cards/CWE-908.md": {
+      "sha256": "f18bfbaba9ef492a0cb8fba6be745c011ff278e0297b4eca4b043b40ea864336",
+      "bytes": 5430
+    },
+    "skills/csa/references/cwe_cards/CWE-unclassified-diagnosis.md": {
+      "sha256": "dfb0f0ad184a7fa991286df53acee18a97c1d08bc717b4eddb6b2701b7041f07",
+      "bytes": 2904
+    },
+    "skills/csa/references/cwe_cards/Category-Concurrency.md": {
+      "sha256": "7d1c453603b7635d411963557519ae2e72bbe26a64b4691b6ed3f3e79122f7d8",
+      "bytes": 2160
+    },
+    "skills/csa/references/cwe_cards/Category-Input_Validation.md": {
+      "sha256": "c51f91911b2ec1af8ab4197bba1a0cc18d0f74fe60c605b6709dfe5cc33d0ee0",
+      "bytes": 2506
+    },
+    "skills/csa/references/cwe_cards/Category-Integer_Arithmetic.md": {
+      "sha256": "6669483f4171eb693666ada45b25c6aae9a58f4c747cc19d50105656f0fc9602",
+      "bytes": 3057
+    },
+    "skills/csa/references/cwe_cards/Category-Memory_Safety.md": {
+      "sha256": "0765a499e29a6451286090fda7baeb466330423503403d442f6af89d50e5d14d",
+      "bytes": 3982
+    },
+    "skills/csa/references/cwe_cards/Category-Resource_Management.md": {
+      "sha256": "318a69b80188b881055b415f5a99938bf1e484f2dc4cc3db2919cb9e979a038d",
+      "bytes": 6476
+    },
+    "skills/csa/references/cwe_cards/Category-Security_Policy.md": {
+      "sha256": "4131de60fba8b7405273824e0bb3fd484b900fc5ff7ec97a712e751c5f521220",
+      "bytes": 17659
+    },
+    "skills/csa/references/cwe_cards/Category-Type_Misc.md": {
+      "sha256": "dc518291ab60d5b819fbaf5d05bb3496a6a8fd285da8c55e9a02b5ea082d4b6a",
+      "bytes": 3696
+    },
+    "skills/csa/references/cwe_cards/README.md": {
+      "sha256": "076232fd1e66dd7ecdf64e211bbd894211620439284ec25b5c50b5c43f4029ce",
+      "bytes": 3960
+    },
+    "skills/csa/references/cwe_cards/_template_tier1.md": {
+      "sha256": "420811e8989ac44cfe7adb4ed79efbb42057c3edd625f964634de750f80b016c",
+      "bytes": 2057
+    },
+    "skills/csa/references/cwe_cards/_template_tier2.md": {
+      "sha256": "ba97f757543aa6b01b605af062ba24476d11b37a4b86018fd41870b6a626243d",
+      "bytes": 775
+    },
+    "skills/csa/references/cwe_cards/_template_tier3_umbrella.md": {
+      "sha256": "e503bcb3855041f656b6e25b834d94b2eed93c7db9e518e05c7f746f00e6ba74",
+      "bytes": 1157
+    },
+    "skills/csa/references/cwe_cards/cwe_cards_generation_guide.md": {
+      "sha256": "70cf302dd80b6235f7dddf14a5edb3543648deaa5ae68512035bcf4f2bafbee3",
+      "bytes": 16843
+    },
+    "skills/csa/references/cwe_cards/index.json": {
+      "sha256": "789d0369ee8fc7377eac65fec869db564da3fa49224ea30efd8d1b1a21e337ec",
+      "bytes": 16617
+    },
+    "skills/csa/references/examples/llvm-official/01_div_zero.cpp": {
+      "sha256": "425cfdb3aba8335488743f2e05ead71c41d3ecdd3532dbedc5632c9668a61e43",
+      "bytes": 6851
+    },
+    "skills/csa/references/examples/llvm-official/02_simple_stream.cpp": {
+      "sha256": "ea606ebf5ca2990fe49312bdb701bff086763ae60857fe167562367f3afe21ab",
+      "bytes": 11630
+    },
+    "skills/csa/references/examples/llvm-official/03_undef_result.cpp": {
+      "sha256": "e8159e9c268e018d303ee02e1e9f6b5487719fde42bedfeb519b4d2dc223eea3",
+      "bytes": 6206
+    },
+    "skills/csa/references/examples/llvm-official/04_nullability.cpp": {
+      "sha256": "1e6e285fb97397e1d81c7f613b0bdc7451573ae6b274e7e19f3151fbeda829e3",
+      "bytes": 45395
+    },
+    "skills/csa/references/examples/llvm-official/05_malloc.cpp": {
+      "sha256": "2de19ae2730f7b347b70d0df4e318d29134bb35e3c50c0e1eef5f2733ed89ac9",
+      "bytes": 59529
+    }
+  }
+}

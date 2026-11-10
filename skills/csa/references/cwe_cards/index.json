@@ -1,0 +1,681 @@
+{
+  "CWE-787": {
+    "tier": 1,
+    "has_repo_variant": true,
+    "variants": {
+      "kernel": "CWE-787-kernel.md",
+      "userspace": "CWE-787-userspace.md"
+    },
+    "kernel_repo_match": [
+      "torvalds_linux"
+    ]
+  },
+  "CWE-476": {
+    "tier": 1,
+    "has_repo_variant": false,
+    "card_path": "CWE-476.md"
+  },
+  "CWE-125": {
+    "tier": 1,
+    "has_repo_variant": true,
+    "variants": {
+      "kernel": "CWE-125-kernel.md",
+      "userspace": "CWE-125-userspace.md"
+    },
+    "kernel_repo_match": [
+      "torvalds_linux"
+    ]
+  },
+  "CWE-416": {
+    "tier": 1,
+    "has_repo_variant": true,
+    "variants": {
+      "kernel": "CWE-416-kernel.md",
+      "userspace": "CWE-416-userspace.md"
+    },
+    "kernel_repo_match": [
+      "torvalds_linux"
+    ]
+  },
+  "CWE-119": {
+    "tier": 1,
+    "has_repo_variant": true,
+    "variants": {
+      "kernel": "CWE-119-kernel.md",
+      "userspace": "CWE-119-userspace.md"
+    },
+    "kernel_repo_match": [
+      "torvalds_linux"
+    ]
+  },
+  "CWE-190": {
+    "tier": 1,
+    "has_repo_variant": true,
+    "variants": {
+      "kernel": "CWE-190-kernel.md",
+      "userspace": "CWE-190-userspace.md"
+    },
+    "kernel_repo_match": [
+      "torvalds_linux"
+    ]
+  },
+  "CWE-401": {
+    "tier": 1,
+    "has_repo_variant": true,
+    "variants": {
+      "kernel": "CWE-401-kernel.md",
+      "userspace": "CWE-401-userspace.md"
+    },
+    "kernel_repo_match": [
+      "torvalds_linux"
+    ]
+  },
+  "CWE-120": {
+    "tier": 2,
+    "has_repo_variant": false,
+    "card_path": "CWE-120.md"
+  },
+  "CWE-20": {
+    "tier": 2,
+    "has_repo_variant": false,
+    "card_path": "CWE-20.md"
+  },
+  "CWE-415": {
+    "tier": 2,
+    "has_repo_variant": false,
+    "card_path": "CWE-415.md"
+  },
+  "CWE-362": {
+    "tier": 2,
+    "has_repo_variant": false,
+    "card_path": "CWE-362.md"
+  },
+  "CWE-617": {
+    "tier": 2,
+    "has_repo_variant": false,
+    "card_path": "CWE-617.md"
+  },
+  "CWE-667": {
+    "tier": 2,
+    "has_repo_variant": false,
+    "card_path": "CWE-667.md"
+  },
+  "CWE-400": {
+    "tier": 2,
+    "has_repo_variant": false,
+    "card_path": "CWE-400.md"
+  },
+  "CWE-835": {
+    "tier": 2,
+    "has_repo_variant": false,
+    "card_path": "CWE-835.md"
+  },
+  "CWE-189": {
+    "tier": 2,
+    "has_repo_variant": false,
+    "card_path": "CWE-189.md"
+  },
+  "CWE-399": {
+    "tier": 2,
+    "has_repo_variant": false,
+    "card_path": "CWE-399.md"
+  },
+  "CWE-369": {
+    "tier": 2,
+    "has_repo_variant": false,
+    "card_path": "CWE-369.md"
+  },
+  "CWE-674": {
+    "tier": 2,
+    "has_repo_variant": false,
+    "card_path": "CWE-674.md"
+  },
+  "CWE-772": {
+    "tier": 2,
+    "has_repo_variant": false,
+    "card_path": "CWE-772.md"
+  },
+  "CWE-908": {
+    "tier": 2,
+    "has_repo_variant": false,
+    "card_path": "CWE-908.md"
+  },
+  "CWE-770": {
+    "tier": 2,
+    "has_repo_variant": false,
+    "card_path": "CWE-770.md"
+  },
+  "CWE-200": {
+    "tier": 2,
+    "has_repo_variant": false,
+    "card_path": "CWE-200.md"
+  },
+  "CWE-122": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Memory_Safety.md",
+    "parent_category": "Memory_Safety"
+  },
+  "CWE-264": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-681": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Integer_Arithmetic.md",
+    "parent_category": "Integer_Arithmetic"
+  },
+  "CWE-665": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Type_Misc.md",
+    "parent_category": "Type_Misc"
+  },
+  "CWE-295": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-22": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-129": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Integer_Arithmetic.md",
+    "parent_category": "Integer_Arithmetic"
+  },
+  "CWE-862": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-843": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Memory_Safety.md",
+    "parent_category": "Memory_Safety"
+  },
+  "CWE-444": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-252": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Input_Validation.md",
+    "parent_category": "Input_Validation"
+  },
+  "CWE-834": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Integer_Arithmetic.md",
+    "parent_category": "Integer_Arithmetic"
+  },
+  "CWE-77": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-763": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Memory_Safety.md",
+    "parent_category": "Memory_Safety"
+  },
+  "CWE-754": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Input_Validation.md",
+    "parent_category": "Input_Validation"
+  },
+  "CWE-732": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-682": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Integer_Arithmetic.md",
+    "parent_category": "Integer_Arithmetic"
+  },
+  "CWE-330": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-284": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-203": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-131": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Memory_Safety.md",
+    "parent_category": "Memory_Safety"
+  },
+  "CWE-909": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Type_Misc.md",
+    "parent_category": "Type_Misc"
+  },
+  "CWE-755": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Input_Validation.md",
+    "parent_category": "Input_Validation"
+  },
+  "CWE-269": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-863": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-59": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-287": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-273": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-79": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-78": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-74": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-680": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Resource_Management.md",
+    "parent_category": "Resource_Management"
+  },
+  "CWE-668": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Type_Misc.md",
+    "parent_category": "Type_Misc"
+  },
+  "CWE-404": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Resource_Management.md",
+    "parent_category": "Resource_Management"
+  },
+  "CWE-310": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-17": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-121": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Memory_Safety.md",
+    "parent_category": "Memory_Safety"
+  },
+  "CWE-417": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Input_Validation.md",
+    "parent_category": "Input_Validation"
+  },
+  "CWE-345": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-276": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-193": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Integer_Arithmetic.md",
+    "parent_category": "Integer_Arithmetic"
+  },
+  "CWE-191": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Integer_Arithmetic.md",
+    "parent_category": "Integer_Arithmetic"
+  },
+  "CWE-824": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Memory_Safety.md",
+    "parent_category": "Memory_Safety"
+  },
+  "CWE-367": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Concurrency.md",
+    "parent_category": "Concurrency"
+  },
+  "CWE-327": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-319": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-1284": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Memory_Safety.md",
+    "parent_category": "Memory_Safety"
+  },
+  "CWE-704": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Type_Misc.md",
+    "parent_category": "Type_Misc"
+  },
+  "CWE-697": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-670": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Resource_Management.md",
+    "parent_category": "Resource_Management"
+  },
+  "CWE-662": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Concurrency.md",
+    "parent_category": "Concurrency"
+  },
+  "CWE-459": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Resource_Management.md",
+    "parent_category": "Resource_Management"
+  },
+  "CWE-354": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-347": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-918": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-89": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-776": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Resource_Management.md",
+    "parent_category": "Resource_Management"
+  },
+  "CWE-707": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-457": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Resource_Management.md",
+    "parent_category": "Resource_Management"
+  },
+  "CWE-455": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Resource_Management.md",
+    "parent_category": "Resource_Management"
+  },
+  "CWE-434": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-388": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Input_Validation.md",
+    "parent_category": "Input_Validation"
+  },
+  "CWE-338": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-307": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-281": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-19": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Concurrency.md",
+    "parent_category": "Concurrency"
+  },
+  "CWE-134": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-116": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Type_Misc.md",
+    "parent_category": "Type_Misc"
+  },
+  "CWE-94": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-838": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Resource_Management.md",
+    "parent_category": "Resource_Management"
+  },
+  "CWE-833": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Resource_Management.md",
+    "parent_category": "Resource_Management"
+  },
+  "CWE-73": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-672": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Resource_Management.md",
+    "parent_category": "Resource_Management"
+  },
+  "CWE-613": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-610": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-552": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-532": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-522": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-440": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Resource_Management.md",
+    "parent_category": "Resource_Management"
+  },
+  "CWE-436": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Resource_Management.md",
+    "parent_category": "Resource_Management"
+  },
+  "CWE-426": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-407": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Resource_Management.md",
+    "parent_category": "Resource_Management"
+  },
+  "CWE-290": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-255": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-212": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Security_Policy.md",
+    "parent_category": "Security_Policy"
+  },
+  "CWE-1321": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Type_Misc.md",
+    "parent_category": "Type_Misc"
+  },
+  "CWE-1188": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Type_Misc.md",
+    "parent_category": "Type_Misc"
+  },
+  "CWE-1077": {
+    "tier": 3,
+    "has_repo_variant": false,
+    "card_path": "Category-Type_Misc.md",
+    "parent_category": "Type_Misc"
+  }
+}
